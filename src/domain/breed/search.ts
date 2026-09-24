@@ -1,0 +1,16 @@
+/**
+ * Búsqueda local por nombre.
+ *
+ * Insensible a mayúsculas y a acentos: quien escribe "persa" o "PERSÁ" espera
+ * encontrar "Persian". Es una función pura para poder usarla igual en el
+ * servidor (primer render ya filtrado) y en el cliente.
+ */
+export function normalizeForSearch(value: string): string {
+  return value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+export function filterByName<T extends { readonly name: string }>(items: readonly T[], term: string): readonly T[] {
+  const needle = normalizeForSearch(term);
+  if (!needle) return items;
+  return items.filter((item) => normalizeForSearch(item.name).includes(needle));
+}
