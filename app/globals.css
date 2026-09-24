@@ -1,26 +1,273 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:where(.dark, .dark *));
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ==========================================================================
+   Sistema visual — "ficha de archivo"
+   Papel blanco, filetes de 1px, esquinas rectas, etiquetas monoespaciadas y
+   titulares en serif. Un solo acento: ámbar de iris felino (hue 62), por
+   debajo del 3 % de la superficie. Los neutrales llevan una pizca del mismo
+   tono para que el gris no se lea frío junto al ámbar.
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+   Contraste medido (WCAG 2.x):
+     tinta / papel 18.1 · tinta-suave / papel 6.6 · tinta-tenue / papel 4.7
+     ámbar / papel 5.5  · (oscuro) ámbar / fondo 10.1 · tinta-suave 7.8
+   ========================================================================== */
+@theme {
+  --color-ambar-50: oklch(97% 0.02 75);
+  --color-ambar-100: oklch(93% 0.045 74);
+  --color-ambar-200: oklch(87% 0.08 72);
+  --color-ambar-300: oklch(80% 0.13 72);
+  --color-ambar-400: oklch(72% 0.15 68);
+  --color-ambar-500: oklch(63% 0.145 64);
+  --color-ambar-600: oklch(53% 0.125 62);
+  --color-ambar-700: oklch(45% 0.105 60);
+  --color-ambar-800: oklch(37% 0.08 58);
+  --color-ambar-900: oklch(29% 0.06 56);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --animate-shimmer: shimmer 1.6s var(--ease-in-out) infinite;
+  @keyframes shimmer {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@theme inline {
+  --font-sans: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-display), ui-serif, Georgia, serif;
+  --font-mono: var(--font-technical), ui-monospace, SFMono-Regular, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+}
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.2 0.012 60);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.012 60);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0.012 60);
+  --primary: oklch(0.53 0.125 62);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.975 0.006 75);
+  --secondary-foreground: oklch(0.2 0.012 60);
+  --muted: oklch(0.975 0.006 75);
+  --muted-foreground: oklch(0.48 0.012 60);
+  --faint: oklch(0.56 0.01 60);
+  --accent: oklch(0.97 0.02 75);
+  --accent-foreground: oklch(0.37 0.08 58);
+  --destructive: oklch(0.52 0.17 28);
+  --border: oklch(0.9 0.006 70);
+  --input: oklch(0.86 0.008 70);
+  --ring: oklch(0.55 0.15 62);
+  --chart-1: oklch(0.53 0.125 62);
+  --chart-2: oklch(0.86 0.02 70);
+  color-scheme: light;
+}
+
+.dark {
+  --background: oklch(0.165 0.008 60);
+  --foreground: oklch(0.95 0.006 75);
+  --card: oklch(0.21 0.009 60);
+  --card-foreground: oklch(0.95 0.006 75);
+  --popover: oklch(0.21 0.009 60);
+  --popover-foreground: oklch(0.95 0.006 75);
+  --primary: oklch(0.8 0.13 72);
+  --primary-foreground: oklch(0.165 0.008 60);
+  --secondary: oklch(0.21 0.009 60);
+  --secondary-foreground: oklch(0.95 0.006 75);
+  --muted: oklch(0.21 0.009 60);
+  --muted-foreground: oklch(0.72 0.01 70);
+  --faint: oklch(0.62 0.01 70);
+  --accent: oklch(0.26 0.03 65);
+  --accent-foreground: oklch(0.87 0.08 72);
+  --destructive: oklch(0.7 0.16 28);
+  --border: oklch(0.95 0.006 75 / 13%);
+  --input: oklch(0.95 0.006 75 / 20%);
+  --ring: oklch(0.8 0.13 72);
+  --chart-1: oklch(0.8 0.13 72);
+  --chart-2: oklch(0.34 0.01 65);
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    /* El gesto de "tirar para recargar" es nuestro: sin esto, Chrome en
+       Android recarga la página entera antes de que lo veamos. */
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-kerning: normal;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-serif;
+    font-weight: 400;
+    text-wrap: balance;
+  }
+
+  button,
+  a,
+  [role="button"] {
+    cursor: pointer;
+  }
+
+  /* El anillo aparece en el mismo frame en que llega el foco: nunca se anima. */
+  :where(a, button, input, textarea, select, [tabindex]):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Utilidades propias con @utility: así admiten variantes (md:, hover:, [&_x]:). */
+
+/* Etiqueta técnica: la voz de archivo de toda la interfaz. */
+@utility label-mono {
+  @apply font-mono text-[0.6875rem] uppercase;
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cuatro escuadras de 10px en las esquinas, dibujadas con gradientes: un
+   solo elemento, sin pseudo-elementos que choquen con los del componente. */
+@utility corner-marks {
+  --mark: 10px;
+  --mark-color: color-mix(in oklch, currentColor 45%, transparent);
+  background:
+    linear-gradient(var(--mark-color), var(--mark-color)) top left / var(--mark) 1px no-repeat,
+    linear-gradient(var(--mark-color), var(--mark-color)) top left / 1px var(--mark) no-repeat,
+    linear-gradient(var(--mark-color), var(--mark-color)) top right / var(--mark) 1px no-repeat,
+    linear-gradient(var(--mark-color), var(--mark-color)) top right / 1px var(--mark) no-repeat,
+    linear-gradient(var(--mark-color), var(--mark-color)) bottom left / var(--mark) 1px no-repeat,
+    linear-gradient(var(--mark-color), var(--mark-color)) bottom left / 1px var(--mark) no-repeat,
+    linear-gradient(var(--mark-color), var(--mark-color)) bottom right / var(--mark) 1px no-repeat,
+    linear-gradient(var(--mark-color), var(--mark-color)) bottom right / 1px var(--mark) no-repeat;
+}
+
+/* Cuadrícula de papel milimetrado, estática. */
+@utility grid-paper {
+  background-image:
+    linear-gradient(to right, color-mix(in oklch, var(--foreground) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklch, var(--foreground) 4%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* ── Lenis ──────────────────────────────────────────────────────────────── */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ── View transitions ─────────────────────────────────────────────────────
+   El nombre de la raza viaja de la fila de la lista al titular del detalle.
+   El desenfoque a mitad de camino tapa el salto de tamaño de la serif. */
+::view-transition-group(.breed-name) {
+  animation-duration: 420ms;
+  animation-timing-function: var(--ease-out);
+}
+::view-transition-image-pair(.breed-name) {
+  animation-name: via-blur;
+}
+@keyframes via-blur {
+  35% {
+    filter: blur(2px);
+  }
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Avisos (sileo) ───────────────────────────────────────────────────────
+   sileo capitaliza cada palabra del título (convención del inglés); en
+   español solo va la inicial. Su CSS se inyecta en tiempo de ejecución,
+   después de este archivo: por eso el selector lleva un nivel más. */
+[data-sileo-viewport] [data-sileo-title] {
+  text-transform: none;
+}
+
+/* En tema oscuro sileo pinta una píldora clara (#f2f2f2) y sus colores de
+   estado quedan entre 1,7:1 y 3,4:1. Estos tonos rondan 5–6:1 (AA). En
+   tema claro la píldora es oscura y los colores originales ya pasan. */
+[data-sileo-viewport][data-theme="dark"] {
+  --sileo-state-success: oklch(0.5 0.14 145);
+  --sileo-state-error: oklch(0.5 0.19 27);
+  --sileo-state-warning: oklch(0.5 0.11 70);
+  --sileo-state-info: oklch(0.5 0.13 240);
+}
+html [data-sileo-viewport][data-theme="dark"] [data-sileo-description] {
+  color: rgb(0 0 0 / 0.62);
 }
