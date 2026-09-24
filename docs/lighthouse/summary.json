@@ -1,0 +1,46 @@
+{
+  "home-mobile": {
+    "performance": 93,
+    "accessibility": 100,
+    "best-practices": 100,
+    "seo": 100,
+    "performanceRuns": [
+      93,
+      91,
+      94
+    ]
+  },
+  "home-desktop": {
+    "performance": 100,
+    "accessibility": 100,
+    "best-practices": 100,
+    "seo": 100,
+    "performanceRuns": [
+      100,
+      100,
+      100
+    ]
+  },
+  "detalle-mobile": {
+    "performance": 92,
+    "accessibility": 100,
+    "best-practices": 100,
+    "seo": 100,
+    "performanceRuns": [
+      91,
+      97,
+      92
+    ]
+  },
+  "detalle-desktop": {
+    "performance": 100,
+    "accessibility": 100,
+    "best-practices": 100,
+    "seo": 100,
+    "performanceRuns": [
+      100,
+      100,
+      100
+    ]
+  }
+}
