@@ -1,0 +1,168 @@
+"use client";
+
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { Command } from "cmdk";
+import { ArrowRight, LayoutList, Monitor, Moon, Plus, Sun } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
+import type { ReactNode } from "react";
+import { Drawer } from "vaul";
+import { describeCountry } from "@domain/breed/country";
+import { normalizeForSearch } from "@domain/breed/search";
+import { useMediaQuery } from "../../hooks/use-media-query";
+import { useUseCases } from "../../providers/use-cases-provider";
+import { useNavigationStore } from "../../stores/navigation-store";
+import { breedsQueryOptions } from "../directory/breeds-query";
+
+interface PaletteDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+/**
+ * Salto rápido a cualquier raza cargada (⌘K). Comparte la consulta paginada
+ * con el directorio: si ya bajaste tres páginas, aquí están las tres; si
+ * entras directo a un detalle, pide la primera. En pantallas pequeñas se
+ * abre como cajón inferior (vaul), que se cierra deslizando.
+ */
+export default function PaletteDialog({ open, onOpenChange }: PaletteDialogProps) {
+  const desktop = useMediaQuery("(min-width: 768px)", true);
+  const body = <PaletteBody open={open} close={() => onOpenChange(false)} />;
+
+  if (desktop) {
+    return (
+      <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+        <DialogPrimitive.Portal>
+          <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-foreground/20 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
+          <DialogPrimitive.Content
+            aria-describedby={undefined}
+            className="fixed top-[14vh] left-1/2 z-50 w-[min(40rem,calc(100vw-2rem))] -translate-x-1/2 border border-border bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-2"
+          >
+            <DialogPrimitive.Title className="sr-only">Ir a una raza</DialogPrimitive.Title>
+            {body}
+          </DialogPrimitive.Content>
+        </DialogPrimitive.Portal>
+      </DialogPrimitive.Root>
+    );
+  }
+
+  return (
+    <Drawer.Root open={open} onOpenChange={onOpenChange}>
+      <Drawer.Portal>
+        <Drawer.Overlay className="fixed inset-0 z-50 bg-foreground/25" />
+        <Drawer.Content
+          aria-describedby={undefined}
+          className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col border-t border-border bg-popover text-popover-foreground outline-none"
+        >
+          <div className="mx-auto mt-3 mb-1 h-1 w-10 bg-border" aria-hidden="true" />
+          <Drawer.Title className="sr-only">Ir a una raza</Drawer.Title>
+          {body}
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
+  );
+}
+
+function PaletteBody({ open, close }: { open: boolean; close: () => void }) {
+  const router = useRouter();
+  const { setTheme } = useTheme();
+  const { listBreedsPage } = useUseCases();
+  const directoryHref = useNavigationStore((state) => state.directoryHref);
+  const setLastVisited = useNavigationStore((state) => state.setLastVisited);
+
+  const { data, hasNextPage, fetchNextPage, isFetching } = useInfiniteQuery({
+    ...breedsQueryOptions(listBreedsPage),
+    enabled: open,
+  });
+  const breeds = data?.pages.flatMap((page) => page.breeds) ?? [];
+  const total = data?.pages[0]?.total ?? 0;
+
+  const run = (action: () => void) => {
+    close();
+    action();
+  };
+
+  return (
+    <Command
+      label="Ir a una raza"
+      loop
+      filter={(value, search) => (normalizeForSearch(value).includes(normalizeForSearch(search)) ? 1 : 0)}
+      className="flex min-h-0 flex-col"
+    >
+      <Command.Input
+        autoFocus
+        placeholder="Escribe el nombre de una raza…"
+        className="h-14 w-full border-b border-border bg-transparent px-5 text-base outline-none placeholder:text-faint"
+      />
+      <Command.List data-lenis-prevent className="max-h-[min(26rem,60vh)] overflow-y-auto overscroll-contain p-2">
+        <Command.Empty className="px-3 py-6 text-sm text-muted-foreground">
+          {isFetching ? "Cargando razas…" : "Ninguna raza cargada coincide."}
+        </Command.Empty>
+
+        <Group heading={total ? `Razas cargadas · ${breeds.length} de ${total}` : "Razas"}>
+          {breeds.map((breed) => (
+            <Item
+              key={breed.slug}
+              value={`${breed.name} ${breed.country ?? ""}`}
+              onSelect={() =>
+                run(() => {
+                  setLastVisited(breed.slug);
+                  router.push(`/razas/${breed.slug}`);
+                })
+              }
+            >
+              <span className="min-w-0 flex-1 truncate">{breed.name}</span>
+              <span className="truncate text-xs text-muted-foreground">
+                {describeCountry(breed.country)?.primary}
+              </span>
+            </Item>
+          ))}
+          {hasNextPage && (
+            <Item value="cargar más razas" onSelect={() => void fetchNextPage()}>
+              <Plus aria-hidden="true" /> Cargar más razas
+            </Item>
+          )}
+        </Group>
+
+        <Group heading="Acciones">
+          <Item value="ir al directorio" onSelect={() => run(() => router.push(directoryHref))}>
+            <LayoutList aria-hidden="true" /> Ir al directorio
+            <ArrowRight className="ml-auto" aria-hidden="true" />
+          </Item>
+          <Item value="tema claro" onSelect={() => run(() => setTheme("light"))}>
+            <Sun aria-hidden="true" /> Tema claro
+          </Item>
+          <Item value="tema oscuro" onSelect={() => run(() => setTheme("dark"))}>
+            <Moon aria-hidden="true" /> Tema oscuro
+          </Item>
+          <Item value="tema del sistema" onSelect={() => run(() => setTheme("system"))}>
+            <Monitor aria-hidden="true" /> Tema del sistema
+          </Item>
+        </Group>
+      </Command.List>
+    </Command>
+  );
+}
+
+function Group({ heading, children }: { heading: string; children: ReactNode }) {
+  return (
+    <Command.Group
+      heading={heading}
+      className="[&_[cmdk-group-heading]]:label-mono py-1 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-muted-foreground"
+    >
+      {children}
+    </Command.Group>
+  );
+}
+
+function Item({ children, ...props }: React.ComponentProps<typeof Command.Item>) {
+  return (
+    <Command.Item
+      className="flex cursor-pointer items-center gap-3 px-3 py-2.5 text-sm outline-none select-none data-[selected=true]:bg-muted data-[selected=true]:text-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground"
+      {...props}
+    >
+      {children}
+    </Command.Item>
+  );
+}
