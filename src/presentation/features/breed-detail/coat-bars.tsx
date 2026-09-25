@@ -6,31 +6,32 @@ interface CoatBarsProps {
   data: Array<{ family: string; label: string; count: number; current: boolean }>;
 }
 
-/** Barras horizontales: la de esta raza en ámbar, el resto en neutro. */
+/**
+ * Barras horizontales en la pantalla LCD: la familia de esta raza, encendida.
+ * La animación propia de recharts (que reescribe atributos SVG en cada
+ * frame) está apagada: el gráfico entra con un fundido de la pestaña.
+ */
 export default function CoatBars({ data }: CoatBarsProps) {
-  const reducedMotion =
-    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data} layout="vertical" margin={{ top: 0, right: 40, bottom: 0, left: 0 }} barCategoryGap={6}>
+      <BarChart data={data} layout="vertical" margin={{ top: 0, right: 34, bottom: 0, left: 0 }} barCategoryGap={4}>
         <XAxis type="number" hide />
         <YAxis
           type="category"
           dataKey="label"
-          width={112}
+          width={104}
           tickLine={false}
           axisLine={false}
-          tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+          tick={{ fill: "var(--screen-soft)", fontSize: 11 }}
         />
-        <Bar dataKey="count" isAnimationActive={!reducedMotion} animationDuration={600} radius={0}>
+        <Bar dataKey="count" isAnimationActive={false} radius={[0, 8, 8, 0]}>
           {data.map((row) => (
-            <Cell key={row.family} fill={row.current ? "var(--chart-1)" : "var(--chart-2)"} />
+            <Cell key={row.family} fill={row.current ? "var(--screen-accent)" : "rgb(255 255 255 / 0.16)"} />
           ))}
           <LabelList
             dataKey="count"
             position="right"
-            style={{ fill: "var(--foreground)", fontSize: 12, fontFamily: "var(--font-technical)" }}
+            style={{ fill: "var(--screen-ink)", fontSize: 11, fontFamily: "var(--hud-stack)" }}
           />
         </Bar>
       </BarChart>
