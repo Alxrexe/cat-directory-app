@@ -1,7 +1,6 @@
 "use client";
 
 import { QueryClientProvider } from "@tanstack/react-query";
-import { ThemeProvider } from "next-themes";
 import { useState, type ReactNode } from "react";
 import { ToasterHost } from "../components/ui/toaster-host";
 import { ConnectionWatcher } from "./connection-watcher";
@@ -17,19 +16,15 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [queryClient] = useState(createQueryClient);
 
   return (
-    // Claro por defecto; el oscuro es una elección del visitante (botón de la
-    // barra de sistema), no del sistema operativo.
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
-      <QueryClientProvider client={queryClient}>
-        <UseCasesProvider>
-          {children}
-          <ToasterHost />
-          <ConnectionWatcher />
-          <SmoothScroll />
-          <SoundLayer />
-          <ServiceWorkerRegistrar />
-        </UseCasesProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <UseCasesProvider>
+        {children}
+        <ToasterHost />
+        <ConnectionWatcher />
+        <SmoothScroll />
+        <SoundLayer />
+        <ServiceWorkerRegistrar />
+      </UseCasesProvider>
+    </QueryClientProvider>
   );
 }

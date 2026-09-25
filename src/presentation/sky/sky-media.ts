@@ -11,8 +11,19 @@ export const SKY = {
   dark: { poster: "/media/sky-night-poster.webp", video: "/media/sky-night" },
 } as const satisfies Record<ColorTheme, { poster: string; video: string }>;
 
-/** Adelanta el póster de un cielo (al acercar el puntero al botón de tema). */
-export function preloadSkyPoster(theme: ColorTheme) {
-  const image = new Image();
-  image.src = SKY[theme].poster;
+const posters = new Map<ColorTheme, Promise<void>>();
+
+/**
+ * Adelanta y decodifica el póster de un cielo (al acercar el puntero al
+ * botón de tema). La promesa se comparte: pedirlo dos veces no descarga dos.
+ */
+export function preloadSkyPoster(theme: ColorTheme): Promise<void> {
+  let pending = posters.get(theme);
+  if (!pending) {
+    const image = new Image();
+    image.src = SKY[theme].poster;
+    pending = image.decode().catch(() => {});
+    posters.set(theme, pending);
+  }
+  return pending;
 }

@@ -20,7 +20,7 @@ export default function Toaster({ onMounted }: { onMounted?: () => void }) {
   }, [onMounted]);
 
   // sileo nombra el tema por el fondo que acompaña: "dark" es la píldora
-  // clara (va con la porcelana) y "light", la oscura (va con la noche).
+  // clara (va con la perla) y "light", la oscura (va con la noche).
   const { theme } = useColorTheme();
   return <Sileo position="top-center" offset={{ top: 84 }} theme={theme === "dark" ? "light" : "dark"} />;
 }
