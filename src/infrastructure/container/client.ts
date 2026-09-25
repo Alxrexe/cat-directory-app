@@ -14,9 +14,9 @@ export interface ClientContainerOptions {
 }
 
 /**
- * Raíz de composición del navegador. La crea el proveedor de React una vez
- * por sesión y la reparte por contexto, así que un test puede sustituir
- * cualquier caso de uso sin tocar módulos.
+ * Raíz de composición del navegador. No se importa directamente: la carga
+ * `createLazyClientContainer` (client-lazy.ts) la primera vez que hace
+ * falta, para que Zod y los adaptadores no viajen con el primer pintado.
  */
 export function createClientContainer(options: ClientContainerOptions = {}) {
   const http = createHttpClient({
@@ -38,5 +38,3 @@ export function createClientContainer(options: ClientContainerOptions = {}) {
     firstPageSnapshot: createFirstPageSnapshot({ snapshots, clock: systemClock }),
   };
 }
-
-export type ClientUseCases = ReturnType<typeof createClientContainer>;
