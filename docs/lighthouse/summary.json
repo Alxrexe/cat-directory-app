@@ -1,13 +1,13 @@
 {
   "home-mobile": {
-    "performance": 93,
+    "performance": 90,
     "accessibility": 100,
     "best-practices": 100,
     "seo": 100,
     "performanceRuns": [
-      93,
+      89,
       91,
-      94
+      90
     ]
   },
   "home-desktop": {
@@ -22,14 +22,14 @@
     ]
   },
   "detalle-mobile": {
-    "performance": 92,
+    "performance": 90,
     "accessibility": 100,
     "best-practices": 100,
     "seo": 100,
     "performanceRuns": [
-      91,
-      97,
-      92
+      83,
+      90,
+      90
     ]
   },
   "detalle-desktop": {
