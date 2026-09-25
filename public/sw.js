@@ -8,7 +8,8 @@
  * - Las llamadas a catfact.ninja no se tocan: su resiliencia es cosa de la
  *   app (reintentos, copia en localStorage, estados de error).
  */
-const VERSION = "v1";
+// Subir la versión descarta las cachés anteriores (p. ej., tras un rediseño).
+const VERSION = "v2";
 const PAGES = `pages-${VERSION}`;
 const ASSETS = `assets-${VERSION}`;
 
