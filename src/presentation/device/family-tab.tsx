@@ -35,7 +35,7 @@ export default function FamilyTab({ breed, related, relatedPhotos, coats, total,
                     type="button"
                     onClick={() => onOpenRelated(item.slug)}
                     data-cue="breed"
-                    className="group relative block aspect-[4/3] w-full overflow-hidden rounded-2xl text-left shadow-[0_0_0_1px_var(--anod-lo),0_10px_18px_-12px_var(--shadow-deep)] transition-transform duration-300 ease-[var(--ease-cozy)] hover:-translate-y-1"
+                    className="group relative block aspect-[4/3] w-full overflow-hidden rounded-2xl text-left shadow-[0_0_0_1px_oklch(100%_0_0/0.1),0_10px_18px_-12px_var(--shadow-deep)] transition-transform duration-300 ease-[var(--ease-cozy)] hover:-translate-y-1"
                   >
                     {photo ? (
                       <FullImage

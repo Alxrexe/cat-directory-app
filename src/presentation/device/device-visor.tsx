@@ -20,7 +20,7 @@ interface DeviceVisorProps {
 /**
  * El visor: la foto de la raza, completa y de borde a borde. Sin marco
  * interior ni pie aparte: el número, la etiqueta de nueva y el crédito
- * flotan sobre la foto, y el borde es un bisel de aluminio de 1,5 px. La
+ * flotan sobre la foto, y el borde es un filete de 1 px con un brillo. La
  * proporción de cada foto se respeta (`FullImage`): nunca se estira ni se
  * corta, y el hueco lo llena la propia foto desenfocada.
  *
@@ -54,7 +54,8 @@ export function DeviceVisor({ name, photo, sourceUrl, position, total, isNew, pr
       {/* En escritorio el visor cede altura para que el Ronrón quepa sin scroll. */}
       <div
         ref={frameRef}
-        className="relative aspect-[4/3.3] w-full overflow-hidden rounded-[28px] bg-surface-3 shadow-[0_0_0_1.5px_var(--alu-edge),0_1px_0_1.5px_var(--alu-hi),0_18px_36px_-22px_var(--shadow-deep)] lg:max-h-[max(15rem,calc(100dvh-26rem))]"
+        data-screen
+        className="squircle relative aspect-[4/3.3] w-full overflow-hidden rounded-[28px] bg-surface-3 shadow-[0_0_0_1px_var(--hairline),0_18px_36px_-22px_var(--shadow-deep)] lg:max-h-[max(14rem,calc(100dvh-29rem))]"
       >
         {photo ? (
           <FullImage
@@ -80,10 +81,13 @@ export function DeviceVisor({ name, photo, sourceUrl, position, total, isNew, pr
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(165deg,var(--glass-shine)_0%,transparent_32%),linear-gradient(0deg,var(--scrim)_0%,transparent_26%)]"
         />
 
-        <span className="hud absolute top-3 left-3 rounded-full bg-surface px-2.5 py-1.5 text-slate shadow-[0_0_0_1px_var(--alu-edge)]">
-          N.º {padIndex(position)}/{padIndex(total)}
+        <span className="pearl absolute top-3 left-3 flex items-baseline gap-1.5 rounded-full px-3 py-1.5 text-slate">
+          <span className="hud text-[0.54rem]">N.º</span>
+          <span className="lcd text-[0.95rem] leading-none">
+            {padIndex(position)}/{padIndex(total)}
+          </span>
         </span>
-        {isNew && <span className="hud anodized absolute top-3 right-3 rounded-full px-2.5 py-1.5">Nueva</span>}
+        {isNew && <span className="hud gel absolute top-3 right-3 rounded-full px-3 py-1.5 text-[0.56rem]">Nueva</span>}
 
         <figcaption className="hud absolute bottom-3 left-4 text-[0.56rem] text-photo-ink">
           {photo ? (
@@ -107,7 +111,7 @@ export function DeviceVisor({ name, photo, sourceUrl, position, total, isNew, pr
   );
 }
 
-/** Sin foto (o si no llega): el monograma de la raza sobre la porcelana. */
+/** Sin foto (o si no llega): el monograma de la raza sobre la perla. */
 function MonogramPlate({ name }: { name: string }) {
   return (
     <div className="grid size-full place-items-center bg-[radial-gradient(circle_at_50%_40%,var(--surface),var(--surface-3))]">

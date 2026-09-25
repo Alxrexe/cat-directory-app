@@ -7,7 +7,7 @@ import { useUseCases } from "../providers/use-cases-provider";
 import { useConnectionStore } from "../stores/connection-store";
 import { describeError } from "../lib/error-copy";
 import { readyGsap } from "../lib/gsap";
-import { useIdleModule } from "../lib/idle";
+import { useIdleModule, usePageSettled } from "../lib/idle";
 import { notify } from "../lib/notify";
 import { playCue } from "../lib/sound";
 
@@ -24,9 +24,13 @@ const loadFactText = () => import("../features/breed-detail/fact-text");
  */
 export function useRandomFact(slug: string) {
   const { getRandomFact } = useUseCases();
+  // En una ficha abierta desde un enlace, el dato (y el cliente HTTP que lo
+  // trae) espera a que la página termine de cargar: no compite con la foto.
+  const settled = usePageSettled();
   const query = useQuery({
     queryKey: ["random-fact", slug],
     queryFn: ({ signal }) => getRandomFact({ signal }),
+    enabled: settled,
     staleTime: Number.POSITIVE_INFINITY,
     gcTime: 0,
   });
@@ -50,7 +54,8 @@ export type RandomFactQuery = ReturnType<typeof useRandomFact>;
 export function FactLcd({ fact }: { fact: RandomFactQuery }) {
   const retry = useConnectionStore((state) => state.retry);
   const paused = fact.fetchStatus === "paused";
-  const loading = fact.isFetching && !paused;
+  // "Cargando" también mientras la consulta espera a que la página se asiente.
+  const loading = !paused && (fact.isFetching || fact.isPending);
   const text = fact.data?.text;
   // Se decide al llegar cada dato: si GSAP aparece después, este dato no se
   // re-anima (se vería el texto desaparecer y volver).
@@ -64,7 +69,8 @@ export function FactLcd({ fact }: { fact: RandomFactQuery }) {
       aria-busy={loading}
       // En escritorio la tira ocupa la altura que le da la cruceta (h-full) y
       // el texto largo se desplaza por dentro: el Ronrón no cambia de tamaño.
-      className="rounded-[26px] screen-glass p-1.5 lg:flex lg:h-full lg:flex-col"
+      data-screen
+      className="squircle rounded-[26px] screen-glass p-1.5 lg:flex lg:h-full lg:flex-col"
     >
       <div className="flex min-h-[6rem] flex-col rounded-[21px] px-5 py-3.5 ring-1 ring-white/5 lg:min-h-0 lg:flex-1 lg:py-3">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">

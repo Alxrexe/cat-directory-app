@@ -9,6 +9,7 @@ import { useSimulationStore } from "../simulation/simulation-store";
 import { useDeviceStore } from "../stores/device-store";
 import { useNavigationStore } from "../stores/navigation-store";
 import { TopBar } from "../top-bar/top-bar";
+import { playDeviceOpen } from "./device-motion";
 import { RonronDevice } from "./ronron-device";
 
 /**
@@ -38,17 +39,12 @@ export function DevicePage({ dossier, catalog }: { dossier: BreedDossier; catalo
     if (direction !== 0) {
       tl.fromTo(parts, { x: direction * 36, opacity: 0 }, { x: 0, opacity: 1, duration: 0.55, stagger: 0.05, ease: "power3.out" });
     } else {
-      tl.fromTo(device, { y: 30, scale: 0.96, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.9, ease: "expo.out" })
-        .fromTo(
-          device.querySelectorAll("[data-device-ears] > div, [data-device-shoulder]"),
-          { y: 36, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.6, stagger: 0.06, ease: "back.out(1.6)" },
-          0.25,
-        )
-        .fromTo(parts, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, stagger: 0.07, ease: "power3.out" }, 0.2);
+      tl.add(playDeviceOpen(gsap, device, null));
     }
     return () => {
-      tl.kill();
+      // Interrumpida (otra raza, cierre): salta al estado final para que
+      // ninguna pieza se quede a medio abrir.
+      tl.progress(1).kill();
     };
   }, [dossier.breed.slug]);
 

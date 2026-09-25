@@ -58,7 +58,7 @@ export function DeviceScreen(props: DeviceScreenProps) {
   }, [tab, breed.slug]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col rounded-[32px] screen-glass p-2">
+    <div data-screen className="squircle flex min-h-0 flex-1 flex-col rounded-[30px] screen-glass p-2">
       <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[26px] p-4 ring-1 ring-white/5 sm:p-5">
         {/* Líneas de barrido del LCD: estáticas, casi invisibles. */}
         <div
@@ -86,7 +86,7 @@ export function DeviceScreen(props: DeviceScreenProps) {
               <Tabs.Trigger
                 key={value}
                 value={value}
-                className="hud h-9 flex-1 rounded-full text-screen-soft data-[state=active]:bg-[linear-gradient(180deg,var(--key-hi),var(--key-lo))] data-[state=active]:text-screen data-[state=active]:shadow-[inset_0_-1px_0_var(--alu-lo),0_2px_6px_-2px_var(--shadow-deep)]"
+                className="hud h-9 flex-1 rounded-full text-screen-soft data-[state=active]:bg-[linear-gradient(180deg,var(--key-hi),var(--key-lo))] data-[state=active]:text-screen data-[state=active]:shadow-[inset_0_1px_0_var(--sheen),inset_0_-1px_0_var(--shade),0_2px_6px_-2px_var(--shadow-deep)]"
               >
                 {TAB_LABEL[value]}
               </Tabs.Trigger>

@@ -30,30 +30,31 @@ export function DPad({
   canLeft: boolean;
   canRight: boolean;
 }) {
-  // Cruceta de pizarra anodizada: un solo bloque de luz (arriba) y sombra
-  // (abajo) repartido en brazos, con un hoyuelo en el centro.
+  // Cruceta de plástico perla, del mismo color que la carcasa y un punto
+  // más honda (como la de una consola de bolsillo blanca). Un solo bloque de
+  // luz arriba y sombra abajo repartido en los brazos, y un hoyuelo central.
   const arm =
-    "grid place-items-center bg-[linear-gradient(180deg,var(--anod-hi),var(--anod))] text-surface/85 hover:text-surface [&_svg]:size-5 shadow-[inset_0_1px_0_var(--anod-shine),inset_0_-2px_0_var(--anod-lo)]";
+    "grid place-items-center bg-[linear-gradient(180deg,var(--surface-2),var(--surface-3))] text-slate/75 hover:text-slate [&_svg]:size-5 shadow-[inset_0_1px_0_var(--sheen),inset_0_-2.5px_0_var(--shade)]";
   return (
     <div
       role="group"
       aria-label="Cruceta"
-      className="grid size-[7.5rem] shrink-0 grid-cols-3 grid-rows-3 drop-shadow-[0_8px_10px_var(--shadow-soft)] sm:size-32 lg:size-28 xl:size-32"
+      className="grid size-[7rem] shrink-0 grid-cols-3 grid-rows-3 drop-shadow-[0_0_1px_var(--shadow-deep)] drop-shadow-[0_6px_8px_var(--shadow-soft)] sm:size-28 lg:size-26 xl:size-28"
     >
-      <button type="button" aria-label="Pestaña anterior" onClick={onUp} className={cn(arm, press, "col-start-2 rounded-t-xl")}>
+      <button type="button" aria-label="Pestaña anterior" onClick={onUp} className={cn(arm, press, "col-start-2 rounded-t-[14px]")}>
         <ChevronUp aria-hidden="true" />
       </button>
-      <button type="button" aria-label={leftLabel} onClick={onLeft} disabled={!canLeft} className={cn(arm, press, "row-start-2 rounded-l-xl")}>
+      <button type="button" aria-label={leftLabel} onClick={onLeft} disabled={!canLeft} className={cn(arm, press, "row-start-2 rounded-l-[14px]")}>
         <ChevronLeft aria-hidden="true" />
       </button>
       <span
         aria-hidden="true"
-        className="col-start-2 row-start-2 bg-[radial-gradient(circle,var(--anod-lo)_0%,var(--anod)_62%)]"
+        className="col-start-2 row-start-2 bg-[radial-gradient(circle,var(--shade)_0%,var(--surface-3)_62%)]"
       />
-      <button type="button" aria-label={rightLabel} onClick={onRight} disabled={!canRight} className={cn(arm, press, "col-start-3 row-start-2 rounded-r-xl")}>
+      <button type="button" aria-label={rightLabel} onClick={onRight} disabled={!canRight} className={cn(arm, press, "col-start-3 row-start-2 rounded-r-[14px]")}>
         <ChevronRight aria-hidden="true" />
       </button>
-      <button type="button" aria-label="Pestaña siguiente" onClick={onDown} className={cn(arm, press, "col-start-2 row-start-3 rounded-b-xl")}>
+      <button type="button" aria-label="Pestaña siguiente" onClick={onDown} className={cn(arm, press, "col-start-2 row-start-3 rounded-b-[14px]")}>
         <ChevronDown aria-hidden="true" />
       </button>
     </div>
@@ -72,9 +73,9 @@ export function RoundButton({
       <button
         type="button"
         className={cn(
-          "grid size-14 place-items-center rounded-full font-display text-xl font-semibold sm:size-16",
-          // A es la acción principal (pizarra anodizada); B, aluminio torneado.
-          tone === "a" ? "anodized" : "console-dot text-slate",
+          "select-frame grid size-14 place-items-center rounded-full font-display text-xl font-bold sm:size-15",
+          // A es la acción principal (gel azul); B, perla.
+          tone === "a" ? "gel" : "pearl-button text-slate",
           press,
           className,
         )}
@@ -82,7 +83,7 @@ export function RoundButton({
       >
         <span aria-hidden="true">{letter}</span>
       </button>
-      <span aria-hidden="true" className="hud text-[0.56rem] whitespace-nowrap text-ink-soft">
+      <span aria-hidden="true" className="hud text-[0.54rem] whitespace-nowrap text-ink-soft">
         {caption}
       </span>
     </div>
@@ -94,7 +95,7 @@ export function PillButton({ children, className, ...props }: ComponentProps<"bu
     <button
       type="button"
       className={cn(
-        "hud porcelain h-8 rounded-full px-3.5 text-[0.58rem] whitespace-nowrap text-slate hover:-translate-y-px",
+        "hud pearl select-frame h-8 rounded-full px-3.5 text-[0.56rem] whitespace-nowrap text-slate hover:-translate-y-px",
         press,
         className,
       )}
@@ -105,12 +106,16 @@ export function PillButton({ children, className, ...props }: ComponentProps<"bu
   );
 }
 
+/**
+ * Gatillo L/R: una pieza aparte que flota sobre la carcasa (como las
+ * orejas), no pegada a ella.
+ */
 export function ShoulderButton({ letter, className, ...props }: ComponentProps<"button"> & { letter: string }) {
   return (
     <button
       type="button"
       className={cn(
-        "metal-shell h-8 w-20 rounded-t-2xl rounded-b-md font-display text-sm font-semibold text-slate",
+        "pearl-button select-frame h-8 w-20 rounded-full font-display text-sm font-bold text-slate",
         press,
         className,
       )}
@@ -121,23 +126,24 @@ export function ShoulderButton({ letter, className, ...props }: ComponentProps<"
   );
 }
 
-/** Rejilla de altavoz y LED de encendido: pura decoración. */
+/**
+ * Rejilla de altavoz: 4 × 3 perforaciones en el plástico, pintadas con un
+ * degradado radial que se repite (un solo elemento, no doce).
+ */
 export function Speaker() {
   return (
-    <div aria-hidden="true" className="grid grid-cols-4 gap-1.5">
-      {Array.from({ length: 12 }, (_, i) => (
-        // Perforaciones en el metal: agujeros con sombra interior.
-        <span key={i} className="size-1.5 rounded-full bg-alu-lo shadow-[inset_0_1px_1px_var(--anod)]" />
-      ))}
-    </div>
+    <span
+      aria-hidden="true"
+      className="block h-[30px] w-[42px] bg-[radial-gradient(circle,var(--shadow-soft)_0_2.4px,transparent_3px)] bg-[length:12px_12px] bg-[position:-3px_-3px]"
+    />
   );
 }
 
 export function PowerLed() {
   return (
     <span aria-hidden="true" className="flex items-center gap-1.5">
-      <span className="size-2 animate-breathe rounded-full bg-accent shadow-[0_0_10px_var(--accent)]" />
-      <span className="hud text-[0.56rem] text-ink-soft">On</span>
+      <span className="size-2 animate-breathe rounded-full bg-accent shadow-[0_0_10px_var(--glint)]" />
+      <span className="hud text-[0.54rem] text-ink-soft">On</span>
     </span>
   );
 }

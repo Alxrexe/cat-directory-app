@@ -8,6 +8,7 @@ import { readyGsap } from "../lib/gsap";
 import { playCue } from "../lib/sound";
 import { useSimulationStore } from "../simulation/simulation-store";
 import { useDeviceStore } from "../stores/device-store";
+import { playDeviceClose, playDeviceOpen } from "./device-motion";
 import { RonronDevice } from "./ronron-device";
 
 const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -17,10 +18,9 @@ const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matc
  * `@modal/(.)razas/[slug]`): la URL es la de la ficha, así que se puede
  * compartir, y "atrás" lo cierra.
  *
- * Apertura: el dispositivo nace en el orbe (o fila) que se pulsó y viaja
- * hasta el centro creciendo; después las orejas y las pantallas se
- * encienden en cascada. Cierre: el camino inverso, más corto. Todo con
- * transform y opacidad.
+ * Apertura: el aparato nace cerrado en el orbe (o fila) que se pulsó, viaja
+ * al centro, la tapa se abre sobre la bisagra y las pantallas se encienden
+ * (device-motion.ts). Cierre: el camino inverso, más corto.
  *
  * Al cambiar de raza desde dentro (◀ ▶, "Al azar", familia) no se repite la
  * apertura: solo el contenido se desliza en el sentido del cambio.
@@ -64,38 +64,19 @@ export function DeviceModal({ dossier, catalog }: { dossier: BreedDossier; catal
         .timeline({ onComplete: () => useDeviceStore.getState().setDirection(0) })
         .fromTo(parts, { x: direction * 36, opacity: 0 }, { x: 0, opacity: 1, duration: 0.55, stagger: 0.05, ease: "power3.out" });
       return () => {
-        tl.kill();
+        tl.progress(1).kill();
       };
     }
 
-    const origin = useSimulationStore.getState().origin;
-    const rect = device.getBoundingClientRect();
-    const fromX = origin ? origin.x - (rect.left + rect.width / 2) : 0;
-    const fromY = origin ? origin.y - (rect.top + Math.min(rect.height, window.innerHeight) / 2) : 40;
-    const fromScale = origin ? Math.max(0.08, (origin.size * 1.2) / rect.width) : 0.9;
-
     const tl = gsap.timeline();
-    tl.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "sine.out" }, 0)
-      .fromTo(
-        device,
-        { x: fromX, y: fromY, scale: fromScale, opacity: 0 },
-        { x: 0, y: 0, scale: 1, opacity: 1, duration: 0.85, ease: "expo.out" },
-        0,
-      )
-      .fromTo(
-        device.querySelectorAll("[data-device-ears] > div, [data-device-shoulder]"),
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, stagger: 0.06, ease: "back.out(1.6)" },
-        0.35,
-      )
-      .fromTo(
-        device.querySelectorAll("[data-device-part]"),
-        { y: 18, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, stagger: 0.07, ease: "power3.out" },
-        0.3,
-      );
+    tl.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "sine.out" }, 0).add(
+      playDeviceOpen(gsap, device, useSimulationStore.getState().origin),
+      0,
+    );
     return () => {
-      tl.kill();
+      // Interrumpida (otra raza, cierre): salta al estado final para que
+      // ninguna pieza se quede a medio abrir.
+      tl.progress(1).kill();
     };
   }, [dossier.breed.slug, mounted]);
 
@@ -111,19 +92,10 @@ export function DeviceModal({ dossier, catalog }: { dossier: BreedDossier; catal
       back();
       return;
     }
-    const origin = useSimulationStore.getState().origin;
-    const rect = device.getBoundingClientRect();
     gsap
       .timeline({ onComplete: back })
-      .to(device, {
-        x: origin ? origin.x - (rect.left + rect.width / 2) : 0,
-        y: origin ? origin.y - (rect.top + Math.min(rect.height, window.innerHeight) / 2) : 30,
-        scale: origin ? Math.max(0.08, (origin.size * 1.2) / rect.width) : 0.92,
-        opacity: 0,
-        duration: 0.45,
-        ease: "power3.in",
-      })
-      .to(overlay, { opacity: 0, duration: 0.35, ease: "sine.in" }, 0.1);
+      .add(playDeviceClose(gsap, device, useSimulationStore.getState().origin), 0)
+      .to(overlay, { opacity: 0, duration: 0.35, ease: "sine.in" }, 0.35);
   }, [router]);
 
   const navigate = useCallback(
@@ -159,7 +131,7 @@ export function DeviceModal({ dossier, catalog }: { dossier: BreedDossier; catal
             Ficha de la raza en el Ronrón. Flechas izquierda y derecha: otra raza. A: otro dato curioso. B o Escape: cerrar.
           </p>
           <div
-            className="flex min-h-full items-center justify-center px-3 py-6 sm:px-6"
+            className="flex min-h-full items-center justify-center px-3 py-6 sm:px-6 [perspective:1400px]"
             onPointerDown={(event) => {
               if (event.target === event.currentTarget) close();
             }}
