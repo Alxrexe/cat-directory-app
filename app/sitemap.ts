@@ -1,7 +1,6 @@
 import type { MetadataRoute } from "next";
 import { serverUseCases } from "@infrastructure/container/server";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+import { SITE_URL } from "./site-url";
 
 export const revalidate = 3600;
 

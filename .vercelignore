@@ -1,0 +1,12 @@
+# Lo que `vercel` no debe subir (la CLI no lee .gitignore).
+
+# Originales 4K del cielo (~80 MB cada uno): el sitio usa public/media.
+/public/Blue sky.mp4
+/public/Night sky.mp4
+
+# Documentación, auditorías y cobertura: no forman parte del sitio.
+/docs
+/coverage
+
+# Variables locales
+.env*

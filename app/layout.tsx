@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Nunito, Rubik } from "next/font/google";
 import { AppProviders } from "@presentation/providers/app-providers";
 import { SkyBackground } from "@presentation/sky/sky-background";
+import { SITE_URL } from "./site-url";
 import "./globals.css";
 
 /**
@@ -25,8 +26,6 @@ const nunito = Nunito({
   subsets: ["latin"],
   display: "swap",
 });
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
