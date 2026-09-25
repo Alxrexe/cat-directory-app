@@ -86,8 +86,11 @@ export function StartGate({ phase, arriving, tunnelVisible, total, onStart, onWa
     onWarm();
   };
 
+  // Un ref además de `started`: Enter y el clic pueden llegar en el mismo tick.
+  const startedRef = useRef(false);
   const start = () => {
-    if (started) return;
+    if (started || startedRef.current) return;
+    startedRef.current = true;
     playCue("arrival");
     void loadFieldEngine();
     onStart();
@@ -119,6 +122,21 @@ export function StartGate({ phase, arriving, tunnelVisible, total, onStart, onWa
       fill: "forwards",
     });
   };
+
+  // Enter empieza desde cualquier sitio, no solo con el foco en el botón.
+  const startFromKeyboard = useEffectEvent((event: KeyboardEvent) => {
+    if (event.key !== "Enter" || event.repeat || event.metaKey || event.ctrlKey || event.altKey) return;
+    if ((event.target as HTMLElement | null)?.closest("input, textarea, [contenteditable='true']")) return;
+    event.preventDefault();
+    warm();
+    start();
+  });
+  useEffect(() => {
+    if (started) return;
+    const listener = (event: KeyboardEvent) => startFromKeyboard(event);
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
+  }, [started]);
 
   const status = arriving ? "Listo" : started ? "Enlazando" : "En espera";
 
