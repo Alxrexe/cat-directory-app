@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import type { SoundName } from "cuelume";
-import { usePreferencesStore } from "../stores/preferences-store";
 import { loadSoundEngine } from "../lib/sound";
 
 /** El primer selector que coincide decide el sonido. */
@@ -26,21 +25,17 @@ function resolve(target: EventTarget | null) {
 /**
  * Sonido de interfaz por delegación: cuatro listeners en el documento,
  * sin marcar cada elemento, así que las filas que monta la virtualización
- * suenan sin registrarse. Solo existe mientras el usuario lo tiene activado.
+ * suenan sin registrarse. Siempre activo; el motor se descarga con la
+ * primera pulsación o tecla (antes el navegador no deja sonar nada).
  */
 export function SoundLayer() {
-  const enabled = usePreferencesStore((state) => state.sound);
-
   useEffect(() => {
-    void usePreferencesStore.persist.rehydrate();
-  }, []);
-
-  useEffect(() => {
-    if (!enabled) return;
     let play: ((sound: SoundName) => void) | null = null;
-    loadSoundEngine()
-      .then((module) => (play = module.play))
-      .catch(() => {});
+    const wake = () =>
+      void loadSoundEngine()
+        .then((module) => (play = module.play))
+        .catch(() => {});
+    window.addEventListener("keydown", wake, { once: true, passive: true });
 
     let lastNode: Element | null = null;
     let lastAt = 0;
@@ -60,7 +55,17 @@ export function SoundLayer() {
     };
     const onDown = (event: PointerEvent) => {
       const hit = resolve(event.target);
-      if (hit?.rule.press) play?.(hit.rule.press);
+      if (!play) {
+        // Primera pulsación: se descarga el motor y suena en cuanto llega.
+        void loadSoundEngine()
+          .then((module) => {
+            play = module.play;
+            if (hit?.rule.press) play(hit.rule.press);
+          })
+          .catch(() => {});
+        return;
+      }
+      if (hit?.rule.press) play(hit.rule.press);
     };
 
     const options: AddEventListenerOptions = { passive: true, capture: true };
@@ -71,8 +76,9 @@ export function SoundLayer() {
       document.removeEventListener("pointerover", onOver, options);
       document.removeEventListener("pointerout", onOut, options);
       document.removeEventListener("pointerdown", onDown, options);
+      window.removeEventListener("keydown", wake);
     };
-  }, [enabled]);
+  }, []);
 
   return null;
 }
