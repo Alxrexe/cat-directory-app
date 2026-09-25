@@ -5,8 +5,10 @@
     "best-practices": 100,
     "seo": 100,
     "performanceRuns": [
-      89,
       91,
+      91,
+      89,
+      89,
       90
     ]
   },
@@ -18,6 +20,8 @@
     "performanceRuns": [
       100,
       100,
+      100,
+      100,
       100
     ]
   },
@@ -27,7 +31,9 @@
     "best-practices": 100,
     "seo": 100,
     "performanceRuns": [
-      83,
+      78,
+      90,
+      90,
       90,
       90
     ]
@@ -38,6 +44,8 @@
     "best-practices": 100,
     "seo": 100,
     "performanceRuns": [
+      90,
+      100,
       100,
       100,
       100

@@ -35,16 +35,24 @@ No hace falta ninguna variable de entorno. Opcionales: `NEXT_PUBLIC_SITE_URL` (U
 
 ## Cómo se usa
 
-1. **Inicio.** Una pantalla blanca con un solo botón, "Empezar simulación". Al pulsarlo se enlaza el Michiverso: un túnel de luz en WebGL mientras se cargan de verdad el motor, el cielo y las razas. Los pasos se ven en pantalla. Una cookie recuerda que ya entraste y la próxima visita va directo al campo.
-2. **El campo.** Cada raza es un orbe blanco con orejas de gato y su monograma. Las filas se deslizan en diagonal sin fin. Al pasar el puntero, los orbes cercanos se agrandan como bajo una lupa y el resto sigue su curso. La rueda o el arrastre aceleran el viaje, y viajar despierta la página siguiente de la API.
+1. **Inicio.** Una pantalla de porcelana con un solo botón, "Empezar simulación". Al pulsarlo se enlaza el Michiverso: un túnel de luz en WebGL mientras se cargan de verdad el motor, el cielo y las razas. Los pasos se ven en pantalla. Cada vez que entras (o recargas) empiezas aquí, con el botón central; dentro de la visita, volver de una ficha al campo no repite la entrada.
+2. **El campo.** Cada raza es un orbe con orejas de gato y su monograma: de porcelana de día, lavanda de noche. Las filas se deslizan en diagonal sin fin. Al pasar el puntero, los orbes cercanos se agrandan como bajo una lupa y el resto sigue su curso. La rueda o el arrastre aceleran el viaje, y viajar despierta la página siguiente de la API.
 3. **La consola de abajo.** Buscador, filtros de pelaje, contador y la lista completa, virtualizada y con scroll infinito.
-4. **El Ronrón.** Pulsar un orbe (o una fila) abre la ficha como un dispositivo que nace del orbe: foto, datos, historia, familia y un dato curioso. Tiene controles reales (cruceta, A, B, L, R) y atajos de teclado.
+4. **El Ronrón.** Pulsar un orbe (o una fila) abre la ficha como un dispositivo que nace del orbe: foto, datos, historia, familia y un dato curioso. Arriba, la foto y la pantalla de datos; abajo, como en una DS, la cruceta, la pantalla del dato curioso y los botones A/B, cada uno en su pista (nada se pisa a ningún ancho). Los controles funcionan de verdad (cruceta, A, B, L, R) y tienen atajos de teclado. La foto se ve siempre completa y de borde a borde: nunca se recorta ni deja franjas, porque el hueco lo rellena la propia foto desenfocada.
+
+La interfaz suena (sonidos sintetizados, sin archivos) desde la primera pulsación, que es cuando el navegador lo permite. No hay interruptor: el sonido es parte de la consola.
+
+**Tema.** Claro por defecto. El botón del sol y la luna, en la barra de arriba, pasa a la noche: cielo nocturno en video, orbes lavanda con un halo suave y estrellas, carcasa de grafito y teclas lavanda. La elección se recuerda en el navegador; el sistema operativo no decide.
 
 | Inicio | Lupa sobre el campo |
 | --- | --- |
 | ![Pantalla de inicio](docs/screenshots/inicio.png) | ![Lupa](docs/screenshots/lupa.png) |
 
 ![El Ronrón](docs/screenshots/ronron.png)
+
+| De noche: el campo | De noche: el Ronrón |
+| --- | --- |
+| ![Campo en tema oscuro](docs/screenshots/noche-campo.png) | ![Ronrón en tema oscuro](docs/screenshots/noche-ronron.png) |
 
 ## Requisitos de la prueba
 
@@ -77,7 +85,7 @@ Además: foto y resumen de cada raza desde Wikipedia (ver [Datos de Wikipedia](#
 | Gestión de estado | React Query para estado de servidor y Zustand para estado de UI. Ver [Gestión de estado](#gestión-de-estado-react-query--zustand). |
 | Arquitectura limpia | Hexagonal, con las fronteras comprobadas por ESLint. Ver [Arquitectura](#arquitectura). |
 | Skeletons | Lista, dato curioso y pestaña Familia tienen skeleton. El campo tiene su pantalla de enlace con los pasos reales. |
-| Toasts ante fallos de red | Avisos con sileo: sin conexión, conexión restablecida, página que falla (con "Reintentar"), dato que falla. |
+| Toasts ante fallos de red | Avisos con sileo, arriba y bajo la barra de sistema: sin conexión, conexión restablecida, página que falla (con "Reintentar"), dato que falla. |
 | Reintentos con backoff | Exponencial con jitter y límite, en el adaptador HTTP. Ver [Manejo de fallos](#manejo-de-fallos). |
 | Tipado fuerte y Zod | TypeScript estricto. Toda respuesta de catfact.ninja y de Wikipedia se valida con Zod (`zod/mini`) antes de entrar al dominio. |
 | Accesibilidad | Ver [Accesibilidad](#accesibilidad). |
@@ -115,7 +123,7 @@ Más detalle, con el flujo de datos y cada decisión, en [ARCHITECTURE.md](ARCHI
 Son dos tipos de estado distintos, así que cada uno tiene su herramienta:
 
 - **Estado de servidor → TanStack Query.** Las páginas del directorio son una `useInfiniteQuery` hidratada con lo que resolvió el servidor, y el dato curioso es una `useQuery` aparte. Query aporta caché, deduplicación, estados de carga y error por consulta y, sobre todo, **pausa las peticiones sin red y las reanuda solas al volver** (`networkMode: "online"`). La paleta ⌘K reutiliza la misma consulta que la lista.
-- **Estado de UI → Zustand.** La fase de la simulación (inicio, enlace, en marcha), el estado de conexión ("reintentando 2 de 3"), el Ronrón abierto, las razas descubiertas (persistidas), las preferencias (sonido) y la navegación. Son stores pequeños, sin provider, y legibles desde fuera de React: el cliente HTTP avisa de cada reintento sin conocer la UI, y el motor de Three.js recibe el estado sin re-renderizar.
+- **Estado de UI → Zustand.** La fase de la simulación (inicio, enlace, en marcha), el estado de conexión ("reintentando 2 de 3"), el Ronrón abierto, las razas descubiertas (persistidas) y la navegación. Son stores pequeños, sin provider, y legibles desde fuera de React: el cliente HTTP avisa de cada reintento sin conocer la UI, y el motor de Three.js recibe el estado sin re-renderizar.
 - **La URL** es la fuente de verdad de `q`, `pelaje` y `page`. Se escribe con `history.replaceState`, que el App Router sincroniza con `useSearchParams` sin volver a pedir la página al servidor en cada tecla.
 
 Redux Toolkit habría resuelto lo mismo con más ceremonia. Aquí no hay flujos de escritura complejos que justifiquen reducers y acciones.
@@ -124,7 +132,7 @@ Redux Toolkit habría resuelto lo mismo con más ceremonia. Aquí no hay flujos 
 
 | Ruta | Estrategia | Por qué |
 | --- | --- | --- |
-| `/` | SSR dinámico con caché de datos (`fetch` con `revalidate: 3600`) | Lee `?page=`, `?q=` y la cookie de la simulación para devolver la vista correcta desde el primer byte. Cada página de la API sale de la caché de datos de Next, así que el render no espera a la API. |
+| `/` | SSR dinámico con caché de datos (`fetch` con `revalidate: 3600`) | Lee `?page=` y `?q=` para devolver la lista correcta desde el primer byte (la pantalla de inicio va siempre delante). Cada página de la API sale de la caché de datos de Next, así que el render no espera a la API. |
 | `/razas/[slug]` | SSG de las 98 razas en el build + ISR cada hora + `dynamicParams` | La ficha es estática y se sirve al instante. Una raza nueva se genera en su primera visita. Si la API cae durante el build, el build no falla: las fichas se generan bajo demanda. |
 | `@modal/(.)razas/[slug]` | Ruta interceptada | Al navegar desde el campo, el Ronrón se abre como modal encima de los orbes, pero la URL es la de la ficha: se comparte, "atrás" lo cierra y F5 abre la página completa. |
 | Dato curioso, páginas 2+ | Cliente | El dato tiene que ser aleatorio en cada visita (en el HTML quedaría congelado) y el infinite scroll es client-side por requisito. |
@@ -132,6 +140,8 @@ Redux Toolkit habría resuelto lo mismo con más ceremonia. Aquí no hay flujos 
 ### Datos de Wikipedia
 
 La API de razas no tiene fotos. El adaptador `infrastructure/wikipedia` las toma de la API de MediaWiki en el build: busca el artículo de cada raza ("Bengal cat", "Bengal (cat)", "Bengal"), acepta solo artículos que se describen como gato o raza, y trae la foto principal y un resumen en español cuando existe (si no, en inglés, y lo dice). Todo por lotes y en serie: unas diez peticiones para las 98 razas, cacheadas un día. Si Wikipedia no responde, la ficha sale igual, con el monograma en lugar de la foto.
+
+Las fotos pasan por el optimizador de imágenes de Next (AVIF/WebP al tamaño del visor), que guarda cada una un mes: el servidor de imágenes de Wikimedia limita las ráfagas con un 429, así que cada foto se le pide una sola vez. Si aun así una no llega, se muestra el monograma de la raza, nunca un icono de imagen rota.
 
 ## Manejo de fallos
 
@@ -161,7 +171,7 @@ La regla: **nunca perder lo que el usuario ya tiene en pantalla y decir siempre 
 
 ## Auditoría Lighthouse
 
-Build de producción, Lighthouse 13 (CLI), cada auditoría corrida 3 veces con el servidor caliente. Se reporta la mediana.
+Build de producción, Lighthouse 13 (CLI), cada auditoría corrida 5 veces con el servidor caliente (`RUNS=5 npm run lighthouse`). Se reporta la mediana.
 
 | Página | Performance | Accessibility | Best Practices | SEO |
 | --- | --- | --- | --- | --- |
@@ -174,16 +184,16 @@ Build de producción, Lighthouse 13 (CLI), cada auditoría corrida 3 veces con e
 | --- | --- |
 | ![Lighthouse Home móvil](docs/screenshots/lighthouse-home-mobile.png) | ![Lighthouse Detalle móvil](docs/screenshots/lighthouse-detalle-mobile.png) |
 
-Los reportes completos están en [`docs/lighthouse/`](docs/lighthouse/): JSON y HTML de cada página y formato, más `summary.json` con las tres corridas.
+Los reportes completos están en [`docs/lighthouse/`](docs/lighthouse/): JSON y HTML de cada página y formato, más `summary.json` con las cinco corridas.
 
 Todas las métricas llegan a 90. La de menos margen es **Performance en móvil**: Lighthouse simula un móvil de gama media con la CPU 4 veces más lenta, y el campo de orbes es una experiencia WebGL. Lo que la sostiene:
 
 - **Nada de lo que no se ve en el primer pintado viaja con la página.** El motor del campo (Three.js, ~170 KB) se pide al acercar el puntero al botón de inicio y termina de cargar durante el túnel, que es literalmente la pantalla de carga. GSAP llega con la primera interacción. El cliente HTTP, Zod y los adaptadores se descargan la primera vez que hace falta una página nueva o un dato. Los avisos (sileo y motion), la paleta, los tooltips, el gráfico y el carrusel, al usarlos.
 - **Hidratación por tandas.** Cada pieza grande está en su propio `<Suspense>` (nada suspende), así React cede el hilo entre una y otra.
 - **Fuentes:** dos familias web (Rubik y Nunito). Los rótulos técnicos usan la mono del sistema.
-- **CSS del primer pintado: 14 KB.**
+- **CSS del primer pintado: 17 KB** (gzip, con los dos temas). El póster del cielo se pide después del primer pintado y entra con un fundido; el relleno desenfocado de las fotos es una miniatura de 16 px (menos de 1 KB).
 
-Nota para reproducir: las cifras de móvil varían entre corridas según la carga del equipo (en la misma build, de 83 a 91 con otras aplicaciones abiertas). El script calienta cada ruta y toma la mediana de tres; para comparar, cerrar otras aplicaciones pesadas. En escritorio es 100 de forma estable.
+Nota para reproducir: las cifras de móvil dependen de la carga del equipo. Con el editor, un navegador y aplicaciones de chat abiertos (carga media de 6 a 8 en un Intel i9 de 8 núcleos), la misma build dio corridas sueltas de 71 a 92; las medianas de cinco fueron estables. El script calienta cada ruta y toma la mediana; para comparar, cerrar aplicaciones pesadas o subir `RUNS`. En escritorio es 99-100 de forma estable.
 
 ## Capturas
 
@@ -215,5 +225,7 @@ Nota para reproducir: las cifras de móvil varían entre corridas según la carg
 - **La API no expone ids** ni un endpoint por raza. El slug se deriva del nombre y el detalle se resuelve recorriendo las páginas en el servidor (cacheadas).
 - **La búsqueda es local**, como pide el enunciado: filtra lo cargado y lo dice.
 - **Los textos de la API están en inglés** y se muestran tal cual. La interfaz está en español. De los 306 datos curiosos, 7 son crudos para una app familiar (pieles, gatos que se comen…); si sale uno, se pide otro.
-- **Tema claro siempre.** El Michiverso vive sobre el cielo de día; no hay modo oscuro por decisión de diseño.
+- **Tema claro por defecto, oscuro a elección.** El oscuro no sigue al sistema operativo: es una decisión del visitante, con su propio cielo, paleta del campo y materiales. `next-themes` pone la clase antes del primer pintado, así que no hay parpadeo; el cielo que no se usa no descarga nada.
+- **La pantalla de inicio siempre.** Entrar o recargar pasa por "Empezar simulación". Solo la navegación interna (cerrar una ficha) vuelve directo al campo.
+- **Sonido siempre activo.** Es parte de la consola, no una opción. Los navegadores no dejan sonar nada antes de la primera pulsación o tecla, así que el motor de sonido se descarga en ese momento.
 - **Sin despliegue público.** La app se evalúa con el build de producción local (`npm run build && npm start`).

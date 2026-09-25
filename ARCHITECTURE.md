@@ -72,7 +72,6 @@ Este documento amplía la sección de arquitectura del [README](README.md): capa
 ```
 GET /?page=3&q=bri
   → parseDirectoryParams (valores inválidos caen al valor por defecto)
-  → cookie michiverso_sim: ¿pantalla de inicio o directo al campo?
   → serverUseCases.restoreBreedPages(3)
       → CatfactBreedRepository.getPage(1..3)
           → fetch(..., { next: { revalidate: 3600 } })  ← caché de datos de Next
@@ -144,6 +143,7 @@ Los puertos rechazan siempre con `DataSourceError`, cuyo `kind` decide qué hace
 - **Sin red, las peticiones se pausan en vez de fallar.** Es el `networkMode: "online"` de React Query. `ConnectionWatcher` sincroniza además su estado si la red ya faltaba antes de hidratar. Lo que llegó a fallar se relanza al reconectar.
 - **Módulos diferidos tolerantes.** `useIdleModule` sustituye a `React.lazy` y `next/dynamic`, que convierten un chunk que no descarga en un error de render. Aquí el componente se queda en su versión básica y reintenta con el evento `online`. GSAP sigue la misma regla: si no llegó, lo que está en pantalla se queda quieto, nunca oculto.
 - **Sin WebGL** (o si el motor falla), la simulación pasa a "modo consola": la lista y el Ronrón siguen funcionando.
+- **Fotos de Wikimedia:** su servidor de imágenes responde 429 ante ráfagas. El optimizador de Next guarda cada foto un mes (`minimumCacheTTL`), así se le pide una vez; si una no llega, `FullImage` muestra el monograma de la raza en lugar de un icono roto.
 - **Tres niveles de copia sin red**: la caché de datos de Next (servidor), la copia de la página 1 en localStorage (cliente) y el service worker (HTML y assets).
 
 ## 6. Estado
@@ -154,11 +154,10 @@ Los puertos rechazan siempre con `DataSourceError`, cuyo `kind` decide qué hace
 | Dato curioso | React Query (`["random-fact", slug]`, `gcTime: 0`) | Ciclo de carga propio; se descarta al salir, así la próxima visita trae otro. |
 | Copia local de la página 1 | React Query (`["first-page-snapshot"]`) | Solo se lee si el servidor no trajo datos; su lectura espera a la raíz diferida. |
 | `q`, `pelaje`, `page` | URL | Compartible y sobrevive a F5. Se escribe con `replaceState` para no provocar un render de servidor por tecla. |
-| Fase de la simulación y pasos de carga | Zustand `simulation-store` | Lo leen la pantalla de inicio, el motor y el cielo. La cookie `michiverso_sim` recuerda que ya se entró. |
+| Fase de la simulación y pasos de carga | Zustand `simulation-store` | Lo leen la pantalla de inicio, el motor y el cielo. `entered` vive en memoria: cerrar una ficha vuelve al campo sin repetir la entrada, pero recargar o volver a entrar la muestra siempre. |
 | Ronrón abierto y sentido de navegación | Zustand `device-store` | La barra superior y la consola se apartan; el campo se atenúa. |
 | Razas descubiertas | Zustand `discovery-store` + `persist` | Contador de la barra de sistema. `skipHydration` para no desincronizar el HTML. |
 | Conexión y reintento | Zustand `connection-store` | Lo alimenta el adaptador HTTP a través de la raíz de composición. |
-| Preferencia de sonido | Zustand `preferences-store` + `persist` | Con `skipHydration`. |
 | Vuelta al directorio | Zustand `navigation-store` | B en la ficha completa vuelve a la misma búsqueda y página. |
 
 ## 7. Rendimiento
@@ -178,11 +177,11 @@ Los puertos rechazan siempre con `DataSourceError`, cuyo `kind` decide qué hace
   | SplitType (dato palabra a palabra) | solo si GSAP ya está al llegar el dato |
   | use-gesture y motion (tirar para recargar) | al desplegar la lista, solo en táctil |
   | Lenis | solo con ratón |
-  | cuelume | solo si el usuario activa el sonido |
+  | cuelume (sonido, siempre activo) | con la primera pulsación o tecla |
 
 - **Hidratación por tandas.** Las piezas grandes (inicio, barra, consola, lista, visor, pantalla, dato, controles) van cada una en su `<Suspense>`: nada suspende, pero React cede el hilo entre una y otra en vez de hidratar en una sola tarea larga.
 - **Fuentes:** Rubik (títulos) y Nunito (interfaz), subconjunto latino. Los rótulos técnicos usan la mono del sistema: una tercera fuente web costaba ~30 KB en el camino del primer pintado.
-- **Video del cielo:** el original de 80 MB se recodificó a WebM VP9 (~130 KB) y MP4 de respaldo, con un póster de 10 KB. El póster no se pide mientras la pantalla de inicio lo tapa.
+- **Videos del cielo:** los originales de 80 MB (día y noche) se recodificaron a WebM VP9 (~130–145 KB) y MP4 de respaldo, con un póster de ~10 KB cada uno. El póster no se pide mientras la pantalla de inicio lo tapa, y el cielo del tema que no se usa no descarga nada.
 - **Campo:** un solo draw call instanciado; la CPU coloca ~300 puntos por frame. El bucle se para con la pestaña oculta. Con `prefers-reduced-motion` el campo no se desliza.
 - Animaciones solo con `transform` y `opacity` (DOM) o en shader (WebGL). Ninguna transición de color, sombra o tamaño.
 
@@ -191,10 +190,33 @@ Los puertos rechazan siempre con `DataSourceError`, cuyo `kind` decide qué hace
 Referentes: el menú de una consola familiar de sobremesa (piezas de plástico blanco, botones redondos con aro, barra inferior curva) y el rigor de una interfaz técnica (filetes de 1 px, rótulos en mono con mucho aire, cifras tabulares). Sin cristal: la porcelana es opaca.
 
 - **Paleta del logo**, en OKLCH (`app/globals.css`): porcelana `oklch(99.3% 0.003 272)`, aro lavanda `oklch(84.6% 0.028 270)`, pizarra `oklch(43.8% 0.05 275)` y un solo acento pervinca `oklch(56% 0.13 262)` para foco, estado activo y progreso. Las pantallas del Ronrón son pizarra profunda con texto lavanda.
-- **Piezas:** `porcelain` (superficie con aro y brillo), `console-dot` (botón redondo), `hud` (rótulo técnico). La marca es la cabeza del gato dentro del aro (`brand/cat-mark.tsx`); también es el botón de inicio.
+- **Materiales:** porcelana (caras blancas), aluminio mecanizado (cantos, botones redondos, carcasa del Ronrón) y pizarra anodizada (la tecla principal, la cruceta, el filtro activo). El metal solo varía la luminosidad del mismo tono frío (`--alu-*`, `--anod-*`): brillo arriba, canto oscuro abajo, como una pieza de consola o de portátil.
+- **Piezas:** `porcelain` (cara blanca con bisel de aluminio), `console-dot` (tapa de aluminio torneado, con cepillado cónico), `anodized` (tecla principal), `metal-shell` (carcasa), `metal-disc` (botón de inicio), `well` (zona hundida), `screen-glass` (pantalla con reflejo, sin desenfoque de fondo) y `hud` (rótulo técnico). La marca es la cabeza del gato dentro del aro (`brand/cat-mark.tsx`); también es el botón de inicio.
+- **Fotos completas de borde a borde** (`components/full-image.tsx`): la foto va entera (`contain`) y el hueco lo rellena la misma foto ampliada y desenfocada; las dos capas piden la misma URL. En el visor, el número, la etiqueta de nueva y el crédito flotan sobre la foto, sin marco ni pie aparte.
+- **Orbes:** el shader añade un canto metálico fino en la silueta (pizarra abajo, brillo arriba).
 - **Consola inferior:** su borde se levanta en el centro (dos hombros SVG y una joroba) para alojar el buscador, con botones redondos en las esquinas y una tira de atajos reales.
-- **Tema claro siempre**, sobre el video del cielo de día a pantalla completa.
+- **Dos temas.** Claro por defecto, sobre el video del cielo de día; oscuro a elección (botón sol/luna de la barra), sobre el cielo nocturno. El oscuro no invierte colores: es la misma consola en edición noche. La carcasa pasa a grafito, la porcelana a índigo profundo, las pantallas a casi negro (siguen siendo lo más hondo del aparato) y la pizarra anodizada a lavanda. Todo sale de los mismos tokens: `.dark` solo redefine valores, ningún componente conoce el tema. Excepciones con nombre propio: `--photo-ink` (texto sobre foto, claro en los dos) y `--key-*`/`--track` (pestaña activa y su carril).
+- **El campo cambia de paleta en el shader:** `engine.setTheme` funde los colores de los orbes, el fondo y el velo con un tween de 0 a 1, sin recrear nada. La página se funde con una View Transition (solo opacidad, en el compositor).
+- **Ronrón por pistas:** visor y pantalla arriba (la pantalla toma la altura del visor y desplaza su contenido con el borde fundido); abajo una rejilla con áreas con nombre: `pad · fact · btn` en escritorio, con la marca, los atajos y el altavoz al pie, y `fact` arriba de `pad · mid · btn` en tableta y móvil. La altura del visor se calcula con `100dvh` para que el aparato entero quepa en 1280×800 y 1024×768.
 - **Tipografías:** Rubik (títulos, nombres, monogramas de los orbes), Nunito (interfaz) y la mono del sistema (rótulos).
+- **Avisos** arriba y al centro, bajo la barra de sistema: la píldora clara de sileo de día y la oscura de noche, con los tonos de estado ajustados a AA en las dos.
+
+**Contraste medido** (WCAG 2.x, calculado desde los OKLCH de `app/globals.css`):
+
+| Par | Claro | Oscuro |
+| --- | --- | --- |
+| Texto principal | 13.9:1 | 14.2:1 |
+| Pizarra (marca, iconos) | 7.7:1 | 10.9:1 |
+| Texto secundario | 6.2:1 | 7.8:1 |
+| Foco y activo (no texto, mín. 3:1) | 4.6:1 | 8.1:1 |
+| Borde de control (no texto, mín. 3:1) | 3.6:1 | 3.9:1 |
+| Pantalla: texto | 11.8:1 | 17.5:1 |
+| Pantalla: secundario | 7.1:1 | 9.4:1 |
+| Pantalla: rótulos | 7.6:1 | 11.6:1 |
+| Tecla A, filtro activo | 8.0:1 | 6.6:1 |
+| Pestaña activa | 8.6:1 | 7.9:1 |
+| Pestañas inactivas | 6.6:1 | 9.6:1 |
+| Letra de B e iconos redondos | 6.2:1 | 6.3:1 |
 
 ## 9. Librerías y dónde se usan
 
@@ -210,13 +232,13 @@ Referentes: el menú de una consola familiar de sobremesa (piezas de plástico b
 | `@radix-ui/*` | Dialog (Ronrón y paleta), Tabs (pantalla), ToggleGroup (filtros de pelaje), Toggle (sonido), Tooltip, Label, Slot |
 | `cmdk` + `vaul` | Paleta ⌘K: diálogo en escritorio, cajón inferior en móvil |
 | `sileo` | Avisos, detrás de `presentation/lib/notify.ts`. Un solo aviso a la vez: el nuevo transforma al anterior |
-| `next-themes` | Fija el tema claro (`forcedTheme`) aunque el sistema esté en oscuro |
+| `next-themes` | Tema claro por defecto y oscuro a elección: clase `.dark` en `<html>` antes del primer pintado, recordada en `localStorage` |
 | `motion` + `@use-gesture/react` | Tirar para recargar |
 | `lenis` | Desplazamiento suave con rueda (se para con modales abiertos) |
 | `embla-carousel-react` | Razas emparentadas |
 | `recharts` | Reparto de pelajes |
 | `date-fns` | "Copia guardada hace 3 horas" |
-| `cuelume` | Sonidos de interfaz sintetizados (opcionales, apagados por defecto) |
+| `cuelume` | Sonidos de interfaz sintetizados, siempre activos (por delegación en el documento) |
 | `lucide-react` | Iconografía |
 | `class-variance-authority`, `clsx`, `tailwind-merge`, `tw-animate-css` | Variantes de componentes y utilidades de estilo |
 | `@next/bundle-analyzer` | `npm run analyze` |
