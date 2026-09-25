@@ -152,11 +152,11 @@ export function RonronDevice({ dossier, catalog, mode, onClose, onNavigate, root
             style={{ transform: "rotate(45deg)" }}
             className={
               side === "left"
-                ? "absolute top-3 left-[7%] size-24 rounded-[24px] bg-surface shadow-[0_0_0_2px_var(--ring)] sm:left-[9%] sm:size-32 sm:rounded-[30px]"
-                : "absolute top-3 right-[7%] size-24 rounded-[24px] bg-surface shadow-[0_0_0_2px_var(--ring)] sm:right-[9%] sm:size-32 sm:rounded-[30px]"
+                ? "metal-shell absolute top-3 left-[7%] size-24 rounded-[24px] sm:left-[9%] sm:size-32 sm:rounded-[30px]"
+                : "metal-shell absolute top-3 right-[7%] size-24 rounded-[24px] sm:right-[9%] sm:size-32 sm:rounded-[30px]"
             }
           >
-            <div className="absolute inset-[26%] rounded-[14px] bg-ring" />
+            <div className="well absolute inset-[26%] rounded-[14px]" />
           </div>
         ))}
       </div>
@@ -170,18 +170,23 @@ export function RonronDevice({ dossier, catalog, mode, onClose, onNavigate, root
 
       <div
         data-device-shell
-        className="relative z-10 rounded-[46px] bg-[linear-gradient(180deg,var(--surface),var(--surface-2))] p-2.5 shadow-[0_0_0_2px_var(--ring),inset_0_2px_0_oklch(100%_0_0/0.95),0_50px_90px_-44px_var(--ink)] sm:p-3.5"
+        // Carcasa de aluminio (cepillado vertical, chaflán) con un frontal de
+        // porcelana hundido: el contraste metal/blanco de una consola de mano.
+        className="metal-shell relative z-10 rounded-[46px] p-2 sm:p-2.5"
       >
-        {/* Frontal: una placa algo más honda que la carcasa, con su filete. */}
-        <div className="rounded-[38px] bg-paper p-3 shadow-[inset_0_0_0_1.5px_var(--ring)] sm:p-5">
+        <div className="rounded-[39px] bg-[linear-gradient(180deg,var(--surface),var(--paper))] p-3 shadow-[inset_0_0_0_1px_var(--alu-mid),inset_0_2px_6px_-2px_var(--alu-lo)] sm:p-4">
           {/*
-            En escritorio, dos columnas: a la izquierda visor y controles (su
-            altura manda); a la derecha la pantalla, que ocupa exactamente esa
-            altura (h-0 + min-h-full) y desplaza su contenido por dentro. Así
-            cambiar de pestaña nunca cambia el tamaño del Ronrón.
+            Distribución de consola de mano:
+            1. arriba, el visor y la pantalla de datos, a la misma altura (la
+               pantalla toma la del visor con h-0 + min-h-full y desplaza su
+               contenido por dentro: cambiar de pestaña no mueve nada);
+            2. abajo, como la mitad inferior de una DS: cruceta, la pantalla del
+               dato curioso y B/A, cada uno en su pista de la rejilla;
+            3. al pie, una franja fina con la marca, los atajos y el altavoz.
+            En móvil y tableta el dato va a todo lo ancho y los controles debajo.
           */}
-          <div className="grid gap-3 sm:gap-5 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-            <div data-device-part className="lg:col-start-1 lg:row-start-1">
+          <div className="grid gap-3 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)]">
+            <div data-device-part>
               {/* Cada bloque en su <Suspense>: nada suspende, pero React hidrata
                   por tandas cortas en vez de una sola tarea larga. */}
               <Suspense fallback={null}>
@@ -197,63 +202,68 @@ export function RonronDevice({ dossier, catalog, mode, onClose, onNavigate, root
               </Suspense>
             </div>
 
-            <div className="flex min-w-0 flex-col gap-3 sm:gap-4 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:h-0 lg:min-h-full">
-              <div data-device-part className="flex min-h-0 flex-col lg:flex-1">
-                <Suspense fallback={null}>
-                  <DeviceScreen
-                    breed={breed}
-                    profile={profile}
-                    coats={dossier.coats}
-                    total={dossier.total}
-                    related={dossier.related}
-                    relatedPhotos={dossier.relatedPhotos}
-                    tab={tab}
-                    onTabChange={setTab}
-                    onOpenRelated={(slug) => onNavigate(slug, 1)}
-                  />
-                </Suspense>
-              </div>
-              <div data-device-part>
-                <Suspense fallback={null}>
-                  <FactLcd fact={fact} />
-                </Suspense>
-              </div>
+            <div data-device-part className="flex min-w-0 flex-col lg:h-0 lg:min-h-full">
+              <Suspense fallback={null}>
+                <DeviceScreen
+                  breed={breed}
+                  profile={profile}
+                  coats={dossier.coats}
+                  total={dossier.total}
+                  related={dossier.related}
+                  relatedPhotos={dossier.relatedPhotos}
+                  tab={tab}
+                  onTabChange={setTab}
+                  onOpenRelated={(slug) => onNavigate(slug, 1)}
+                />
+              </Suspense>
             </div>
 
             <div
               data-device-part
-              className="flex items-center justify-between gap-3 px-1 pt-1 sm:px-2 lg:col-start-1 lg:row-start-2 lg:pr-6"
+              // Áreas con nombre: la misma pieza cambia de sitio sin duplicarse.
+              // Móvil/tableta: dato arriba; cruceta · centro · B/A debajo.
+              // Escritorio: cruceta · dato · B/A, y la franja de la marca al pie.
+              className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-4 [grid-template-areas:'fact_fact_fact'_'pad_mid_btn'] sm:gap-x-6 lg:col-span-2 lg:gap-x-7 lg:gap-y-3 lg:[grid-template-areas:'pad_fact_btn'_'mid_mid_mid']"
             >
-              <Suspense fallback={null}>
-                <DPad
-                  onLeft={goPrevious}
-                  onRight={goNext}
-                  onUp={() => moveTab(-1)}
-                  onDown={() => moveTab(1)}
-                  leftLabel={previous ? `Raza anterior: ${previous.name}` : "No hay raza anterior"}
-                  rightLabel={next ? `Raza siguiente: ${next.name}` : "No hay raza siguiente"}
-                  canLeft={Boolean(previous)}
-                  canRight={Boolean(next)}
-                />
-              </Suspense>
+              <div className="min-w-0 [grid-area:fact] lg:h-0 lg:min-h-full">
+                <Suspense fallback={null}>
+                  <FactLcd fact={fact} />
+                </Suspense>
+              </div>
 
-              {/* Centro de la consola: marca grabada, atajos y LED. En columna
-                  estrecha (lg) los atajos se apilan y el altavoz se retira. */}
-              <div className="hidden flex-col items-center gap-2.5 sm:flex">
-                <p className="flex items-center gap-2" aria-hidden="true">
+              <div className="pl-1 [grid-area:pad] sm:pl-2">
+                <Suspense fallback={null}>
+                  <DPad
+                    onLeft={goPrevious}
+                    onRight={goNext}
+                    onUp={() => moveTab(-1)}
+                    onDown={() => moveTab(1)}
+                    leftLabel={previous ? `Raza anterior: ${previous.name}` : "No hay raza anterior"}
+                    rightLabel={next ? `Raza siguiente: ${next.name}` : "No hay raza siguiente"}
+                    canLeft={Boolean(previous)}
+                    canRight={Boolean(next)}
+                  />
+                </Suspense>
+              </div>
+
+              {/* Marca grabada con su LED, los dos atajos y el altavoz. En
+                  tableta van apilados entre la cruceta y B/A; en escritorio
+                  forman la franja del pie. */}
+              <div className="flex min-w-0 flex-col items-center gap-3 [grid-area:mid] max-sm:invisible lg:flex-row lg:justify-between lg:px-2">
+                <p className="flex items-center gap-2 lg:w-44" aria-hidden="true">
                   <EngravedMark />
                   <PowerLed />
                 </p>
-                <div className="flex flex-col gap-2 md:flex-row lg:flex-col xl:flex-row">
+                <div className="flex flex-wrap justify-center gap-2">
                   <PillButton onClick={random}>Al azar</PillButton>
                   <PillButton onClick={() => void share()}>Compartir</PillButton>
                 </div>
-                <div className="hidden md:block lg:hidden">
+                <div className="hidden lg:flex lg:w-44 lg:justify-end">
                   <Speaker />
                 </div>
               </div>
 
-              <div className="flex items-end gap-3 sm:gap-5">
+              <div className="flex items-end gap-4 pr-1 [grid-area:btn] sm:gap-5 sm:pr-2">
                 <RoundButton
                   letter="B"
                   caption={mode === "modal" ? "Cerrar" : "Volver"}
@@ -261,7 +271,7 @@ export function RonronDevice({ dossier, catalog, mode, onClose, onNavigate, root
                   aria-label={closeLabel}
                   onClick={onClose}
                 />
-                <div className="mb-7">
+                <div className="mb-6">
                   <RoundButton
                     letter="A"
                     caption="Otro dato"
@@ -299,8 +309,8 @@ function EngravedMark() {
     fontFamily: "var(--font-rubik)",
   };
   return (
-    <svg viewBox="0 0 150 26" className="h-5 w-auto xl:h-6" aria-hidden="true">
-      <text {...text} y={21} fill="white" opacity={0.75}>
+    <svg viewBox="0 0 150 26" className="h-5 w-auto max-w-full" aria-hidden="true">
+      <text {...text} y={21} fill="var(--alu-hi)" opacity={0.9}>
         RONRÓN
       </text>
       <text {...text} y={20} fill="var(--slate)" opacity={0.3}>

@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import type { BreedPhoto } from "@domain/breed/profile";
+import { FullImage } from "../components/full-image";
 import { padIndex } from "../lib/format";
 import { breedMonogram } from "../lib/monogram";
 import { readyGsap } from "../lib/gsap";
@@ -18,10 +18,12 @@ interface DeviceVisorProps {
 }
 
 /**
- * El visor: la foto de la raza entera, sin recortes, dentro de un marco
- * de "canal" de consola (rectángulo redondeado con aro lavanda). Las fotos
- * de Wikimedia tienen proporciones distintas: se muestran completas
- * (`object-contain`) sobre un fondo neutro, nunca estiradas ni cortadas.
+ * El visor: la foto de la raza, completa y de borde a borde. Sin marco
+ * interior ni pie aparte: el número, la etiqueta de nueva y el crédito
+ * flotan sobre la foto, y el borde es un bisel de aluminio de 1,5 px. La
+ * proporción de cada foto se respeta (`FullImage`): nunca se estira ni se
+ * corta, y el hueco lo llena la propia foto desenfocada.
+ *
  * Cuando la foto llega, una línea de luz la recorre y la imagen se asienta
  * (escala + opacidad, nada más).
  */
@@ -33,7 +35,7 @@ export function DeviceVisor({ name, photo, sourceUrl, position, total, isNew, pr
     const frame = frameRef.current;
     const gsap = readyGsap();
     if (!gsap || !frame || !loaded || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const image = frame.querySelector("img");
+    const image = frame.querySelector("[data-photo]");
     const scan = frame.querySelector("[data-scan]");
     const tl = gsap.timeline();
     tl.fromTo(image, { scale: 1.14, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.1, ease: "power3.out" }).fromTo(
@@ -48,65 +50,70 @@ export function DeviceVisor({ name, photo, sourceUrl, position, total, isNew, pr
   }, [loaded]);
 
   return (
-    <figure className="relative rounded-[30px] bg-surface p-2 shadow-[0_0_0_2px_var(--ring),inset_0_1.5px_0_oklch(100%_0_0/0.9)]">
+    <figure className="relative">
       {/* En escritorio el visor cede altura para que el Ronrón quepa sin scroll. */}
-      <div className="relative mx-auto aspect-[4/3.4] w-full max-w-[30rem] lg:max-h-[calc(100dvh-24rem)]">
-        <div
-          ref={frameRef}
-          className="absolute inset-0 overflow-hidden rounded-[24px] bg-[radial-gradient(circle_at_50%_40%,var(--surface),var(--surface-3))]"
-        >
-          {photo ? (
-            <Image
-              src={photo.url}
-              alt={`Foto de un gato de raza ${name}`}
-              fill
-              priority={priority}
-              sizes="(min-width: 1024px) 480px, (min-width: 640px) 60vw, 86vw"
-              quality={60}
-              className="object-contain"
-              onLoad={() => setLoaded(true)}
-            />
-          ) : (
-            <div className="grid size-full place-items-center">
-              <span className="font-display text-[clamp(3rem,10vw,6rem)] font-semibold text-ring-strong">
-                {breedMonogram(name)}
-              </span>
-            </div>
-          )}
-          <div
-            data-scan
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 top-0 h-1/5 bg-gradient-to-b from-transparent via-[var(--accent-soft)] to-transparent opacity-0"
+      <div
+        ref={frameRef}
+        className="relative aspect-[4/3.3] w-full overflow-hidden rounded-[28px] bg-surface-3 shadow-[0_0_0_1.5px_var(--alu-edge),0_1px_0_1.5px_var(--alu-hi),0_18px_36px_-22px_var(--shadow-deep)] lg:max-h-[max(15rem,calc(100dvh-26rem))]"
+      >
+        {photo ? (
+          <FullImage
+            src={photo.url}
+            alt={`Foto de un gato de raza ${name}`}
+            priority={priority}
+            sizes="(min-width: 1024px) 480px, (min-width: 640px) 60vw, 84vw"
+            quality={60}
+            onLoad={() => setLoaded(true)}
+            fallback={<MonogramPlate name={name} />}
           />
-          {/* Filete interior: el borde de la pantalla del canal. */}
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[24px] shadow-[inset_0_0_0_1.5px_var(--ring)]" />
-        </div>
+        ) : (
+          <MonogramPlate name={name} />
+        )}
+        <div
+          data-scan
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 h-1/5 bg-gradient-to-b from-transparent via-[var(--accent-soft)] to-transparent opacity-0"
+        />
+        {/* Reflejo del cristal del visor y velo inferior para que el crédito se lea. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(165deg,var(--glass-shine)_0%,transparent_32%),linear-gradient(0deg,var(--scrim)_0%,transparent_26%)]"
+        />
 
-        <span className="hud absolute top-3 left-3 rounded-full bg-surface/90 px-2.5 py-1.5 text-slate shadow-[0_0_0_1.5px_var(--ring)]">
+        <span className="hud absolute top-3 left-3 rounded-full bg-surface px-2.5 py-1.5 text-slate shadow-[0_0_0_1px_var(--alu-edge)]">
           N.º {padIndex(position)}/{padIndex(total)}
         </span>
-        {isNew && (
-          <span className="hud absolute top-3 right-3 rounded-full bg-slate px-2.5 py-1.5 text-surface">Nueva</span>
-        )}
-      </div>
+        {isNew && <span className="hud anodized absolute top-3 right-3 rounded-full px-2.5 py-1.5">Nueva</span>}
 
-      <figcaption className="hud flex items-center justify-center gap-2 pt-2 pb-0.5 text-center text-[0.58rem] text-ink-soft">
-        {photo ? (
-          <>
-            Foto:
-            <a
-              href={sourceUrl ?? "https://commons.wikimedia.org"}
-              target="_blank"
-              rel="noreferrer"
-              className="text-slate underline decoration-ring decoration-[1.5px] underline-offset-2 hover:decoration-accent"
-            >
-              Wikimedia Commons
-            </a>
-          </>
-        ) : (
-          "Sin foto en el archivo"
-        )}
-      </figcaption>
+        <figcaption className="hud absolute bottom-3 left-4 text-[0.56rem] text-photo-ink">
+          {photo ? (
+            <>
+              Foto:{" "}
+              <a
+                href={sourceUrl ?? "https://commons.wikimedia.org"}
+                target="_blank"
+                rel="noreferrer"
+                className="underline decoration-photo-ink/60 decoration-[1.5px] underline-offset-2 hover:decoration-photo-ink"
+              >
+                Wikimedia Commons
+              </a>
+            </>
+          ) : (
+            <span className="text-ink-soft">Sin foto en el archivo</span>
+          )}
+        </figcaption>
+      </div>
     </figure>
+  );
+}
+
+/** Sin foto (o si no llega): el monograma de la raza sobre la porcelana. */
+function MonogramPlate({ name }: { name: string }) {
+  return (
+    <div className="grid size-full place-items-center bg-[radial-gradient(circle_at_50%_40%,var(--surface),var(--surface-3))]">
+      <span className="font-display text-[clamp(3rem,10vw,6rem)] font-semibold text-ring-strong">
+        {breedMonogram(name)}
+      </span>
+    </div>
   );
 }

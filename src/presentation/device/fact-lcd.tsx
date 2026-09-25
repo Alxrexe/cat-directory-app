@@ -62,19 +62,19 @@ export function FactLcd({ fact }: { fact: RandomFactQuery }) {
     <section
       aria-labelledby="fact-title"
       aria-busy={loading}
-      className="rounded-[28px] bg-screen p-2 shadow-[inset_0_3px_14px_oklch(15%_0.04_275/0.55)]"
+      // En escritorio la tira ocupa la altura que le da la cruceta (h-full) y
+      // el texto largo se desplaza por dentro: el Ronrón no cambia de tamaño.
+      className="rounded-[26px] screen-glass p-1.5 lg:flex lg:h-full lg:flex-col"
     >
-      <div className="min-h-[7.5rem] rounded-[22px] p-4 ring-1 ring-white/5">
-        <div className="flex items-center justify-between gap-3">
+      <div className="flex min-h-[6rem] flex-col rounded-[21px] px-5 py-3.5 ring-1 ring-white/5 lg:min-h-0 lg:flex-1 lg:py-3">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
           <h3 id="fact-title" className="hud text-screen-accent">
             Dato curioso
           </h3>
-          <span className="hud text-screen-soft" aria-hidden="true">
-            A · otro dato
-          </span>
+          <p className="hud text-[0.56rem] text-screen-soft">En inglés · catfact.ninja</p>
         </div>
 
-        <div className="mt-2" role="status" aria-live="polite">
+        <div className="mt-1.5 flex min-h-0 flex-1 flex-col" role="status" aria-live="polite">
           {paused ? (
             <p className="flex items-start gap-2 text-sm text-screen-soft">
               <CloudOff className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
@@ -104,19 +104,18 @@ export function FactLcd({ fact }: { fact: RandomFactQuery }) {
               <p className="mt-1 text-sm text-screen-soft">{describeError(fact.error).description} Pulsa A para reintentar.</p>
             </div>
           ) : fact.data ? (
-            // En escritorio, tres líneas como mucho: un dato largo se desplaza
-            // dentro del LCD y el Ronrón no cambia de tamaño.
+            // Un dato largo se desplaza dentro de la tira, con el último
+            // renglón fundido para que se note que sigue.
             <blockquote
               lang="en"
               tabIndex={0}
               data-lenis-prevent
-              className="rounded-md text-[1.02rem] leading-relaxed text-screen-ink outline-none focus-visible:ring-2 focus-visible:ring-screen-accent/60 lg:max-h-[5.1rem] lg:overflow-y-auto lg:overscroll-contain [scrollbar-color:oklch(82%_0.09_255/0.4)_transparent] [scrollbar-width:thin]"
+              className="min-h-0 flex-1 rounded-md text-[1.02rem] leading-relaxed text-screen-ink outline-none focus-visible:ring-2 focus-visible:ring-screen-accent/60 lg:overflow-y-auto lg:overscroll-contain lg:pb-3 lg:[mask-image:linear-gradient(to_bottom,black_calc(100%-0.9rem),transparent)] [scrollbar-color:var(--screen-soft)_transparent] [scrollbar-width:thin]"
             >
               {FactText ? <FactText key={fact.data.text} text={fact.data.text} /> : <span className="block">{fact.data.text}</span>}
             </blockquote>
           ) : null}
         </div>
-        <p className="mt-2 text-[0.7rem] text-screen-soft">En inglés, tal como lo publica catfact.ninja.</p>
       </div>
     </section>
   );

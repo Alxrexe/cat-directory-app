@@ -114,8 +114,9 @@ const fragmentShader = /* glsl */ `
     // Silueta: cabeza redonda + dos orejas, unidas con mínimo suave.
     vec2 headC = vec2(0.0, -0.06);
     float head = length(q - headC) - 0.9;
-    float earL = sdTriangle(q, vec2(-0.96, 0.28), vec2(-0.66, 1.1), vec2(-0.22, 0.72)) - 0.07;
-    float earR = sdTriangle(q, vec2(0.96, 0.28), vec2(0.66, 1.1), vec2(0.22, 0.72)) - 0.07;
+    // Orejas pequeñas: asoman ~0,15 del radio sobre la cabeza.
+    float earL = sdTriangle(q, vec2(-0.83, 0.3), vec2(-0.57, 0.9), vec2(-0.31, 0.7)) - 0.05;
+    float earR = sdTriangle(q, vec2(0.83, 0.3), vec2(0.57, 0.9), vec2(0.31, 0.7)) - 0.05;
     float shape = smin(head, min(earL, earR), 0.16);
 
     // Descarte temprano: casi todo el quad es aire.
@@ -132,9 +133,15 @@ const fragmentShader = /* glsl */ `
     col = mix(col, uShade, smoothstep(0.78, 1.0, sqrt(r2)) * 0.28);
     col += pow(max(0.0, dot(n, normalize(vec3(-0.3, 0.55, 0.78)))), 28.0) * 0.28;
 
+    // Canto metálico: una banda fina en el borde de la silueta, pizarra
+    // abajo y brillante arriba, como el bisel de una pieza mecanizada.
+    float edgeBand = smoothstep(-0.075, -0.018, shape);
+    vec3 rimCol = mix(mix(uShade, uInk, 0.38), vec3(1.0), smoothstep(-0.7, 0.9, q.y));
+    col = mix(col, rimCol, edgeBand * 0.6);
+
     // Interior de las orejas.
-    float inL = sdTriangle(q, vec2(-0.78, 0.5), vec2(-0.64, 0.93), vec2(-0.38, 0.72)) - 0.03;
-    float inR = sdTriangle(q, vec2(0.78, 0.5), vec2(0.64, 0.93), vec2(0.38, 0.72)) - 0.03;
+    float inL = sdTriangle(q, vec2(-0.7, 0.46), vec2(-0.57, 0.77), vec2(-0.43, 0.66)) - 0.025;
+    float inR = sdTriangle(q, vec2(0.7, 0.46), vec2(0.57, 0.77), vec2(0.43, 0.66)) - 0.025;
     col = mix(col, uEar, (1.0 - smoothstep(-aa, aa, min(inL, inR))) * 0.85);
 
     // Glifo del atlas (monograma + nombre), teñido con la tinta del tema.

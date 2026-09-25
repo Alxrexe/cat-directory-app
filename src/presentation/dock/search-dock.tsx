@@ -108,7 +108,7 @@ export function SearchDock({
         data-state={!visible ? "hidden" : expanded ? "open" : "closed"}
         className={cn(
           "pointer-events-auto relative w-full text-ink [--highlight:var(--accent)] [--panel:min(380px,46dvh)]",
-          "drop-shadow-[0_-10px_22px_oklch(29%_0.045_275/0.16)]",
+          "drop-shadow-[0_-10px_22px_var(--shadow-soft)]",
           // Solo transform: la bandeja se desliza, nunca cambia de altura.
           "transition-transform duration-700 ease-[var(--ease-cozy)] will-change-transform",
           "data-[state=closed]:[transform:translateY(var(--panel))] data-[state=hidden]:[transform:translateY(calc(var(--panel)+220px))]",
@@ -124,9 +124,13 @@ export function SearchDock({
           en SVG; la central es la joroba que sube y aloja el buscador.
         */}
         <div className="grid grid-cols-[52px_26px_minmax(0,1fr)_26px_52px] grid-rows-[22px_auto] sm:grid-cols-[minmax(72px,1fr)_56px_minmax(0,660px)_56px_minmax(72px,1fr)] sm:grid-rows-[28px_auto]">
-          <div aria-hidden="true" className="col-start-1 row-start-1 border-b-2 border-ring" />
+          {/* El filete es un canto de aluminio: línea oscura y brillo debajo. */}
+          <div
+            aria-hidden="true"
+            className="col-start-1 row-start-1 border-b-[1.5px] border-alu-edge shadow-[0_1.5px_0_var(--alu-hi)]"
+          />
           <Shoulder className="col-start-2 row-start-1" />
-          <div className="col-start-3 row-span-2 row-start-1 border-t-2 border-ring bg-surface px-1 pt-3 sm:px-2 sm:pt-4">
+          <div className="col-start-3 row-span-2 row-start-1 border-t-[1.5px] border-alu-edge bg-surface px-1 pt-3 shadow-[inset_0_1.5px_0_var(--alu-hi)] sm:px-2 sm:pt-4">
             <SearchField
               ref={searchRef}
               defaultQuery={query}
@@ -142,7 +146,10 @@ export function SearchDock({
             />
           </div>
           <Shoulder mirrored className="col-start-4 row-start-1" />
-          <div aria-hidden="true" className="col-start-5 row-start-1 border-b-2 border-ring" />
+          <div
+            aria-hidden="true"
+            className="col-start-5 row-start-1 border-b-[1.5px] border-alu-edge shadow-[0_1.5px_0_var(--alu-hi)]"
+          />
 
           {/* Esquina izquierda: recargar y el contador. */}
           <div className="col-span-2 col-start-1 row-start-2 flex items-center gap-3 bg-surface pt-2 pl-2 sm:pl-5">
@@ -204,7 +211,7 @@ export function SearchDock({
                 <ToggleGroup.Item
                   key={chip}
                   value={chip}
-                  className="relative isolate h-9 shrink-0 rounded-full px-4 font-display text-[0.82rem] font-medium text-ink-soft ring-[1.5px] ring-ring before:absolute before:inset-0 before:-z-10 before:scale-90 before:rounded-full before:bg-slate before:opacity-0 before:transition-[opacity,transform] before:duration-300 before:ease-[var(--ease-cozy)] hover:text-ink data-[state=on]:text-surface data-[state=on]:ring-slate data-[state=on]:before:scale-100 data-[state=on]:before:opacity-100"
+                  className="relative isolate h-9 shrink-0 rounded-full px-4 font-display text-[0.82rem] font-medium bg-[linear-gradient(180deg,var(--surface),var(--surface-2))] text-ink-soft shadow-[inset_0_-1px_0_var(--alu-mid)] ring-1 ring-alu-mid before:absolute before:inset-0 before:-z-10 before:scale-90 before:rounded-full before:bg-[linear-gradient(180deg,var(--anod-hi),var(--anod-lo))] before:opacity-0 before:transition-[opacity,transform] before:duration-300 before:ease-[var(--ease-cozy)] hover:text-ink data-[state=on]:text-surface data-[state=on]:ring-anod-lo data-[state=on]:before:scale-100 data-[state=on]:before:opacity-100"
                 >
                   {chip === "all" ? "Todos" : COAT_LABEL[chip as CoatFamily]}
                 </ToggleGroup.Item>
@@ -218,7 +225,7 @@ export function SearchDock({
         {/* Bandeja con la lista */}
         <div
           id="dock-panel"
-          className="relative h-[var(--panel)] border-t-[1.5px] border-ring bg-paper"
+          className="relative h-[var(--panel)] border-t-[1.5px] border-alu-mid bg-paper"
           inert={!expanded}
         >
           <div className="relative mx-auto h-full max-w-[980px]">
@@ -297,13 +304,9 @@ function Shoulder({ mirrored = false, className }: { mirrored?: boolean; classNa
       className={cn("h-full w-full", mirrored && "-scale-x-100", className)}
     >
       <path d="M0 28 C28 28 28 0 56 0 L56 28 Z" fill="var(--surface)" />
-      <path
-        d="M0 27 C28 27 28 1 56 1"
-        fill="none"
-        stroke="var(--ring)"
-        strokeWidth="2"
-        vectorEffect="non-scaling-stroke"
-      />
+      {/* Canto de aluminio: la arista oscura y, justo dentro, el brillo. */}
+      <path d="M0 27.2 C28 27.2 28 0.8 56 0.8" fill="none" stroke="var(--alu-edge)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+      <path d="M0 28.9 C28 28.9 28 2.5 56 2.5" fill="none" stroke="var(--alu-hi)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }
@@ -321,13 +324,14 @@ function ShortcutStrip() {
   ];
   return (
     <div
-      className="mx-auto mt-3 hidden max-w-[980px] items-center justify-between border-t border-ring pt-2.5 lg:flex"
+      className="mx-auto mt-3 hidden max-w-[980px] items-center justify-between border-t border-alu-mid pt-2.5 lg:flex"
       aria-hidden="true"
     >
       <ul className="flex items-center gap-5">
         {keys.map(([key, label]) => (
           <li key={key} className="hud flex items-center gap-2 text-[0.58rem] text-ink-soft">
-            <kbd className="tabular grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[0.62rem] tracking-normal text-slate normal-case ring-[1.5px] ring-ring-strong">
+            {/* Tecla de aluminio, como las de un teclado de portátil. */}
+            <kbd className="tabular grid h-5 min-w-5 place-items-center rounded-[5px] bg-[linear-gradient(180deg,var(--alu-hi),var(--alu-mid))] px-1.5 text-[0.62rem] tracking-normal text-slate normal-case shadow-[0_0_0_1px_var(--alu-edge),inset_0_-1px_0_var(--alu-lo)]">
               {key}
             </kbd>
             {label}

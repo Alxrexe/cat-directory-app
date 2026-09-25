@@ -10,9 +10,9 @@ const hoverLayer =
 
 /**
  * Botones de consola. Tres voces:
- * - `default`: la píldora pizarra llena (la acción principal de la vista).
- * - `outline`: porcelana con aro lavanda (acciones secundarias).
- * - `console`: el botón redondo del menú de la consola, para iconos.
+ * - `default`: pizarra anodizada (la acción principal de la vista).
+ * - `outline`: porcelana con canto de aluminio (acciones secundarias).
+ * - `console`: la tapa de aluminio torneado del menú, para iconos.
  * Al pulsarlos bajan un píxel, como una tecla. Solo se animan transform y
  * opacidad; el fondo de hover es una capa que se funde.
  */
@@ -21,7 +21,7 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-slate text-surface shadow-[0_8px_18px_-12px_var(--ink)] hover:-translate-y-0.5",
+        default: "anodized hover:-translate-y-0.5",
         outline: "porcelain text-ink hover:-translate-y-0.5",
         console: "console-dot text-slate hover:-translate-y-0.5",
         ghost: cn("text-ink before:bg-slate/8", hoverLayer),

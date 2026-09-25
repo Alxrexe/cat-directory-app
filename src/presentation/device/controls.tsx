@@ -30,17 +30,26 @@ export function DPad({
   canLeft: boolean;
   canRight: boolean;
 }) {
+  // Cruceta de pizarra anodizada: un solo bloque de luz (arriba) y sombra
+  // (abajo) repartido en brazos, con un hoyuelo en el centro.
   const arm =
-    "grid place-items-center bg-slate text-surface/85 hover:text-surface [&_svg]:size-5 shadow-[inset_0_2px_0_oklch(100%_0_0/0.14),inset_0_-3px_0_oklch(20%_0.04_275/0.45)]";
+    "grid place-items-center bg-[linear-gradient(180deg,var(--anod-hi),var(--anod))] text-surface/85 hover:text-surface [&_svg]:size-5 shadow-[inset_0_1px_0_var(--anod-shine),inset_0_-2px_0_var(--anod-lo)]";
   return (
-    <div role="group" aria-label="Cruceta" className="grid size-[7.5rem] shrink-0 grid-cols-3 grid-rows-3 sm:size-32 lg:size-28 xl:size-32">
+    <div
+      role="group"
+      aria-label="Cruceta"
+      className="grid size-[7.5rem] shrink-0 grid-cols-3 grid-rows-3 drop-shadow-[0_8px_10px_var(--shadow-soft)] sm:size-32 lg:size-28 xl:size-32"
+    >
       <button type="button" aria-label="Pestaña anterior" onClick={onUp} className={cn(arm, press, "col-start-2 rounded-t-xl")}>
         <ChevronUp aria-hidden="true" />
       </button>
       <button type="button" aria-label={leftLabel} onClick={onLeft} disabled={!canLeft} className={cn(arm, press, "row-start-2 rounded-l-xl")}>
         <ChevronLeft aria-hidden="true" />
       </button>
-      <span aria-hidden="true" className="col-start-2 row-start-2 bg-slate" />
+      <span
+        aria-hidden="true"
+        className="col-start-2 row-start-2 bg-[radial-gradient(circle,var(--anod-lo)_0%,var(--anod)_62%)]"
+      />
       <button type="button" aria-label={rightLabel} onClick={onRight} disabled={!canRight} className={cn(arm, press, "col-start-3 row-start-2 rounded-r-xl")}>
         <ChevronRight aria-hidden="true" />
       </button>
@@ -64,10 +73,8 @@ export function RoundButton({
         type="button"
         className={cn(
           "grid size-14 place-items-center rounded-full font-display text-xl font-semibold sm:size-16",
-          // A es la acción principal (pizarra llena); B, un botón de porcelana.
-          tone === "a"
-            ? "bg-slate text-surface shadow-[inset_0_2px_0_oklch(100%_0_0/0.18),inset_0_-3px_0_oklch(20%_0.04_275/0.4),0_10px_20px_-12px_var(--ink)]"
-            : "console-dot text-slate",
+          // A es la acción principal (pizarra anodizada); B, aluminio torneado.
+          tone === "a" ? "anodized" : "console-dot text-slate",
           press,
           className,
         )}
@@ -87,7 +94,7 @@ export function PillButton({ children, className, ...props }: ComponentProps<"bu
     <button
       type="button"
       className={cn(
-        "hud h-8 rounded-full bg-surface px-3.5 text-[0.58rem] whitespace-nowrap text-slate shadow-[0_0_0_1.5px_var(--ring)] hover:-translate-y-px",
+        "hud porcelain h-8 rounded-full px-3.5 text-[0.58rem] whitespace-nowrap text-slate hover:-translate-y-px",
         press,
         className,
       )}
@@ -103,7 +110,7 @@ export function ShoulderButton({ letter, className, ...props }: ComponentProps<"
     <button
       type="button"
       className={cn(
-        "h-8 w-20 rounded-t-2xl rounded-b-md bg-surface font-display text-sm font-semibold text-slate shadow-[0_0_0_2px_var(--ring)]",
+        "metal-shell h-8 w-20 rounded-t-2xl rounded-b-md font-display text-sm font-semibold text-slate",
         press,
         className,
       )}
@@ -119,7 +126,8 @@ export function Speaker() {
   return (
     <div aria-hidden="true" className="grid grid-cols-4 gap-1.5">
       {Array.from({ length: 12 }, (_, i) => (
-        <span key={i} className="size-1.5 rounded-full bg-ring" />
+        // Perforaciones en el metal: agujeros con sombra interior.
+        <span key={i} className="size-1.5 rounded-full bg-alu-lo shadow-[inset_0_1px_1px_var(--anod)]" />
       ))}
     </div>
   );

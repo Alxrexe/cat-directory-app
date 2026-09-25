@@ -1,9 +1,8 @@
 "use client";
 
 import useEmblaCarousel from "embla-carousel-react";
-import Image from "next/image";
 import { coatFamily } from "@domain/breed/coat";
-import { OrbShape } from "../brand/orb-shape";
+import { FullImage } from "../components/full-image";
 import { COAT_LABEL } from "../lib/format";
 import { useIdleModule } from "../lib/idle";
 import { breedMonogram, shortBreedName } from "../lib/monogram";
@@ -29,26 +28,33 @@ export default function FamilyTab({ breed, related, relatedPhotos, coats, total,
             {related.map((item) => {
               const photo = relatedPhotos[item.slug];
               return (
-                <li key={item.slug} className="w-24 shrink-0" aria-roledescription="diapositiva">
+                <li key={item.slug} className="w-32 shrink-0" aria-roledescription="diapositiva">
+                  {/* Tesela de canal: la foto completa de borde a borde, con el
+                      nombre sobre un velo; al señalarla sube un poco. */}
                   <button
                     type="button"
                     onClick={() => onOpenRelated(item.slug)}
                     data-cue="breed"
-                    className="group flex w-full flex-col items-center gap-1.5 text-center"
+                    className="group relative block aspect-[4/3] w-full overflow-hidden rounded-2xl text-left shadow-[0_0_0_1px_var(--anod-lo),0_10px_18px_-12px_var(--shadow-deep)] transition-transform duration-300 ease-[var(--ease-cozy)] hover:-translate-y-1"
                   >
-                    <span className="relative size-20 transition-transform duration-300 ease-[var(--ease-cozy)] group-hover:-translate-y-1">
-                      <OrbShape className="absolute inset-0 size-full" fill="var(--ring)" />
-                      <span className="absolute inset-[7%] overflow-hidden rounded-full">
-                        {photo ? (
-                          <Image src={photo.url} alt="" fill sizes="80px" className="object-cover" />
-                        ) : (
-                          <span className="grid size-full place-items-center bg-slate font-display text-lg text-screen-ink">
-                            {breedMonogram(item.name)}
-                          </span>
-                        )}
-                      </span>
+                    {photo ? (
+                      <FullImage
+                        src={photo.url}
+                        alt=""
+                        sizes="128px"
+                        quality={60}
+                        fallback={<MonogramTile name={item.name} />}
+                      />
+                    ) : (
+                      <MonogramTile name={item.name} />
+                    )}
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-0 bg-[linear-gradient(165deg,var(--glass-shine)_0%,transparent_30%),linear-gradient(0deg,var(--scrim)_0%,transparent_55%)]"
+                    />
+                    <span className="absolute inset-x-2 bottom-2 line-clamp-2 text-xs leading-tight font-semibold text-photo-ink">
+                      {shortBreedName(item.name)}
                     </span>
-                    <span className="line-clamp-2 text-xs leading-tight font-semibold text-screen-ink">{shortBreedName(item.name)}</span>
                   </button>
                 </li>
               );
@@ -89,5 +95,13 @@ export default function FamilyTab({ breed, related, relatedPhotos, coats, total,
         </table>
       </figure>
     </div>
+  );
+}
+
+function MonogramTile({ name }: { name: string }) {
+  return (
+    <span className="grid size-full place-items-center bg-screen-2 font-display text-2xl text-screen-soft">
+      {breedMonogram(name)}
+    </span>
   );
 }

@@ -201,8 +201,8 @@ export function StartGate({ phase, tunnelVisible, total, onStart, onLeft }: Star
             aria-describedby="gate-hint"
             data-cue="primary"
             // El botón de inicio es el logo hecho botón: disco de porcelana,
-            // aro lavanda, el gato en pizarra y la acción debajo.
-            className="group relative grid size-60 place-items-center rounded-full bg-[linear-gradient(180deg,var(--surface),var(--surface-2))] shadow-[0_0_0_5px_var(--ring),inset_0_2px_0_oklch(100%_0_0/0.95),0_28px_50px_-28px_var(--ink)] outline-offset-8 transition-transform duration-300 ease-[var(--ease-cozy)] hover:scale-[1.04] active:scale-95 sm:size-64"
+            // aro de aluminio torneado, el gato en pizarra y la acción debajo.
+            className="metal-disc group relative grid size-60 place-items-center rounded-full outline-offset-8 transition-transform duration-300 ease-[var(--ease-cozy)] hover:scale-[1.04] active:scale-95 sm:size-64"
           >
             <span className="flex flex-col items-center gap-3">
               <CatMark ring={false} className="-mt-2 size-24 sm:size-28" />

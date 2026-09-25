@@ -112,10 +112,10 @@ export function SearchField({
       <div
         className={cn(
           // Un pozo en la porcelana: fondo algo más hondo y sombra interior.
-          "group relative flex h-12 items-center rounded-full bg-paper shadow-[inset_0_2px_5px_-2px_var(--ring-strong)] ring-[1.5px] ring-ring",
+          "well group relative flex h-12 items-center rounded-full",
           // Anillo de foco en su propia capa: aparece fundiéndose (opacidad).
           "after:pointer-events-none after:absolute after:inset-0 after:rounded-full after:opacity-0 after:ring-2 after:ring-accent after:transition-opacity after:duration-200 focus-within:after:opacity-100",
-          error && "ring-danger after:ring-danger",
+          error && "after:opacity-100 after:ring-danger",
         )}
       >
         <Search className="pointer-events-none absolute left-4 size-[1.1rem] text-slate" aria-hidden="true" />
@@ -159,7 +159,7 @@ export function SearchField({
             <X className="size-4" aria-hidden="true" />
           </button>
         ) : (
-          <kbd className="tabular pointer-events-none absolute right-3 hidden size-6 place-items-center rounded-full text-[0.72rem] text-slate ring-[1.5px] ring-ring-strong md:grid">
+          <kbd className="tabular pointer-events-none absolute right-3 hidden h-6 min-w-6 place-items-center rounded-[6px] bg-[linear-gradient(180deg,var(--alu-hi),var(--alu-mid))] text-[0.72rem] text-slate shadow-[0_0_0_1px_var(--alu-edge),inset_0_-1px_0_var(--alu-lo)] md:grid">
             /
           </kbd>
         )}

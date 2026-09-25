@@ -2,7 +2,7 @@
 
 import * as Tabs from "@radix-ui/react-tabs";
 import { ExternalLink, Feather, Globe2, Palette, Sprout } from "lucide-react";
-import { useEffect, useRef, type ComponentType } from "react";
+import { Fragment, useEffect, useRef, type ComponentType } from "react";
 import type { Breed } from "@domain/breed/breed";
 import { coatFamily, type CoatShare } from "@domain/breed/coat";
 import { describeCountry } from "@domain/breed/country";
@@ -21,8 +21,9 @@ const loadFamily = () => import("./family-tab");
 
 // En escritorio el panel mide lo que deja la pantalla y se desplaza por
 // dentro; es enfocable (Radix le da tabindex 0), así que también con teclado.
+// El borde inferior se funde: si hay más contenido, se nota que sigue.
 const PANEL =
-  "rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-screen-accent/60 lg:absolute lg:inset-0 lg:-mr-2 lg:overflow-y-auto lg:overscroll-contain lg:pr-2 [scrollbar-color:oklch(82%_0.09_255/0.4)_transparent] [scrollbar-width:thin]";
+  "rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-screen-accent/60 lg:absolute lg:inset-0 lg:-mr-2 lg:overflow-y-auto lg:overscroll-contain lg:pr-2 lg:pb-4 lg:[mask-image:linear-gradient(to_bottom,black_calc(100%-1rem),transparent)] [scrollbar-color:oklch(82%_0.09_255/0.4)_transparent] [scrollbar-width:thin]";
 
 export interface DeviceScreenProps {
   breed: Breed;
@@ -57,7 +58,7 @@ export function DeviceScreen(props: DeviceScreenProps) {
   }, [tab, breed.slug]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col rounded-[32px] bg-screen p-2 shadow-[inset_0_3px_14px_oklch(15%_0.04_275/0.55)]">
+    <div className="flex min-h-0 flex-1 flex-col rounded-[32px] screen-glass p-2">
       <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[26px] p-4 ring-1 ring-white/5 sm:p-5">
         {/* Líneas de barrido del LCD: estáticas, casi invisibles. */}
         <div
@@ -80,12 +81,12 @@ export function DeviceScreen(props: DeviceScreenProps) {
           onValueChange={(value) => props.onTabChange(value as ScreenTab)}
           className="relative mt-3.5 flex min-h-0 flex-1 flex-col"
         >
-          <Tabs.List aria-label="Secciones de la ficha" className="flex gap-1 rounded-full bg-white/[0.06] p-1">
+          <Tabs.List aria-label="Secciones de la ficha" className="flex gap-1 rounded-full bg-track p-1 shadow-[inset_0_1px_3px_var(--shadow-deep)]">
             {SCREEN_TABS.map((value) => (
               <Tabs.Trigger
                 key={value}
                 value={value}
-                className="hud h-9 flex-1 rounded-full text-screen-soft data-[state=active]:bg-screen-ink data-[state=active]:text-screen"
+                className="hud h-9 flex-1 rounded-full text-screen-soft data-[state=active]:bg-[linear-gradient(180deg,var(--key-hi),var(--key-lo))] data-[state=active]:text-screen data-[state=active]:shadow-[inset_0_-1px_0_var(--alu-lo),0_2px_6px_-2px_var(--shadow-deep)]"
               >
                 {TAB_LABEL[value]}
               </Tabs.Trigger>
@@ -144,7 +145,7 @@ function SheetTab({ breed, coats, total }: DeviceScreenProps) {
               <span className="sr-only">({field})</span>
             </dt>
             <dd className="mt-1 text-[0.98rem] leading-snug font-semibold wrap-break-word text-screen-ink">
-              {value ?? <span className="font-normal text-screen-soft">{MISSING}</span>}
+              {value ? <SlashBreaks text={value} /> : <span className="font-normal text-screen-soft">{MISSING}</span>}
               {note && <span className="mt-0.5 block text-xs font-normal text-screen-soft">{note}</span>}
             </dd>
           </div>
@@ -168,6 +169,25 @@ function SheetTab({ breed, coats, total }: DeviceScreenProps) {
       )}
     </div>
   );
+}
+
+/**
+ * "Natural/Standard" es una sola palabra para el navegador: en una tarjeta
+ * estrecha se partiría por cualquier letra. Un <wbr> tras cada barra deja
+ * cortar justo ahí.
+ */
+function SlashBreaks({ text }: { text: string }) {
+  const parts = text.split("/");
+  return parts.map((part, i) => (
+    <Fragment key={i}>
+      {part}
+      {i < parts.length - 1 && (
+        <>
+          /<wbr />
+        </>
+      )}
+    </Fragment>
+  ));
 }
 
 function HistoryTab({ profile, name }: { profile: BreedProfile | null; name: string }) {
@@ -203,9 +223,9 @@ function FamilyPanel(props: DeviceScreenProps) {
   const FamilyTab = family?.default;
   if (FamilyTab) return <FamilyTab {...props} />;
   return (
-    <div role="status" aria-label="Cargando la familia" className="flex gap-3">
+    <div role="status" aria-label="Cargando la familia" className="flex gap-3 overflow-hidden">
       {[0, 1, 2, 3].map((i) => (
-        <span key={i} className="size-20 animate-pulse rounded-full bg-white/[0.06]" />
+        <span key={i} className="aspect-[4/3] w-32 shrink-0 animate-pulse rounded-2xl bg-white/[0.06]" />
       ))}
     </div>
   );

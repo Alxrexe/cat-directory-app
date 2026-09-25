@@ -140,7 +140,7 @@ export function DeviceModal({ dossier, catalog }: { dossier: BreedDossier; catal
       <Dialog.Portal>
         <Dialog.Overlay
           ref={overlayRef}
-          className="fixed inset-0 z-50 bg-ink/25 opacity-0"
+          className="fixed inset-0 z-50 bg-overlay opacity-0"
         />
         <Dialog.Content
           aria-describedby="ronron-desc"
