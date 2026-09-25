@@ -30,8 +30,10 @@ interface HomeExperienceProps {
   renderedAt: number;
 }
 
-/** El túnel dura al menos esto, aunque todo cargue antes: es parte del viaje. */
-const MIN_LINK_MS = 2600;
+/** El enlace dura al menos esto, aunque todo cargue antes: es parte del viaje. */
+const MIN_LINK_MS = 2400;
+/** Desde que se abre el iris hasta que la barra y la consola se montan. */
+const ASSEMBLE_MS = 1250;
 
 /**
  * La Home entera: pantalla de inicio → túnel → cielo con orbes + consola.
@@ -53,6 +55,7 @@ export function HomeExperience({ initialPages, serverError, renderedAt }: HomeEx
   const [phase, setPhase] = useState<SimulationPhase>(skipGate ? "running" : "gate");
   const [gateMounted, setGateMounted] = useState(!skipGate);
   const [tunnelVisible, setTunnelVisible] = useState(false);
+  const [arriving, setArriving] = useState(false);
   const [fieldFailed, setFieldFailed] = useState(false);
   const [spotlight, setSpotlight] = useState<string | null>(null);
   const engineRef = useRef<FieldEngine | null>(null);
@@ -149,21 +152,24 @@ export function HomeExperience({ initialPages, serverError, renderedAt }: HomeEx
     });
   }, [completeStep]);
 
-  // Llegada: todos los pasos reales listos y el viaje ha durado lo mínimo.
+  // Llegada: todos los pasos reales listos y el enlace ha durado lo mínimo.
   const allDone = steps.every((step) => step.done);
   useEffect(() => {
     if (phase !== "linking" || !allDone) return;
     const wait = Math.max(0, MIN_LINK_MS - (performance.now() - startedAt.current));
     let enter: ReturnType<typeof setTimeout>;
     const timer = setTimeout(() => {
+      // El iris del campo se abre y, a la vez, la pantalla de inicio se
+      // atraviesa; cuando el campo ya se ve, la barra y la consola se montan.
       void engineRef.current?.arrive();
+      setArriving(true);
       playCue("ready");
       enter = setTimeout(
         () => {
           setPhase("running");
           useSimulationStore.getState().markEntered();
         },
-        engineRef.current ? 1100 : 0,
+        engineRef.current ? ASSEMBLE_MS : 0,
       );
     }, wait);
     return () => {
@@ -303,6 +309,7 @@ export function HomeExperience({ initialPages, serverError, renderedAt }: HomeEx
         <Suspense fallback={null}>
           <StartGate
             phase={phase}
+            arriving={arriving}
             tunnelVisible={tunnelVisible}
             total={directory.total}
             onStart={start}

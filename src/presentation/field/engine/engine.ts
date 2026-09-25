@@ -53,29 +53,34 @@ interface FieldPalette {
   orb: OrbPalette;
   backdrop: BackdropPalette;
   veil: string;
+  /** Los dos colores que se alternan en el borde del iris. */
+  veilRim: [string, string];
 }
 
 /**
- * Paleta del logo. De día: orbes de porcelana, orejas lavanda (el aro),
- * monograma pizarra (el gato) y un anillo pervinca para el orbe señalado.
- * De noche: orbes lavanda con un halo suave, estrellas en el fondo y el
- * velo del color de la pantalla de inicio oscura (--surface de .dark).
+ * Paleta del sistema "consola perla". De día: orbes de perla, orejas en el
+ * lavanda del aro, monograma pizarra y un anillo azul eléctrico que late
+ * en el orbe señalado. De noche: orbes lavanda con halo, estrellas y el
+ * anillo lavanda. El velo tiene el color de la pantalla de inicio (--paper)
+ * y su iris se abre con un borde cian-azul (día) o lavanda-cian (noche).
  */
 const PALETTES: Record<FieldTheme, FieldPalette> = {
   light: {
     orb: {
-      orb: "#fbfbfe",
-      shade: "#d3d9ea",
+      orb: "#fbfcff",
+      shade: "#d2dbef",
       ink: "#4a506e",
       ear: "#c5ccdf",
-      ring: "#5c6cc9",
-      shadowColor: "#2c3350",
-      shadow: 0.18,
-      glowColor: "#ffffff",
-      glow: 0,
+      ring: "#306ce2",
+      shadowColor: "#22305a",
+      shadow: 0.16,
+      glowColor: "#29c1f6",
+      glow: 0.45,
+      glowBase: 0,
     },
-    backdrop: { wave: "#ffffff", rim: "#e6e9f4", waveAlpha: 0.85, stars: 0 },
-    veil: "#fbfbfe",
+    backdrop: { wave: "#ffffff", rim: "#bfe6ff", waveAlpha: 0.8, stars: 0 },
+    veil: "#f1f6fd",
+    veilRim: ["#29c1f6", "#306ce2"],
   },
   dark: {
     orb: {
@@ -83,18 +88,20 @@ const PALETTES: Record<FieldTheme, FieldPalette> = {
       shade: "#968ed8",
       ink: "#262840",
       ear: "#aaa1ea",
-      ring: "#c7b8ff",
+      ring: "#afacff",
       shadowColor: "#03040c",
       shadow: 0.4,
       glowColor: "#9d8cf5",
       glow: 0.75,
+      glowBase: 0.3,
     },
     backdrop: { wave: "#c4bbf7", rim: "#ece7ff", waveAlpha: 0.5, stars: 1 },
-    veil: "#1a1d2d",
+    veil: "#070c1c",
+    veilRim: ["#afacff", "#60d4fe"],
   },
 };
 
-const TUNNEL_COLORS = ["#c5ccdf", "#9aa6d6", "#5c6cc9", "#ffffff", "#aab3cf", "#7d88b8"];
+const TUNNEL_COLORS = ["#306ce2", "#29c1f6", "#c5ccdf", "#8fb4ff", "#afacff", "#ffffff"];
 
 /** Hash determinista 0..1 (siempre el mismo valor para la misma clave). */
 const hash01 = (n: number) => {
@@ -138,8 +145,11 @@ export function createFieldEngine(options: FieldEngineOptions) {
   const orbs = createOrbLayer(atlas, palette.orb);
   const backdrop = createBackdropLayer(palette.backdrop);
   const tunnel = createTunnelLayer(TUNNEL_COLORS);
-  const veil = createVeilLayer(palette.veil);
+  const veil = createVeilLayer(palette.veil, palette.veilRim);
   veil.mesh.renderOrder = 10;
+  // Los trazos del enlace van por encima del velo: se ven sobre el color de
+  // la pantalla de inicio mientras carga.
+  tunnel.mesh.renderOrder = 11;
   scene.add(backdrop.mesh, orbs.mesh, tunnel.mesh, veil.mesh);
   tunnel.mesh.visible = false;
 
@@ -331,8 +341,17 @@ export function createFieldEngine(options: FieldEngineOptions) {
   let last = performance.now();
   let time = 0;
   let running = true;
+  // Con el Ronrón delante el campo queda atenuado y casi quieto: se pinta a
+  // 30 fps (un frame sí y otro no, ritmo parejo en pantallas de 60 Hz) y la
+  // GPU trabaja la mitad.
+  let frameInterval = 0;
+  let throttle: gsap.core.Tween | null = null;
 
   function tick(now: number) {
+    if (frameInterval > 0 && now - last < frameInterval - 2) {
+      raf = running ? requestAnimationFrame(tick) : 0;
+      return;
+    }
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     time += dt;
@@ -452,6 +471,10 @@ export function createFieldEngine(options: FieldEngineOptions) {
     setDimmed(dimmed: boolean) {
       gsap.to(orbs.uniforms.uDim, { value: dimmed ? 1 : 0, duration: 0.7, ease: "sine.inOut" });
       gsap.to(flow, { speed: dimmed ? 0.25 : 1, duration: 1.2, ease: "sine.inOut" });
+      // 60 fps al volver; 30 fps cuando la atenuación ya terminó.
+      frameInterval = 0;
+      throttle?.kill();
+      throttle = dimmed ? gsap.delayedCall(1.2, () => (frameInterval = 1000 / 30)) : null;
     },
 
     /**
@@ -473,12 +496,15 @@ export function createFieldEngine(options: FieldEngineOptions) {
         [backdrop.uniforms.uWave.value, to.backdrop.wave],
         [backdrop.uniforms.uRim.value, to.backdrop.rim],
         [veil.uniforms.uColor.value, to.veil],
+        [veil.uniforms.uRimA.value, to.veilRim[0]],
+        [veil.uniforms.uRimB.value, to.veilRim[1]],
       ];
       const from = colors.map(([color]) => color.clone());
       const target = colors.map(([, hex]) => new Color(hex));
       const numbers: Array<[{ value: number }, number]> = [
         [orbs.uniforms.uShadow, to.orb.shadow],
         [orbs.uniforms.uGlow, to.orb.glow],
+        [orbs.uniforms.uGlowBase, to.orb.glowBase],
         [backdrop.uniforms.uWaveAlpha, to.backdrop.waveAlpha],
         [backdrop.uniforms.uStars, to.backdrop.stars],
       ];
@@ -496,26 +522,38 @@ export function createFieldEngine(options: FieldEngineOptions) {
     beginLink() {
       veil.uniforms.uAlpha.value = 1;
       veil.uniforms.uGlow.value = 0;
+      veil.uniforms.uIris.value = 0;
+      veil.uniforms.uRim.value = 0;
       tunnel.mesh.visible = true;
       tunnel.uniforms.uSpeed.value = 0.06;
       gsap.to(tunnel.uniforms.uAlpha, { value: 1, duration: 0.9, ease: "sine.out" });
       gsap.to(tunnel.uniforms.uSpeed, { value: 0.32, duration: 2.6, ease: "sine.in" });
     },
 
-    /** Llegada: acelerón, destello suave y el cielo aparece con sus orbes. */
+    /**
+     * Llegada: los trazos aceleran, la boca del enlace se ilumina y el velo
+     * se abre como un iris desde el centro, con un borde de luz; los orbes
+     * aparecen del centro hacia fuera con un pequeño salto.
+     */
     arrive(): Promise<void> {
+      const reach = Math.hypot(width, height) * 0.5 + 160;
       return new Promise((resolve) => {
         const tl = gsap.timeline({
           onComplete: () => {
             tunnel.mesh.visible = false;
+            veil.uniforms.uAlpha.value = 0;
+            veil.uniforms.uIris.value = 0;
             resolve();
           },
         });
-        tl.to(tunnel.uniforms.uSpeed, { value: 1.1, duration: 0.9, ease: "power2.in" }, 0)
-          .to(veil.uniforms.uGlow, { value: 1, duration: 0.9, ease: "sine.in" }, 0)
-          .to(tunnel.uniforms.uAlpha, { value: 0, duration: 0.6, ease: "sine.inOut" }, 0.75)
-          .to(veil.uniforms.uAlpha, { value: 0, duration: 1.4, ease: "sine.inOut" }, 0.95)
-          .to(orbs.uniforms.uIntro, { value: 1, duration: 2.2, ease: "power2.out" }, 1.05);
+        tl.to(tunnel.uniforms.uSpeed, { value: 1.3, duration: 0.7, ease: "power2.in" }, 0)
+          .to(veil.uniforms.uGlow, { value: 0.55, duration: 0.55, ease: "sine.in" }, 0)
+          .set(veil.uniforms.uIris, { value: 1 }, 0.5)
+          .to(veil.uniforms.uRim, { value: 1, duration: 0.25, ease: "sine.out" }, 0.5)
+          .to(veil.uniforms.uIris, { value: reach, duration: 1.35, ease: "expo.inOut" }, 0.5)
+          .to(veil.uniforms.uRim, { value: 0, duration: 0.5, ease: "sine.in" }, 1.45)
+          .to(tunnel.uniforms.uAlpha, { value: 0, duration: 0.6, ease: "sine.inOut" }, 0.7)
+          .to(orbs.uniforms.uIntro, { value: 1, duration: 2, ease: "power2.out" }, 0.8);
       });
     },
 
@@ -545,6 +583,7 @@ export function createFieldEngine(options: FieldEngineOptions) {
     dispose() {
       stop();
       themeTween?.kill();
+      throttle?.kill();
       window.removeEventListener("pointermove", onPointerMove);
       document.documentElement.removeEventListener("pointerleave", onPointerLeave);
       canvas.removeEventListener("pointerdown", onPointerDown);

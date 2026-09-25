@@ -113,16 +113,24 @@ export function createBackdropLayer(palette: BackdropPalette) {
 }
 
 /**
- * Velo a pantalla completa, por encima de todo: es el blanco de la pantalla
- * de inicio mientras dura el túnel y el destello suave al llegar al cielo.
+ * Velo a pantalla completa, por encima del campo: el fondo de la pantalla de
+ * inicio mientras dura el enlace. Al llegar se abre como un iris desde el
+ * centro (un hueco que crece con un borde de luz iridiscente) y deja ver
+ * el campo de orbes: todo en el fragment shader, la CPU solo mueve el radio.
  */
-export function createVeilLayer(color: string) {
+export function createVeilLayer(color: string, rim: readonly [string, string]) {
   const geometry = new PlaneGeometry(1, 1);
   const uniforms = {
     uRes: { value: new Vector2(1, 1) },
     uColor: { value: new Color(color) },
     uAlpha: { value: 0 },
     uGlow: { value: 0 },
+    /** Radio del iris en píxeles (0: cerrado). */
+    uIris: { value: 0 },
+    /** Intensidad del borde de luz del iris. */
+    uRim: { value: 0 },
+    uRimA: { value: new Color(rim[0]) },
+    uRimB: { value: new Color(rim[1]) },
   };
   const material = new ShaderMaterial({
     uniforms,
@@ -132,13 +140,40 @@ export function createVeilLayer(color: string) {
       uniform float uAlpha;
       uniform float uGlow;
       uniform vec2 uRes;
+      uniform float uIris;
+      uniform float uRim;
+      uniform vec3 uRimA;
+      uniform vec3 uRimB;
       varying vec2 vPx;
+
+      vec4 over(vec4 dst, vec3 color, float alpha) {
+        float a = alpha + dst.a * (1.0 - alpha);
+        vec3 c = (color * alpha + dst.rgb * dst.a * (1.0 - alpha)) / max(a, 1e-4);
+        return vec4(c, a);
+      }
+
       void main() {
-        // Un centro un poco más luminoso: la "boca" del túnel.
-        float r = length(vPx - uRes * 0.5) / length(uRes * 0.5);
+        vec2 center = uRes * 0.5;
+        vec2 d = vPx - center;
+        float dist = length(d);
+        // Un centro un poco más luminoso: la "boca" del enlace.
+        float r = dist / length(center);
         vec3 c = mix(uColor, vec3(1.0), (1.0 - smoothstep(0.0, 0.6, r)) * uGlow);
-        if (uAlpha < 0.002) discard;
-        gl_FragColor = vec4(c, uAlpha);
+
+        // Iris: dentro del radio el velo desaparece, con un borde suave.
+        float open = step(0.5, uIris);
+        float feather = 18.0 + uIris * 0.05;
+        float veil = mix(1.0, smoothstep(uIris - feather, uIris, dist), open);
+        vec4 outc = vec4(c, uAlpha * veil);
+
+        // Borde de luz iridiscente: el color gira con el ángulo.
+        float width = 8.0 + uIris * 0.025;
+        float band = exp(-pow((dist - uIris) / width, 2.0)) * open * uRim;
+        float hue = 0.5 + 0.5 * sin(atan(d.y, d.x) * 2.0 + uIris * 0.004);
+        outc = over(outc, mix(uRimA, uRimB, hue), band);
+
+        if (outc.a < 0.002) discard;
+        gl_FragColor = outc;
       }
     `,
     transparent: true,

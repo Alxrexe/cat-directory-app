@@ -45,7 +45,9 @@ const vertexShader = /* glsl */ `
 
     // Flotación suave e individual (se apaga con movimiento reducido).
     float bob = sin(uTime * 1.1 + aSeed * 6.2831) * 2.2 * uMotion;
-    float size = aSize * mix(0.35, 1.0, appear) * (0.84 + 0.16 * aMatch);
+    // Un pequeño salto al aparecer (sube por encima de 1 y se asienta).
+    float pop = 1.0 + 0.14 * sin(appear * 3.14159) * (1.0 - appear * 0.4);
+    float size = aSize * mix(0.35, 1.0, appear) * pop * (0.84 + 0.16 * aMatch);
 
     vec2 p = aOffset + vec2(0.0, bob + (1.0 - appear) * 36.0) + position.xy * size * ${QUAD.toFixed(2)};
     // Coordenadas locales en radios de orbe, con y hacia arriba.
@@ -72,6 +74,8 @@ const fragmentShader = /* glsl */ `
   uniform float uShadow;
   uniform vec3 uGlowColor;
   uniform float uGlow;
+  uniform float uGlowBase;
+  uniform float uTime;
   uniform float uDim;
 
   varying vec2 vQ;
@@ -114,9 +118,9 @@ const fragmentShader = /* glsl */ `
     // Silueta: cabeza redonda + dos orejas, unidas con mínimo suave.
     vec2 headC = vec2(0.0, -0.06);
     float head = length(q - headC) - 0.9;
-    // Orejas pequeñas: asoman ~0,15 del radio sobre la cabeza.
-    float earL = sdTriangle(q, vec2(-0.83, 0.3), vec2(-0.57, 0.9), vec2(-0.31, 0.7)) - 0.05;
-    float earR = sdTriangle(q, vec2(0.83, 0.3), vec2(0.57, 0.9), vec2(0.31, 0.7)) - 0.05;
+    // Orejas pequeñas y estrechas: asoman apenas sobre la cabeza.
+    float earL = sdTriangle(q, vec2(-0.75, 0.36), vec2(-0.58, 0.86), vec2(-0.39, 0.66)) - 0.045;
+    float earR = sdTriangle(q, vec2(0.75, 0.36), vec2(0.58, 0.86), vec2(0.39, 0.66)) - 0.045;
     float shape = smin(head, min(earL, earR), 0.16);
 
     // Descarte temprano: casi todo el quad es aire.
@@ -133,15 +137,15 @@ const fragmentShader = /* glsl */ `
     col = mix(col, uShade, smoothstep(0.78, 1.0, sqrt(r2)) * 0.28);
     col += pow(max(0.0, dot(n, normalize(vec3(-0.3, 0.55, 0.78)))), 28.0) * 0.28;
 
-    // Canto metálico: una banda fina en el borde de la silueta, pizarra
-    // abajo y brillante arriba, como el bisel de una pieza mecanizada.
-    float edgeBand = smoothstep(-0.075, -0.018, shape);
-    vec3 rimCol = mix(mix(uShade, uInk, 0.38), vec3(1.0), smoothstep(-0.7, 0.9, q.y));
-    col = mix(col, rimCol, edgeBand * 0.6);
+    // Canto suave: una banda fina en el borde de la silueta, un poco más
+    // honda abajo y con luz arriba, como el filo de una pieza de plástico.
+    float edgeBand = smoothstep(-0.07, -0.02, shape);
+    vec3 rimCol = mix(mix(uShade, uInk, 0.16), vec3(1.0), smoothstep(-0.7, 0.9, q.y));
+    col = mix(col, rimCol, edgeBand * 0.35);
 
     // Interior de las orejas.
-    float inL = sdTriangle(q, vec2(-0.7, 0.46), vec2(-0.57, 0.77), vec2(-0.43, 0.66)) - 0.025;
-    float inR = sdTriangle(q, vec2(0.7, 0.46), vec2(0.57, 0.77), vec2(0.43, 0.66)) - 0.025;
+    float inL = sdTriangle(q, vec2(-0.66, 0.47), vec2(-0.575, 0.74), vec2(-0.47, 0.62)) - 0.02;
+    float inR = sdTriangle(q, vec2(0.66, 0.47), vec2(0.575, 0.74), vec2(0.47, 0.62)) - 0.02;
     col = mix(col, uEar, (1.0 - smoothstep(-aa, aa, min(inL, inR))) * 0.85);
 
     // Glifo del atlas (monograma + nombre), teñido con la tinta del tema.
@@ -157,13 +161,16 @@ const fragmentShader = /* glsl */ `
     float sh = exp(-pow(length((q - vec2(0.0, -1.05)) / vec2(0.82, 0.2)), 2.0) * 2.2);
     outc = over(outc, uShadowColor, sh * uShadow * (1.0 - vLens * 0.6));
 
-    // Halo nocturno.
+    // Halo: de noche en todos (base), de día solo en el señalado.
     float glow = exp(-max(shape, 0.0) * 5.0) * (1.0 - body);
-    outc = over(outc, uGlowColor, glow * uGlow * (0.3 + 0.7 * max(vLens, vHover)));
+    float lit = max(vLens, vHover);
+    outc = over(outc, uGlowColor, glow * uGlow * mix(uGlowBase, 1.0, lit));
 
-    // Anillo de selección (amarillo de día, menta de noche).
-    float ring = 1.0 - smoothstep(0.035, 0.035 + aa * 1.5, abs(shape - 0.1));
-    outc = over(outc, uRing, ring * vHover);
+    // Marco de selección, como en el menú de una consola: un anillo separado
+    // de la silueta que late (azul de día, lavanda de noche).
+    float ring = 1.0 - smoothstep(0.035, 0.035 + aa * 1.5, abs(shape - 0.12));
+    float pulse = 0.72 + 0.28 * sin(uTime * 5.0);
+    outc = over(outc, uRing, ring * vHover * pulse);
 
     outc = over(outc, col, body);
 
@@ -182,6 +189,8 @@ export interface OrbPalette {
   shadow: number;
   glowColor: string;
   glow: number;
+  /** Halo que tienen todos los orbes (0: solo el señalado). */
+  glowBase: number;
 }
 
 export function createOrbLayer(atlas: GlyphAtlas, palette: OrbPalette) {
@@ -231,6 +240,7 @@ export function createOrbLayer(atlas: GlyphAtlas, palette: OrbPalette) {
     uShadow: { value: palette.shadow },
     uGlowColor: { value: new Color(palette.glowColor) },
     uGlow: { value: palette.glow },
+    uGlowBase: { value: palette.glowBase },
   };
 
   const material = new ShaderMaterial({

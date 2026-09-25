@@ -134,7 +134,7 @@ export function OrbField(props: OrbFieldProps) {
         className="fixed inset-0 z-10 block h-dvh w-screen touch-none select-none"
       />
       <div ref={labelRef} aria-hidden="true" className="pointer-events-none fixed top-0 left-0 z-20 will-change-transform">
-        <div className="porcelain flex origin-bottom flex-col items-center rounded-2xl px-4 py-2 opacity-0">
+        <div className="pearl squircle flex origin-bottom flex-col items-center rounded-2xl px-4 py-2 opacity-0">
           <span className="font-display text-lg leading-tight text-ink">{hovered?.name}</span>
           <span className="text-xs font-semibold text-ink-soft">{hovered?.country ?? "País sin registrar"} · clic para abrir</span>
         </div>
