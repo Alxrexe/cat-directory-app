@@ -80,7 +80,7 @@ Los puertos rechazan siempre con `DataSourceError`; la UI decide por su `kind`:
 | `q`, `pelaje`, `page` | URL, con `replaceState` para no pedir un render de servidor por tecla |
 | Fase de la simulación | Zustand (`simulation-store`), en memoria: recargar vuelve a la pantalla de inicio |
 | Ficha abierta, conexión, razas descubiertas, vuelta al directorio | stores de Zustand pequeños; las descubiertas se persisten |
-| Tema | clase `.dark` en `<html>` (script en `<head>`) y un store con `useSyncExternalStore`; sigue al sistema hasta que el visitante elige |
+| Tema | clase `.dark` en `<html>` y un store con `useSyncExternalStore`; cada visita empieza en claro |
 
 ## Rendimiento
 
@@ -127,4 +127,4 @@ Contraste medido (WCAG 2.x) desde los valores de `app/globals.css`:
 
 ## Pruebas
 
-44 pruebas con Vitest, cada una en su capa: el dominio sin dobles; los casos de uso con repositorios en memoria y reloj falso; la infraestructura con `fetch` simulado (503 intermitente, 429, esquema inválido, filas rotas), una Wikipedia simulada y temporizadores falsos para el backoff; y en presentación el debounce, los stores y el adaptador de localStorage. Los recorridos completos (lista, scroll infinito, búsqueda en la URL, teclado, sin conexión, API caída, tema del sistema) se verificaron con Playwright contra el build de producción.
+44 pruebas con Vitest, cada una en su capa: el dominio sin dobles; los casos de uso con repositorios en memoria y reloj falso; la infraestructura con `fetch` simulado (503 intermitente, 429, esquema inválido, filas rotas), una Wikipedia simulada y temporizadores falsos para el backoff; y en presentación el debounce, los stores y el adaptador de localStorage. Los recorridos completos (lista, scroll infinito, búsqueda en la URL, teclado, sin conexión, API caída) se verificaron con Playwright contra el build de producción.

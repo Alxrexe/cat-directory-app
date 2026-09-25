@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { Doto, Hubot_Sans } from "next/font/google";
 import { AppProviders } from "@presentation/providers/app-providers";
 import { SkyBackground } from "@presentation/sky/sky-background";
-import { THEME_SCRIPT } from "@presentation/theme/theme-script";
 import { SITE_URL } from "./site-url";
 import "./globals.css";
 
@@ -49,10 +48,6 @@ export default function RootLayout({ children, modal }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${hubot.variable} ${doto.variable}`}
     >
-      <head>
-        {/* Tema oscuro antes del primer pintado (ver theme-script.ts). */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
-      </head>
       <body className="min-h-dvh">
         <AppProviders>
           <a

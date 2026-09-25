@@ -58,7 +58,7 @@ No hace falta ninguna variable de entorno. `NEXT_PUBLIC_SITE_URL` es opcional: f
 | Tipos y validación | TypeScript estricto y Zod (`zod/mini`) en la frontera con cada API |
 | Accesibilidad | Teclado en lista y buscador (`/`, flechas, Enter, Esc) y `aria-*` en la lista virtual y en los estados de carga y error |
 | Lighthouse | 90 o más en las cuatro categorías, en Home y Detalle |
-| Extras | Tema oscuro que sigue al sistema, transición entre lista y detalle, primera página en localStorage y pruebas |
+| Extras | Tema oscuro con botón (cada visita empieza en claro), transición entre lista y detalle, primera página en localStorage y pruebas |
 
 ## Arquitectura
 
