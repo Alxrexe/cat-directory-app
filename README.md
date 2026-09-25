@@ -35,24 +35,30 @@ No hace falta ninguna variable de entorno. Opcionales: `NEXT_PUBLIC_SITE_URL` (U
 
 ## Cómo se usa
 
-1. **Inicio.** Una pantalla de porcelana con un solo botón, "Empezar simulación". Al pulsarlo se enlaza el Michiverso: un túnel de luz en WebGL mientras se cargan de verdad el motor, el cielo y las razas. Los pasos se ven en pantalla. Cada vez que entras (o recargas) empiezas aquí, con el botón central; dentro de la visita, volver de una ficha al campo no repite la entrada.
-2. **El campo.** Cada raza es un orbe con orejas de gato y su monograma: de porcelana de día, lavanda de noche. Las filas se deslizan en diagonal sin fin. Al pasar el puntero, los orbes cercanos se agrandan como bajo una lupa y el resto sigue su curso. La rueda o el arrastre aceleran el viaje, y viajar despierta la página siguiente de la API.
+1. **Inicio.** El HUD de una consola en espera: rejilla de plano, esquinas con lecturas (marca, hora LCD, fuentes de datos) y en el centro una retícula que gira alrededor de un disco de perla con el gato: el botón "Empezar simulación". Al pulsarlo, el disco se hunde y rebota, salen destellos y la retícula acelera; el disco pasa a marcar el porcentaje de carga y cuatro arcos se encienden, uno por paso real (motor, cielo, razas, orbes), mientras trazos de luz WebGL cruzan la pantalla. Al terminar, la retícula se atraviesa y el velo se abre como un iris desde el centro, con un borde iridiscente, sobre el cielo y los orbes; la barra y la consola se montan después. Cada vez que entras (o recargas) empiezas aquí; dentro de la visita, volver de una ficha al campo no repite la entrada.
+2. **El campo.** Cada raza es un orbe con orejitas de gato y su monograma: de perla de día, lavanda de noche. El orbe señalado lleva un marco azul que late, como la selección del menú de una consola. Las filas se deslizan en diagonal sin fin. Al pasar el puntero, los orbes cercanos se agrandan como bajo una lupa y el resto sigue su curso. La rueda o el arrastre aceleran el viaje, y viajar despierta la página siguiente de la API.
 3. **La consola de abajo.** Buscador, filtros de pelaje, contador y la lista completa, virtualizada y con scroll infinito.
-4. **El Ronrón.** Pulsar un orbe (o una fila) abre la ficha como un dispositivo que nace del orbe: foto, datos, historia, familia y un dato curioso. Arriba, la foto y la pantalla de datos; abajo, como en una DS, la cruceta, la pantalla del dato curioso y los botones A/B, cada uno en su pista (nada se pisa a ningún ancho). Los controles funcionan de verdad (cruceta, A, B, L, R) y tienen atajos de teclado. La foto se ve siempre completa y de borde a borde: nunca se recorta ni deja franjas, porque el hueco lo rellena la propia foto desenfocada.
+4. **El Ronrón.** Pulsar un orbe (o una fila) abre la ficha en una consola de bolsillo de dos piezas, como una DS: nace cerrada en el orbe, viaja al centro, la tapa se abre en 3D sobre su bisagra y las pantallas se encienden como un tubo. En la tapa, la foto y la pantalla de datos (ficha, historia, familia); en la base, la cruceta, la pantalla del dato curioso y los botones A/B, cada uno en su pista (nada se pisa a ningún ancho). Las orejas y los gatillos L/R flotan sueltos sobre la tapa. Los controles funcionan de verdad y tienen atajos de teclado. La foto se ve siempre completa y de borde a borde: nunca se recorta ni deja franjas, porque el hueco lo rellena la propia foto desenfocada.
 
 La interfaz suena (sonidos sintetizados, sin archivos) desde la primera pulsación, que es cuando el navegador lo permite. No hay interruptor: el sonido es parte de la consola.
 
-**Tema.** Claro por defecto. El botón del sol y la luna, en la barra de arriba, pasa a la noche: cielo nocturno en video, orbes lavanda con un halo suave y estrellas, carcasa de grafito y teclas lavanda. La elección se recuerda en el navegador; el sistema operativo no decide.
+**Tema.** Claro por defecto. El botón del sol y la luna, en la barra de arriba, pasa a la noche con una ola de luz que nace del botón, tapa la pantalla con el color del otro tema y se disuelve sobre él: cielo nocturno en video, orbes lavanda con halo y estrellas, plástico índigo y teclas de gel lavanda. La elección se recuerda en el navegador; el sistema operativo no decide.
 
-| Inicio | Lupa sobre el campo |
+**Estética.** Consola de bolsillo blanca y futurismo Y2K, con esquinas continuas a la manera de Apple: plástico perla mate (sin metal), botones de gel azul con reflejo de burbuja, destellos de cuatro puntas, rótulos de HUD y lecturas LCD de matriz de puntos. Una sola tipografía, **Hubot Sans** (grotesca de esquinas redondeadas, entre robot y juguete), y **Doto** solo para las cifras de LCD.
+
+| Inicio | El iris se abre |
 | --- | --- |
-| ![Pantalla de inicio](docs/screenshots/inicio.png) | ![Lupa](docs/screenshots/lupa.png) |
+| ![Pantalla de inicio](docs/screenshots/inicio.png) | ![Llegada al campo](docs/screenshots/iris.png) |
 
 ![El Ronrón](docs/screenshots/ronron.png)
 
-| De noche: el campo | De noche: el Ronrón |
+| La tapa se abre | Lupa sobre el campo |
 | --- | --- |
-| ![Campo en tema oscuro](docs/screenshots/noche-campo.png) | ![Ronrón en tema oscuro](docs/screenshots/noche-ronron.png) |
+| ![Apertura del Ronrón](docs/screenshots/apertura.png) | ![Lupa](docs/screenshots/lupa.png) |
+
+| De noche: el inicio | De noche: el Ronrón |
+| --- | --- |
+| ![Inicio en tema oscuro](docs/screenshots/noche-inicio.png) | ![Ronrón en tema oscuro](docs/screenshots/noche-ronron.png) |
 
 ## Requisitos de la prueba
 
@@ -167,7 +173,7 @@ La regla: **nunca perder lo que el usuario ya tiene en pantalla y decir siempre 
 - **El campo es decorativo para el lector de pantalla** (`aria-hidden`): todo lo que hace tiene su equivalente accesible en la consola (lista, buscador, filtros) y en la paleta ⌘K.
 - **Lista virtualizada:** `aria-setsize` y `aria-posinset`, para que el lector anuncie "13 de 98" aunque solo existan 11 filas en el DOM. Región `status` con el número de resultados.
 - **Teclado:** `/` enfoca el buscador y `↓` pasa a la lista (un solo tabulador entra; dentro, flechas, Inicio, Fin, RePág y AvPág). `Esc` limpia o pliega. ⌘K abre la paleta. En el Ronrón: `←` `→` cambian de raza, `↑` `↓` de pestaña, A pide otro dato y B o `Esc` cierran. El diálogo atrapa el foco y lo devuelve al cerrar.
-- Cada botón de icono tiene nombre accesible. Contraste AA medido sobre la porcelana y las pantallas pizarra. Enlace para saltar al contenido. Con `prefers-reduced-motion` no hay video, el campo no se desliza y las animaciones se reducen a fundidos.
+- Cada botón de icono tiene nombre accesible. Contraste AA medido en los dos temas, sobre la perla y sobre las pantallas (tabla en ARCHITECTURE.md §8). El foco es el marco de selección azul, separado de la pieza. Enlace para saltar al contenido. Con `prefers-reduced-motion` no hay video, el campo no se desliza y las animaciones se reducen a fundidos.
 
 ## Auditoría Lighthouse
 
@@ -176,7 +182,7 @@ Build de producción, Lighthouse 13 (CLI), cada auditoría corrida 5 veces con e
 | Página | Performance | Accessibility | Best Practices | SEO |
 | --- | --- | --- | --- | --- |
 | Home · móvil | **90** | **100** | **100** | **100** |
-| Detalle · móvil | **90** | **100** | **100** | **100** |
+| Detalle · móvil | **91** | **100** | **100** | **100** |
 | Home · escritorio | **100** | **100** | **100** | **100** |
 | Detalle · escritorio | **100** | **100** | **100** | **100** |
 
@@ -190,8 +196,9 @@ Todas las métricas llegan a 90. La de menos margen es **Performance en móvil**
 
 - **Nada de lo que no se ve en el primer pintado viaja con la página.** El motor del campo (Three.js, ~170 KB) se pide al acercar el puntero al botón de inicio y termina de cargar durante el túnel, que es literalmente la pantalla de carga. GSAP llega con la primera interacción. El cliente HTTP, Zod y los adaptadores se descargan la primera vez que hace falta una página nueva o un dato. Los avisos (sileo y motion), la paleta, los tooltips, el gráfico y el carrusel, al usarlos.
 - **Hidratación por tandas.** Cada pieza grande está en su propio `<Suspense>` (nada suspende), así React cede el hilo entre una y otra.
-- **Fuentes:** dos familias web (Rubik y Nunito). Los rótulos técnicos usan la mono del sistema.
-- **CSS del primer pintado: 17 KB** (gzip, con los dos temas). El póster del cielo se pide después del primer pintado y entra con un fundido; el relleno desenfocado de las fotos es una miniatura de 16 px (menos de 1 KB).
+- **Fuentes: 54 KB en total.** Hubot Sans sin el eje de anchura (48 KB; con él pesaba 93 KB y bajaba el móvil a 87) y Doto (6 KB) para el LCD. Una segunda familia de texto (40 KB más) también costaba dos puntos: la interfaz usa solo Hubot.
+- **Lo que no se ve no compite con la foto.** En una ficha abierta desde un enlace, el video del cielo (85 KB con su póster) y el dato curioso (con el cliente HTTP que lo trae) esperan a que la página termine de cargar y el navegador quede ocioso.
+- **CSS del primer pintado: 17 KB** (gzip, con los dos temas). El relleno desenfocado de las fotos es una miniatura de 16 px (menos de 1 KB).
 
 Nota para reproducir: las cifras de móvil dependen de la carga del equipo. Con el editor, un navegador y aplicaciones de chat abiertos (carga media de 6 a 8 en un Intel i9 de 8 núcleos), la misma build dio corridas sueltas de 71 a 92; las medianas de cinco fueron estables. El script calienta cada ruta y toma la mediana; para comparar, cerrar aplicaciones pesadas o subir `RUNS`. En escritorio es 99-100 de forma estable.
 
@@ -200,15 +207,16 @@ Nota para reproducir: las cifras de móvil dependen de la carga del equipo. Con 
 | | |
 | --- | --- |
 | ![Enlace](docs/screenshots/enlace.png) | ![Búsqueda](docs/screenshots/busqueda.png) |
-| El enlace: pasos reales de carga | Búsqueda: la lista filtra y el campo resalta las coincidencias |
+| El enlace: porcentaje y arcos por paso real de carga | Búsqueda: la lista filtra y el campo resalta las coincidencias |
 | ![Historia](docs/screenshots/ronron-historia.png) | ![Familia](docs/screenshots/ronron-familia.png) |
 | Historia, desde Wikipedia | Familia: emparentadas y reparto de pelajes |
-| ![Paleta](docs/screenshots/paleta.png) | |
-| Paleta ⌘K | |
+| ![Paleta](docs/screenshots/paleta.png) | ![Cambio de tema](docs/screenshots/tema-ola.png) |
+| Paleta ⌘K | Cambio de tema: la ola nace del botón |
 
 <p>
-  <img src="docs/screenshots/movil-campo.png" width="260" alt="El campo en móvil">
-  <img src="docs/screenshots/movil-ronron.png" width="260" alt="El Ronrón en móvil">
+  <img src="docs/screenshots/movil-inicio.png" width="240" alt="La pantalla de inicio en móvil">
+  <img src="docs/screenshots/movil-campo.png" width="240" alt="El campo en móvil">
+  <img src="docs/screenshots/movil-ronron.png" width="240" alt="El Ronrón en móvil">
 </p>
 
 ## Pruebas
@@ -225,7 +233,8 @@ Nota para reproducir: las cifras de móvil dependen de la carga del equipo. Con 
 - **La API no expone ids** ni un endpoint por raza. El slug se deriva del nombre y el detalle se resuelve recorriendo las páginas en el servidor (cacheadas).
 - **La búsqueda es local**, como pide el enunciado: filtra lo cargado y lo dice.
 - **Los textos de la API están en inglés** y se muestran tal cual. La interfaz está en español. De los 306 datos curiosos, 7 son crudos para una app familiar (pieles, gatos que se comen…); si sale uno, se pide otro.
-- **Tema claro por defecto, oscuro a elección.** El oscuro no sigue al sistema operativo: es una decisión del visitante, con su propio cielo, paleta del campo y materiales. `next-themes` pone la clase antes del primer pintado, así que no hay parpadeo; el cielo que no se usa no descarga nada.
+- **Tema claro por defecto, oscuro a elección.** El oscuro no sigue al sistema operativo: es una decisión del visitante, con su propio cielo, paleta del campo y materiales. Un script de una línea en el `<head>` (lo pinta el layout raíz, un componente de servidor) pone la clase antes del primer pintado, así que no hay parpadeo; el cielo que no se usa no descarga nada. (Antes lo hacía `next-themes`, cuyo `<script>` dentro de un componente de cliente provocaba el aviso de React 19 "Encountered a script tag while rendering React component" cuando el proveedor se volvía a montar.)
+- **Animaciones solo en la GPU.** Todo lo que se mueve anima `transform`, `opacity` o `filter`, o vive en un shader. La única excepción es interna de sileo (el morph de la píldora de avisos al aparecer).
 - **La pantalla de inicio siempre.** Entrar o recargar pasa por "Empezar simulación". Solo la navegación interna (cerrar una ficha) vuelve directo al campo.
 - **Sonido siempre activo.** Es parte de la consola, no una opción. Los navegadores no dejan sonar nada antes de la primera pulsación o tecla, así que el motor de sonido se descarga en ese momento.
 - **Sin despliegue público.** La app se evalúa con el build de producción local (`npm run build && npm start`).

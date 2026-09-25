@@ -83,10 +83,13 @@ GET /?page=3&q=bri
 **La simulación (navegador)**
 
 ```
-Pantalla de inicio ──(puntero cerca del botón)──▶ descarga el motor (Three.js + GSAP)
-  └─ clic ─▶ túnel de luz en el canvas mientras se completan pasos reales:
+Pantalla de inicio (HUD) ──(puntero cerca del disco)──▶ descarga el motor (Three.js + GSAP)
+  └─ clic ─▶ el disco rebota y marca el % · trazos de luz sobre el velo, en el canvas,
+             mientras se completan pasos reales (un arco por paso):
              motor listo · cielo (el video empieza a sonar) · razas · orbes
-       └─▶ llegada: el velo se abre sobre el cielo y el campo empieza a fluir
+       └─▶ llegada: la retícula se atraviesa y el velo se abre como un iris
+           (shader) sobre el cielo; los orbes salen del centro hacia fuera
+           └─▶ 1,25 s después se montan la barra de sistema y la consola
 ```
 
 **El campo**
@@ -180,43 +183,49 @@ Los puertos rechazan siempre con `DataSourceError`, cuyo `kind` decide qué hace
   | cuelume (sonido, siempre activo) | con la primera pulsación o tecla |
 
 - **Hidratación por tandas.** Las piezas grandes (inicio, barra, consola, lista, visor, pantalla, dato, controles) van cada una en su `<Suspense>`: nada suspende, pero React cede el hilo entre una y otra en vez de hidratar en una sola tarea larga.
-- **Fuentes:** Rubik (títulos) y Nunito (interfaz), subconjunto latino. Los rótulos técnicos usan la mono del sistema: una tercera fuente web costaba ~30 KB en el camino del primer pintado.
+- **Fuentes: 54 KB.** Hubot Sans (48 KB, sin el eje de anchura, que duplicaba el archivo) para todo y Doto (6 KB) para las cifras de LCD, subconjunto latino. Con el eje de anchura y una segunda familia de texto el móvil bajaba a 87.
+- **Lo que no se ve espera** (`usePageSettled` en `lib/idle.ts`): el video del cielo y el dato curioso no se piden hasta que la página cargó y el navegador quedó ocioso. En una ficha abierta desde un enlace competían con la foto (85 KB de cielo antes del LCP).
 - **Videos del cielo:** los originales de 80 MB (día y noche) se recodificaron a WebM VP9 (~130–145 KB) y MP4 de respaldo, con un póster de ~10 KB cada uno. El póster no se pide mientras la pantalla de inicio lo tapa, y el cielo del tema que no se usa no descarga nada.
-- **Campo:** un solo draw call instanciado; la CPU coloca ~300 puntos por frame. El bucle se para con la pestaña oculta. Con `prefers-reduced-motion` el campo no se desliza.
-- Animaciones solo con `transform` y `opacity` (DOM) o en shader (WebGL). Ninguna transición de color, sombra o tamaño.
+- **Campo:** un solo draw call instanciado; la CPU coloca ~300 puntos por frame. El bucle se para con la pestaña oculta y baja a 30 fps (ritmo parejo) cuando el Ronrón está delante y el campo atenuado. Con `prefers-reduced-motion` el campo no se desliza.
+- **Consola inferior sin filtro:** su sombra es una capa fija con degradado; un `drop-shadow` sobre toda la bandeja se recalculaba en cada desplazamiento de la lista.
+- **DOM más corto:** el código de barras y la rejilla del altavoz son un solo elemento cada uno (degradados), no 22 y 12.
+- Animaciones solo con `transform`, `opacity` y `filter` (DOM) o en shader (WebGL): retícula, destellos, ola del tema, apertura 3D del Ronrón (`rotateX` con perspectiva) y encendido de pantallas (`scaleY` + `brightness`). Ninguna transición de color, sombra o tamaño. La única excepción es interna de sileo (el morph de su píldora); su transición de color de fondo se anula en CSS.
 
-## 8. Sistema visual: porcelana de consola
+## 8. Sistema visual: consola perla
 
-Referentes: el menú de una consola familiar de sobremesa (piezas de plástico blanco, botones redondos con aro, barra inferior curva) y el rigor de una interfaz técnica (filetes de 1 px, rótulos en mono con mucho aire, cifras tabulares). Sin cristal: la porcelana es opaca.
+Referentes: una consola de bolsillo de plástico mate blanco (cantos suaves, botones de gel, pantallas brillantes, una bisagra), el menú de una consola de sobremesa (el marco de selección que late) y el futurismo Y2K (azul eléctrico, destellos de cuatro puntas, lecturas LCD de matriz de puntos, retículas de HUD). De Apple, las esquinas continuas y las sombras largas y suaves. Nada de metal cepillado: superficies amables. Sin cristal esmerilado.
 
-- **Paleta del logo**, en OKLCH (`app/globals.css`): porcelana `oklch(99.3% 0.003 272)`, aro lavanda `oklch(84.6% 0.028 270)`, pizarra `oklch(43.8% 0.05 275)` y un solo acento pervinca `oklch(56% 0.13 262)` para foco, estado activo y progreso. Las pantallas del Ronrón son pizarra profunda con texto lavanda.
-- **Materiales:** porcelana (caras blancas), aluminio mecanizado (cantos, botones redondos, carcasa del Ronrón) y pizarra anodizada (la tecla principal, la cruceta, el filtro activo). El metal solo varía la luminosidad del mismo tono frío (`--alu-*`, `--anod-*`): brillo arriba, canto oscuro abajo, como una pieza de consola o de portátil.
-- **Piezas:** `porcelain` (cara blanca con bisel de aluminio), `console-dot` (tapa de aluminio torneado, con cepillado cónico), `anodized` (tecla principal), `metal-shell` (carcasa), `metal-disc` (botón de inicio), `well` (zona hundida), `screen-glass` (pantalla con reflejo, sin desenfoque de fondo) y `hud` (rótulo técnico). La marca es la cabeza del gato dentro del aro (`brand/cat-mark.tsx`); también es el botón de inicio.
-- **Fotos completas de borde a borde** (`components/full-image.tsx`): la foto va entera (`contain`) y el hueco lo rellena la misma foto ampliada y desenfocada; las dos capas piden la misma URL. En el visor, el número, la etiqueta de nueva y el crédito flotan sobre la foto, sin marco ni pie aparte.
-- **Orbes:** el shader añade un canto metálico fino en la silueta (pizarra abajo, brillo arriba).
-- **Consola inferior:** su borde se levanta en el centro (dos hombros SVG y una joroba) para alojar el buscador, con botones redondos en las esquinas y una tira de atajos reales.
-- **Dos temas.** Claro por defecto, sobre el video del cielo de día; oscuro a elección (botón sol/luna de la barra), sobre el cielo nocturno. El oscuro no invierte colores: es la misma consola en edición noche. La carcasa pasa a grafito, la porcelana a índigo profundo, las pantallas a casi negro (siguen siendo lo más hondo del aparato) y la pizarra anodizada a lavanda. Todo sale de los mismos tokens: `.dark` solo redefine valores, ningún componente conoce el tema. Excepciones con nombre propio: `--photo-ink` (texto sobre foto, claro en los dos) y `--key-*`/`--track` (pestaña activa y su carril).
-- **El campo cambia de paleta en el shader:** `engine.setTheme` funde los colores de los orbes, el fondo y el velo con un tween de 0 a 1, sin recrear nada. La página se funde con una View Transition (solo opacidad, en el compositor).
-- **Ronrón por pistas:** visor y pantalla arriba (la pantalla toma la altura del visor y desplaza su contenido con el borde fundido); abajo una rejilla con áreas con nombre: `pad · fact · btn` en escritorio, con la marca, los atajos y el altavoz al pie, y `fact` arriba de `pad · mid · btn` en tableta y móvil. La altura del visor se calcula con `100dvh` para que el aparato entero quepa en 1280×800 y 1024×768.
-- **Tipografías:** Rubik (títulos, nombres, monogramas de los orbes), Nunito (interfaz) y la mono del sistema (rótulos).
+- **Paleta del logo**, en OKLCH (`app/globals.css`): perla `oklch(99.4% 0.003 255)`, aro lavanda `oklch(84.6% 0.028 270)`, pizarra `oklch(43.8% 0.05 275)` y un solo acento, azul eléctrico `oklch(56% 0.19 262)`, para foco, selección y progreso; un cian (`--glint`) solo para halos y destellos. Las pantallas del Ronrón son azul noche con rótulos cian.
+- **Materiales (utilidades):** `pearl` (plástico perla: luz arriba, filete de 1 px, sombra larga), `pearl-button` (botón redondo abombado), `shell` (carcasa de la consola), `gel` (tecla principal con reflejo de burbuja), `well` (zona hundida), `screen-glass` (pantalla encendida con reflejo), `select-frame` (marco de selección que late; hace de anillo de foco), `hud-grid` (rejilla de plano), `hud` (rótulo en mayúsculas con aire), `lcd` (cifras de matriz de puntos) y `squircle` (esquinas continuas con `corner-shape`, donde el navegador lo soporta).
+- **Tipografía:** una sola familia, **Hubot Sans** (grotesca de esquinas redondeadas, entre robot y juguete), para marca, títulos, interfaz, lectura y los monogramas de los orbes; **Doto** (matriz de puntos redondos) solo para las lecturas de LCD: hora, contadores, N.º, porcentaje de carga.
+- **Pantalla de inicio (HUD):** rejilla de plano que se desvanece hacia los bordes, cuatro esquinas con lecturas (marca, hora LCD, razas y fuentes, atajo) y en el centro una retícula: anillo de 120 marcas, arcos que giran, un aro iridiscente (cónico enmascarado) y el disco de perla con el gato. Todo lo que gira es una animación CSS de `transform`. Al pulsar: rebote del disco, onda y destellos (GSAP); cuatro arcos, uno por paso real de carga; al llegar, la retícula se atraviesa (escala + opacidad) mientras el velo WebGL se abre como un iris con borde iridiscente.
+- **El Ronrón:** consola de dos piezas unidas por una bisagra. Tapa: visor (la foto completa) y pantalla de datos. Base: cruceta de perla, pantalla del dato curioso, B de perla y A de gel; al pie, la marca, los atajos, un código de barras (sale del nombre de la raza) y el altavoz. Las orejas (triángulos redondeados con interior de gel y un LED) y los gatillos L/R son piezas sueltas que flotan sobre la tapa. Apertura (`device/device-motion.ts`): nace cerrado en el orbe pulsado, viaja al centro, la tapa gira sobre la bisagra con perspectiva y un pequeño rebote, las pantallas se encienden como un tubo (una raya que se abre con un destello) y orejas, gatillos y botones llegan a su sitio. Al terminar no queda ningún filtro ni perspectiva puestos.
+- **Ronrón por pistas:** en la tapa, la pantalla toma la altura del visor y desplaza su contenido con el borde fundido; en la base, una rejilla con áreas con nombre (`pad · fact · btn` en escritorio, con el pie `mid`; `fact` arriba de `pad · mid · btn` en tableta y móvil). La altura del visor se calcula con `100dvh` para que el aparato quepa en 1280×800 y 1024×768.
+- **Fotos completas de borde a borde** (`components/full-image.tsx`): la foto va entera (`contain`) y el hueco lo rellena la misma foto ampliada y desenfocada.
+- **Orbes:** perla con un canto suave, orejitas estrechas, un pequeño salto al aparecer y un marco de selección azul que late en el orbe señalado (en el shader).
+- **Consola inferior:** su borde se levanta en el centro (dos hombros SVG y una joroba) para alojar el buscador; filtros de pelaje en chips de perla que se llenan de gel.
+- **Dos temas.** Claro por defecto, sobre el video del cielo de día; oscuro a elección (botón sol/luna), sobre el cielo nocturno: la misma consola en edición medianoche (perla índigo, pantallas casi negras, gel lavanda). `.dark` solo redefine valores; ningún componente conoce el tema. La clase la pone un script de una línea en el `<head>` del layout raíz (componente de servidor, `theme/theme-script.ts`) antes del primer pintado, y un store mínimo (`theme/use-color-theme.ts`, `useSyncExternalStore`) la expone a React.
+- **Cambio de tema** (`theme/theme-transition.ts`): una ola del color del tema nuevo nace del botón y tapa la pantalla (un disco de 64 px escalado: solo `transform`), el tema cambia debajo, y la ola se disuelve (opacidad + escala). El campo funde su paleta en el shader (`engine.setTheme`) y el cielo cambia de video mientras la ola tapa.
 - **Avisos** arriba y al centro, bajo la barra de sistema: la píldora clara de sileo de día y la oscura de noche, con los tonos de estado ajustados a AA en las dos.
 
 **Contraste medido** (WCAG 2.x, calculado desde los OKLCH de `app/globals.css`):
 
 | Par | Claro | Oscuro |
 | --- | --- | --- |
-| Texto principal | 13.9:1 | 14.2:1 |
-| Pizarra (marca, iconos) | 7.7:1 | 10.9:1 |
-| Texto secundario | 6.2:1 | 7.8:1 |
-| Foco y activo (no texto, mín. 3:1) | 4.6:1 | 8.1:1 |
-| Borde de control (no texto, mín. 3:1) | 3.6:1 | 3.9:1 |
-| Pantalla: texto | 11.8:1 | 17.5:1 |
-| Pantalla: secundario | 7.1:1 | 9.4:1 |
-| Pantalla: rótulos | 7.6:1 | 11.6:1 |
-| Tecla A, filtro activo | 8.0:1 | 6.6:1 |
-| Pestaña activa | 8.6:1 | 7.9:1 |
-| Pestañas inactivas | 6.6:1 | 9.6:1 |
-| Letra de B e iconos redondos | 6.2:1 | 6.3:1 |
+| Texto principal | 15.4:1 | 14.6:1 |
+| Pizarra (marca, iconos) | 7.8:1 | 11.4:1 |
+| Texto secundario | 6.2:1 | 8.2:1 |
+| Rótulos del HUD sobre el fondo de inicio | 5.8:1 | 9.4:1 |
+| Foco, selección y % de carga | 4.7:1 | 8.2:1 |
+| Borde de control (no texto, mín. 3:1) | 3.6:1 | 4.3:1 |
+| Pantalla: texto | 14.8:1 | 17.6:1 |
+| Pantalla: secundario | 7.3:1 | 9.4:1 |
+| Pantalla: rótulos | 8.3:1 | 11.5:1 |
+| Texto sobre gel (A, chips, botón de inicio) | 5.7:1 | 7.8:1 |
+| Texto sobre gel, zona más clara del degradado | 4.6:1 | 9.7:1 |
+| Pestaña activa | 14.4:1 | 8.6:1 |
+| Pestañas inactivas | 9.9:1 | 10.0:1 |
+| Letra de B e iconos redondos | 7.1:1 | 10.8:1 |
 
 ## 9. Librerías y dónde se usan
 
@@ -225,14 +234,14 @@ Referentes: el menú de una consola familiar de sobremesa (piezas de plástico b
 | `three` | Motor del campo de orbes: shader SDF, túnel de enlace, lupa |
 | `gsap` + `@gsap/react` + `split-type` | Animación de la interfaz (inicio, barra, Ronrón, pestañas) y del dato palabra a palabra |
 | `@tanstack/react-query` | Estado de servidor (directorio, dato curioso, copia local) |
-| `zustand` | Simulación, Ronrón, descubiertas, conexión, preferencias y navegación |
+| `zustand` | Simulación, Ronrón, descubiertas, conexión y navegación |
 | `@tanstack/react-virtual` | Lista virtualizada de la consola |
 | `zod` (`zod/mini`) | Contratos de catfact.ninja, Wikipedia, localStorage y buscador |
 | `react-hook-form` + `@hookform/resolvers` | Buscador con validación Zod |
-| `@radix-ui/*` | Dialog (Ronrón y paleta), Tabs (pantalla), ToggleGroup (filtros de pelaje), Toggle (sonido), Tooltip, Label, Slot |
+| `@radix-ui/*` | Dialog (Ronrón y paleta), Tabs (pantalla), ToggleGroup (filtros de pelaje), Tooltip, Label, Slot |
 | `cmdk` + `vaul` | Paleta ⌘K: diálogo en escritorio, cajón inferior en móvil |
 | `sileo` | Avisos, detrás de `presentation/lib/notify.ts`. Un solo aviso a la vez: el nuevo transforma al anterior |
-| `next-themes` | Tema claro por defecto y oscuro a elección: clase `.dark` en `<html>` antes del primer pintado, recordada en `localStorage` |
+| (propio) `theme/` | Tema claro por defecto y oscuro a elección: script en `<head>` + store con `useSyncExternalStore`. `next-themes` sigue instalado pero sin uso: su `<script>` dentro de un componente de cliente provocaba un aviso de React 19 al volver a montarse |
 | `motion` + `@use-gesture/react` | Tirar para recargar |
 | `lenis` | Desplazamiento suave con rueda (se para con modales abiertos) |
 | `embla-carousel-react` | Razas emparentadas |

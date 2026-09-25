@@ -5,10 +5,10 @@
     "best-practices": 100,
     "seo": 100,
     "performanceRuns": [
-      91,
-      91,
       89,
-      89,
+      90,
+      91,
+      90,
       90
     ]
   },
@@ -26,16 +26,16 @@
     ]
   },
   "detalle-mobile": {
-    "performance": 90,
+    "performance": 91,
     "accessibility": 100,
     "best-practices": 100,
     "seo": 100,
     "performanceRuns": [
-      78,
-      90,
-      90,
-      90,
-      90
+      89,
+      91,
+      91,
+      91,
+      91
     ]
   },
   "detalle-desktop": {
@@ -44,7 +44,7 @@
     "best-practices": 100,
     "seo": 100,
     "performanceRuns": [
-      90,
+      100,
       100,
       100,
       100,
