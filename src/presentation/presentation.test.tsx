@@ -31,14 +31,18 @@ describe("useDebouncedValue", () => {
 
 describe("estado del directorio en la URL", () => {
   it("parsea y sanea q y page", () => {
-    expect(parseDirectoryParams(new URLSearchParams("q=  ben   gal &page=3"))).toEqual({ q: "ben gal", page: 3 });
-    expect(parseDirectoryParams({ page: "-4" })).toEqual({ q: "", page: 1 });
-    expect(parseDirectoryParams({ page: "nope", q: ["a", "b"] })).toEqual({ q: "a", page: 1 });
+    expect(parseDirectoryParams(new URLSearchParams("q=  ben   gal &page=3&pelaje=rex"))).toEqual({
+      q: "ben gal",
+      page: 3,
+      coat: "rex",
+    });
+    expect(parseDirectoryParams({ page: "-4", pelaje: "plumas" })).toEqual({ q: "", page: 1, coat: "all" });
+    expect(parseDirectoryParams({ page: "nope", q: ["a", "b"] })).toEqual({ q: "a", page: 1, coat: "all" });
   });
 
   it("omite los valores por defecto al escribir", () => {
-    expect(directorySearch({ q: "", page: 1 })).toBe("");
-    expect(directorySearch({ q: "rex", page: 2 })).toBe("?q=rex&page=2");
+    expect(directorySearch({ q: "", page: 1, coat: "all" })).toBe("");
+    expect(directorySearch({ q: "rex", page: 2, coat: "long" })).toBe("?q=rex&pelaje=long&page=2");
   });
 });
 

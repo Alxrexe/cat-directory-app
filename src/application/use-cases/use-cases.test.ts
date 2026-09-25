@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import { createBreed } from "@domain/breed/breed";
+import { createCatFact } from "@domain/fact/fact";
 import type { BreedPage } from "@domain/breed/breed-page";
 import type { BreedRepository } from "../ports/breed-repository";
 import type { BreedSnapshot, BreedSnapshotStore } from "../ports/breed-snapshot-store";
 import { createFirstPageSnapshot, SNAPSHOT_MAX_AGE_MS } from "./first-page-snapshot";
 import { createGetBreedDossier } from "./get-breed-dossier";
+import { createGetRandomFact, FACT_DRAWS, FACT_MAX_LENGTH } from "./get-random-fact";
 import { createListBreedsPage } from "./list-breeds-page";
 import { createRestoreBreedPages, MAX_RESTORED_PAGES } from "./restore-breed-pages";
 
@@ -105,5 +107,27 @@ describe("firstPageSnapshot", () => {
     expect(snapshot.recall()?.page).toEqual(page);
     now.mockReturnValue(SNAPSHOT_MAX_AGE_MS + 1);
     expect(snapshot.recall()).toBeNull();
+  });
+});
+
+describe("getRandomFact", () => {
+  const grim = createCatFact("Approximately 24 cat skins can make a coat.");
+  const cozy = createCatFact("Cats sleep 16 to 18 hours per day.");
+
+  it("pide otro dato si el primero no es apto para toda la familia", async () => {
+    const getRandom = vi.fn().mockResolvedValueOnce(grim).mockResolvedValueOnce(cozy);
+    const getRandomFact = createGetRandomFact({ facts: { getRandom } });
+
+    await expect(getRandomFact()).resolves.toBe(cozy);
+    expect(getRandom).toHaveBeenCalledTimes(2);
+    expect(getRandom).toHaveBeenCalledWith({ maxLength: FACT_MAX_LENGTH });
+  });
+
+  it("no insiste para siempre: tras el límite muestra el último", async () => {
+    const getRandom = vi.fn().mockResolvedValue(grim);
+    const getRandomFact = createGetRandomFact({ facts: { getRandom } });
+
+    await expect(getRandomFact()).resolves.toBe(grim);
+    expect(getRandom).toHaveBeenCalledTimes(FACT_DRAWS);
   });
 });
