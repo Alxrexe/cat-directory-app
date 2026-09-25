@@ -234,10 +234,10 @@ const DockRow = memo(function DockRow({ entry, index, active, query, onFocusRow,
       onPointerEnter={() => onSpotlight(breed.slug)}
       onPointerLeave={() => onSpotlight(null)}
       onClick={(event: MouseEvent<HTMLAnchorElement>) => onOpen(breed.slug, event.currentTarget.getBoundingClientRect())}
-      className="group relative isolate flex h-16 items-center gap-3 rounded-2xl px-2 outline-offset-[-3px] before:absolute before:inset-0 before:-z-10 before:rounded-2xl before:bg-[linear-gradient(180deg,var(--surface),var(--surface-2))] before:opacity-0 before:shadow-[0_0_0_1px_var(--alu-mid),inset_0_1px_0_var(--alu-hi),0_8px_18px_-14px_var(--shadow-deep)] before:transition-opacity before:duration-200 hover:before:opacity-100 focus-visible:before:opacity-100"
+      className="group relative isolate flex h-16 items-center gap-3 rounded-2xl px-2 outline-offset-[-3px] before:absolute before:inset-0 before:-z-10 before:rounded-2xl before:bg-[linear-gradient(180deg,var(--pearl-hi),var(--pearl-lo))] before:opacity-0 before:shadow-[0_0_0_1px_var(--hairline),inset_0_1px_0_var(--sheen),0_10px_22px_-14px_var(--shadow-deep)] before:transition-opacity before:duration-200 hover:before:opacity-100 focus-visible:before:opacity-100"
     >
       <span className="relative grid size-11 shrink-0 place-items-center">
-        <OrbShape className="absolute inset-0 size-full" metal innerEar="var(--ring)" />
+        <OrbShape className="absolute inset-0 size-full" pearl innerEar="var(--pearl-hi)" />
         <span className="relative mt-1.5 font-display text-sm font-semibold text-slate">{breedMonogram(breed.name)}</span>
       </span>
       <span className="min-w-0 flex-1">
@@ -247,7 +247,7 @@ const DockRow = memo(function DockRow({ entry, index, active, query, onFocusRow,
         <span className="block truncate text-[0.8rem] text-ink-soft">{country?.primary ?? MISSING}</span>
       </span>
       <span className="hud hidden shrink-0 text-[0.58rem] text-ink-soft sm:block">{COAT_LABEL[family]}</span>
-      <span className="tabular w-9 shrink-0 text-right text-[0.78rem] text-ink-soft" aria-hidden="true">
+      <span className="lcd w-9 shrink-0 text-right text-[0.8rem] text-ink-soft" aria-hidden="true">
         {padIndex(entry.position)}
       </span>
       <ChevronRight

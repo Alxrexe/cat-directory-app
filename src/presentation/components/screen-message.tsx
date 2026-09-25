@@ -3,7 +3,7 @@ import { CatMark } from "../brand/cat-mark";
 
 /**
  * Mensaje a pantalla completa sobre el cielo (404, errores): una pieza de
- * porcelana con el sello del gato, como un aviso del sistema de la consola.
+ * perla con el sello del gato, como un aviso del sistema de la consola.
  */
 export function ScreenMessage({
   label,
@@ -20,7 +20,7 @@ export function ScreenMessage({
 }) {
   return (
     <div className="flex min-h-dvh items-center justify-center px-4 py-16">
-      <div role={role} className="porcelain flex w-full max-w-xl flex-col items-center gap-5 rounded-[40px] px-6 py-10 text-center sm:px-10">
+      <div role={role} className="pearl squircle flex w-full max-w-xl flex-col items-center gap-5 rounded-[40px] px-6 py-10 text-center sm:px-10">
         <CatMark className="size-20" />
         <p className="hud text-slate">{label}</p>
         <h1 className="font-display text-[clamp(1.9rem,6vw,2.8rem)] leading-tight font-semibold text-ink">{title}</h1>

@@ -10,9 +10,10 @@ const hoverLayer =
 
 /**
  * Botones de consola. Tres voces:
- * - `default`: pizarra anodizada (la acción principal de la vista).
- * - `outline`: porcelana con canto de aluminio (acciones secundarias).
- * - `console`: la tapa de aluminio torneado del menú, para iconos.
+ * - `default`: gel azul (la acción principal de la vista).
+ * - `outline`: perla (acciones secundarias).
+ * - `console`: botón redondo de perla del menú, para iconos, con el marco
+ *   de selección que late al señalarlo.
  * Al pulsarlos bajan un píxel, como una tecla. Solo se animan transform y
  * opacidad; el fondo de hover es una capa que se funde.
  */
@@ -21,9 +22,9 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "anodized hover:-translate-y-0.5",
-        outline: "porcelain text-ink hover:-translate-y-0.5",
-        console: "console-dot text-slate hover:-translate-y-0.5",
+        default: "gel hover:-translate-y-0.5",
+        outline: "pearl text-ink hover:-translate-y-0.5",
+        console: "pearl-button select-frame text-slate hover:-translate-y-0.5",
         ghost: cn("text-ink before:bg-slate/8", hoverLayer),
         link: "h-auto rounded-none px-0 text-slate underline decoration-ring decoration-2 underline-offset-4 hover:decoration-accent",
       },

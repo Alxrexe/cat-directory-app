@@ -36,7 +36,7 @@ export default function PaletteDialog({ open, onOpenChange }: PaletteDialogProps
           <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-overlay data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
           <DialogPrimitive.Content
             aria-describedby={undefined}
-            className="fixed top-[14vh] left-1/2 z-50 w-[min(40rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-[28px] bg-surface text-ink shadow-[0_0_0_1px_var(--alu-edge),inset_0_1px_0_var(--alu-hi),0_30px_70px_-24px_var(--shadow-deep)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-2"
+            className="fixed top-[14vh] left-1/2 z-50 w-[min(40rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden squircle rounded-[28px] bg-surface text-ink shadow-[0_0_0_1px_var(--hairline),inset_0_1px_0_var(--sheen),0_30px_70px_-24px_var(--shadow-deep)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-2"
           >
             <DialogPrimitive.Title className="sr-only">Ir a una raza</DialogPrimitive.Title>
             {body}

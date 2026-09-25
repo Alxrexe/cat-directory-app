@@ -39,7 +39,7 @@ export function ConsoleClock({ className }: { className?: string }) {
     <span className={cn("flex-col items-end justify-center gap-1 leading-none", className)}>
       <time
         dateTime={hydrated ? now.toISOString() : undefined}
-        className="tabular text-[0.95rem] font-medium text-ink"
+        className="lcd text-[1.2rem] text-ink"
         suppressHydrationWarning
       >
         {hydrated ? formatTime(now) : "--:--"}
@@ -91,7 +91,7 @@ export function NetworkIndicator({ className }: { className?: string }) {
 
 /**
  * Razas descubiertas: un aro de progreso (el mismo aro lavanda del logo,
- * llenándose en pervinca) y la cuenta en cifras tabulares.
+ * llenándose en azul) y la cuenta en la matriz de puntos del LCD.
  */
 export function DiscoveryMeter({ total, className }: { total: number; className?: string }) {
   const hydrated = useHydrated();
@@ -121,7 +121,7 @@ export function DiscoveryMeter({ total, className }: { total: number; className?
           strokeDasharray={`${Math.max(ratio * 100, shown ? 4 : 0)} 100`}
         />
       </svg>
-      <span className="tabular flex items-baseline text-[0.95rem] font-medium text-ink">
+      <span className="lcd flex items-baseline text-[1.2rem] text-ink">
         <span ref={numberRef} className="inline-block">
           {String(shown).padStart(2, "0")}
         </span>

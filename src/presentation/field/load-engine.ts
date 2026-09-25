@@ -16,8 +16,9 @@ export const loadFieldEngine = () => {
 /** Familias tipográficas ya resueltas por next/font (con su hash). */
 export async function resolveAtlasFonts() {
   const styles = getComputedStyle(document.documentElement);
-  const display = styles.getPropertyValue("--font-rubik").trim() || "system-ui";
-  const body = styles.getPropertyValue("--font-nunito").trim() || "system-ui";
+  // Monograma y nombre en la misma Hubot Sans del resto de la interfaz.
+  const display = styles.getPropertyValue("--font-hubot").trim() || "system-ui";
+  const body = display;
   await Promise.allSettled([document.fonts.load(`700 80px ${display}`), document.fonts.load(`800 24px ${body}`)]);
   return { display, body };
 }

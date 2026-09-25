@@ -63,3 +63,26 @@ export function useIdleModule<T>(loader: () => Promise<T>, { now = false, idle =
 
   return module;
 }
+
+/**
+ * `true` cuando la página ya cargó (evento load) y el navegador tuvo un
+ * momento libre. Para lo que no debe competir con el primer pintado: el
+ * video del cielo, el dato curioso. Si la página ya había cargado (se llegó
+ * navegando), es cuestión de un frame.
+ */
+export function usePageSettled(): boolean {
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    let cancel = () => {};
+    const wait = () => {
+      cancel = onIdle(() => setSettled(true), 1500);
+    };
+    if (document.readyState === "complete") wait();
+    else window.addEventListener("load", wait, { once: true });
+    return () => {
+      cancel();
+      window.removeEventListener("load", wait);
+    };
+  }, []);
+  return settled;
+}

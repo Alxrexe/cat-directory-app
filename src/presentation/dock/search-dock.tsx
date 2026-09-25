@@ -43,7 +43,7 @@ interface SearchDockProps {
 
 /**
  * La consola de abajo, como la barra inferior del menú de una consola de
- * sobremesa: una pieza de porcelana cuyo borde se levanta en el centro
+ * sobremesa: una pieza de plástico perla cuyo borde se levanta en el centro
  * (la "joroba") para alojar el buscador, con botones redondos en las
  * esquinas (recargar, lista), los filtros de pelaje como un selector de
  * canales y una tira de atajos reales en mono.
@@ -108,7 +108,6 @@ export function SearchDock({
         data-state={!visible ? "hidden" : expanded ? "open" : "closed"}
         className={cn(
           "pointer-events-auto relative w-full text-ink [--highlight:var(--accent)] [--panel:min(380px,46dvh)]",
-          "drop-shadow-[0_-10px_22px_var(--shadow-soft)]",
           // Solo transform: la bandeja se desliza, nunca cambia de altura.
           "transition-transform duration-700 ease-[var(--ease-cozy)] will-change-transform",
           "data-[state=closed]:[transform:translateY(var(--panel))] data-[state=hidden]:[transform:translateY(calc(var(--panel)+220px))]",
@@ -118,19 +117,27 @@ export function SearchDock({
           Consola de búsqueda
         </h2>
 
+        {/* Sombra de la consola sobre el cielo: una capa fija con degradado.
+            (Un filtro drop-shadow sobre toda la bandeja se recalculaba cada
+            vez que la lista se desplazaba.) */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 -top-8 h-10 bg-[linear-gradient(to_top,var(--shadow-soft),transparent)]"
+        />
+
         {/*
           Silueta: cinco columnas. Los extremos son la barra plana (su filete
           superior es el borde); las dos intermedias son los hombros curvos
           en SVG; la central es la joroba que sube y aloja el buscador.
         */}
         <div className="grid grid-cols-[52px_26px_minmax(0,1fr)_26px_52px] grid-rows-[22px_auto] sm:grid-cols-[minmax(72px,1fr)_56px_minmax(0,660px)_56px_minmax(72px,1fr)] sm:grid-rows-[28px_auto]">
-          {/* El filete es un canto de aluminio: línea oscura y brillo debajo. */}
+          {/* El filete es el canto del plástico: un hilo de tinta y luz debajo. */}
           <div
             aria-hidden="true"
-            className="col-start-1 row-start-1 border-b-[1.5px] border-alu-edge shadow-[0_1.5px_0_var(--alu-hi)]"
+            className="col-start-1 row-start-1 border-b border-hairline shadow-[0_1px_0_var(--sheen)]"
           />
           <Shoulder className="col-start-2 row-start-1" />
-          <div className="col-start-3 row-span-2 row-start-1 border-t-[1.5px] border-alu-edge bg-surface px-1 pt-3 shadow-[inset_0_1.5px_0_var(--alu-hi)] sm:px-2 sm:pt-4">
+          <div className="col-start-3 row-span-2 row-start-1 border-t border-hairline bg-surface px-1 pt-3 shadow-[inset_0_1px_0_var(--sheen),0_-10px_20px_-14px_var(--shadow-deep)] sm:px-2 sm:pt-4">
             <SearchField
               ref={searchRef}
               defaultQuery={query}
@@ -148,7 +155,7 @@ export function SearchDock({
           <Shoulder mirrored className="col-start-4 row-start-1" />
           <div
             aria-hidden="true"
-            className="col-start-5 row-start-1 border-b-[1.5px] border-alu-edge shadow-[0_1.5px_0_var(--alu-hi)]"
+            className="col-start-5 row-start-1 border-b border-hairline shadow-[0_1px_0_var(--sheen)]"
           />
 
           {/* Esquina izquierda: recargar y el contador. */}
@@ -167,7 +174,7 @@ export function SearchDock({
               </Button>
             </Hint>
             <span className="hidden flex-col gap-1 leading-none lg:flex">
-              <span className="tabular text-[1.05rem] font-medium text-ink">{counter}</span>
+              <span className="lcd text-[1.1rem] text-ink">{counter}</span>
               <span className="hud text-[0.58rem] text-ink-soft">{filtering ? "Coinciden" : "Despiertas"}</span>
             </span>
           </div>
@@ -211,13 +218,15 @@ export function SearchDock({
                 <ToggleGroup.Item
                   key={chip}
                   value={chip}
-                  className="relative isolate h-9 shrink-0 rounded-full px-4 font-display text-[0.82rem] font-medium bg-[linear-gradient(180deg,var(--surface),var(--surface-2))] text-ink-soft shadow-[inset_0_-1px_0_var(--alu-mid)] ring-1 ring-alu-mid before:absolute before:inset-0 before:-z-10 before:scale-90 before:rounded-full before:bg-[linear-gradient(180deg,var(--anod-hi),var(--anod-lo))] before:opacity-0 before:transition-[opacity,transform] before:duration-300 before:ease-[var(--ease-cozy)] hover:text-ink data-[state=on]:text-surface data-[state=on]:ring-anod-lo data-[state=on]:before:scale-100 data-[state=on]:before:opacity-100"
+                  // Chip de perla; el elegido se llena de gel (una capa que
+                  // crece y se funde: transform + opacidad).
+                  className="pearl select-frame relative isolate h-9 shrink-0 rounded-full px-4 font-display text-[0.82rem] font-semibold text-ink-soft before:absolute before:inset-0 before:-z-10 before:scale-75 before:rounded-full before:bg-[linear-gradient(180deg,var(--gel-gloss)_0%,transparent_46%),linear-gradient(180deg,var(--gel-hi),var(--gel)_58%,var(--gel-lo))] before:opacity-0 before:transition-[opacity,transform] before:duration-300 before:ease-[var(--ease-cozy)] hover:text-ink data-[state=on]:text-gel-ink data-[state=on]:before:scale-100 data-[state=on]:before:opacity-100"
                 >
                   {chip === "all" ? "Todos" : COAT_LABEL[chip as CoatFamily]}
                 </ToggleGroup.Item>
               ))}
             </ToggleGroup.Root>
-            <span className="tabular shrink-0 text-sm text-ink-soft lg:hidden">{counter}</span>
+            <span className="lcd shrink-0 text-sm text-ink-soft lg:hidden">{counter}</span>
           </div>
           <ShortcutStrip />
         </div>
@@ -225,7 +234,7 @@ export function SearchDock({
         {/* Bandeja con la lista */}
         <div
           id="dock-panel"
-          className="relative h-[var(--panel)] border-t-[1.5px] border-alu-mid bg-paper"
+          className="relative h-[var(--panel)] border-t border-hairline bg-paper"
           inert={!expanded}
         >
           <div className="relative mx-auto h-full max-w-[980px]">
@@ -304,9 +313,9 @@ function Shoulder({ mirrored = false, className }: { mirrored?: boolean; classNa
       className={cn("h-full w-full", mirrored && "-scale-x-100", className)}
     >
       <path d="M0 28 C28 28 28 0 56 0 L56 28 Z" fill="var(--surface)" />
-      {/* Canto de aluminio: la arista oscura y, justo dentro, el brillo. */}
-      <path d="M0 27.2 C28 27.2 28 0.8 56 0.8" fill="none" stroke="var(--alu-edge)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
-      <path d="M0 28.9 C28 28.9 28 2.5 56 2.5" fill="none" stroke="var(--alu-hi)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+      {/* El canto del plástico: un hilo de tinta y, justo dentro, la luz. */}
+      <path d="M0 27.5 C28 27.5 28 0.5 56 0.5" fill="none" stroke="var(--hairline)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+      <path d="M0 28.6 C28 28.6 28 1.6 56 1.6" fill="none" stroke="var(--sheen)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }
@@ -324,14 +333,14 @@ function ShortcutStrip() {
   ];
   return (
     <div
-      className="mx-auto mt-3 hidden max-w-[980px] items-center justify-between border-t border-alu-mid pt-2.5 lg:flex"
+      className="mx-auto mt-3 hidden max-w-[980px] items-center justify-between border-t border-hairline pt-2.5 lg:flex"
       aria-hidden="true"
     >
       <ul className="flex items-center gap-5">
         {keys.map(([key, label]) => (
           <li key={key} className="hud flex items-center gap-2 text-[0.58rem] text-ink-soft">
-            {/* Tecla de aluminio, como las de un teclado de portátil. */}
-            <kbd className="tabular grid h-5 min-w-5 place-items-center rounded-[5px] bg-[linear-gradient(180deg,var(--alu-hi),var(--alu-mid))] px-1.5 text-[0.62rem] tracking-normal text-slate normal-case shadow-[0_0_0_1px_var(--alu-edge),inset_0_-1px_0_var(--alu-lo)]">
+            {/* Tecla de perla, como las de un teclado de portátil blanco. */}
+            <kbd className="pearl grid h-5 min-w-5 place-items-center rounded-[6px] px-1.5 font-sans text-[0.64rem] font-semibold tracking-normal text-slate normal-case">
               {key}
             </kbd>
             {label}

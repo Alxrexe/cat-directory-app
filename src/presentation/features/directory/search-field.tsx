@@ -111,7 +111,7 @@ export function SearchField({
       </LabelPrimitive.Root>
       <div
         className={cn(
-          // Un pozo en la porcelana: fondo algo más hondo y sombra interior.
+          // Un pozo en el plástico: fondo algo más hondo y sombra interior.
           "well group relative flex h-12 items-center rounded-full",
           // Anillo de foco en su propia capa: aparece fundiéndose (opacidad).
           "after:pointer-events-none after:absolute after:inset-0 after:rounded-full after:opacity-0 after:ring-2 after:ring-accent after:transition-opacity after:duration-200 focus-within:after:opacity-100",
@@ -159,7 +159,7 @@ export function SearchField({
             <X className="size-4" aria-hidden="true" />
           </button>
         ) : (
-          <kbd className="tabular pointer-events-none absolute right-3 hidden h-6 min-w-6 place-items-center rounded-[6px] bg-[linear-gradient(180deg,var(--alu-hi),var(--alu-mid))] text-[0.72rem] text-slate shadow-[0_0_0_1px_var(--alu-edge),inset_0_-1px_0_var(--alu-lo)] md:grid">
+          <kbd className="pearl pointer-events-none absolute right-3 hidden h-6 min-w-6 place-items-center rounded-[7px] text-[0.72rem] font-semibold text-slate md:grid">
             /
           </kbd>
         )}

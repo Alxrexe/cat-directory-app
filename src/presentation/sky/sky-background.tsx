@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { cn } from "../lib/cn";
+import { usePageSettled } from "../lib/idle";
 import { useSimulationStore } from "../simulation/simulation-store";
 import { useColorTheme, type ColorTheme } from "../theme/use-color-theme";
 import { SKY } from "./sky-media";
@@ -24,6 +25,9 @@ const POSTER_CLASS: Record<ColorTheme, string> = {
  * - El póster (10 KB) llega justo después del primer pintado y el video
  *   llega encima con un fundido. El video se crea cuando la simulación lo
  *   pide y el cielo oculto se pausa.
+ * - Nada del cielo se pide antes de que la página termine de cargar y el
+ *   navegador quede ocioso: en una ficha abierta desde un enlace, póster y
+ *   video (85 kB) competían con la foto por el primer pintado.
  * - Con movimiento reducido se queda el póster, sin video.
  */
 export function SkyBackground() {
@@ -33,11 +37,12 @@ export function SkyBackground() {
   const { theme, known } = useColorTheme();
   const width = wide ? 1920 : 1280;
   const play = active && !reducedMotion;
+  const settled = usePageSettled();
 
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-[var(--sky-fallback)]">
-      <SkyLayer sky="light" enabled={known && theme === "light"} width={width} play={play} className="dark:opacity-0" />
-      <SkyLayer sky="dark" enabled={known && theme === "dark"} width={width} play={play} className="opacity-0 dark:opacity-100" />
+      <SkyLayer sky="light" enabled={settled && known && theme === "light"} width={width} play={play} className="dark:opacity-0" />
+      <SkyLayer sky="dark" enabled={settled && known && theme === "dark"} width={width} play={play} className="opacity-0 dark:opacity-100" />
     </div>
   );
 }

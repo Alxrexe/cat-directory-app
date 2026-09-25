@@ -1,30 +1,36 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import { Nunito, Rubik } from "next/font/google";
+import { Doto, Hubot_Sans } from "next/font/google";
 import { AppProviders } from "@presentation/providers/app-providers";
 import { SkyBackground } from "@presentation/sky/sky-background";
+import { THEME_SCRIPT } from "@presentation/theme/theme-script";
 import { SITE_URL } from "./site-url";
 import "./globals.css";
 
 /**
- * Tres voces, como el menú de una consola con un panel técnico:
- * - Rubik: geometría con esquinas suavizadas, la de títulos y nombres.
- * - Nunito: redondeada y muy legible, la de la interfaz y el texto.
- * - La mono del sistema (SF Mono, Menlo, Consolas, Roboto Mono): rótulos
- *   técnicos, reloj y contadores. No descarga nada: una tercera fuente web
- *   costaba ~30 kB en el camino del primer pintado en móvil.
+ * Una sola voz, más una pantalla:
+ * - Hubot Sans: la tipografía del Michiverso, en todo (marca, títulos,
+ *   interfaz y lectura). Grotesca de esquinas redondeadas, entre robot y
+ *   juguete: tecnológica sin frialdad. En mayúsculas y con mucho aire es la
+ *   voz de los rótulos del HUD. Se precarga: es la del primer pintado.
+ * - Doto: matriz de puntos redondos, solo para las lecturas de LCD (hora,
+ *   contadores, N.º). 6 kB, sin precarga.
+ *
+ * Sin el eje de anchura de Hubot: con él, el archivo pesaba 93 kB (el
+ * doble) y retrasaba el primer pintado en móvil.
  */
-const rubik = Rubik({
-  variable: "--font-rubik",
+const hubot = Hubot_Sans({
+  variable: "--font-hubot",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
   display: "swap",
 });
 
-const nunito = Nunito({
-  variable: "--font-nunito",
+const doto = Doto({
+  variable: "--font-doto",
   subsets: ["latin"],
+  axes: ["ROND"],
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -51,8 +57,12 @@ export default function RootLayout({ children, modal }: LayoutProps<"/">) {
     <html
       lang="es"
       suppressHydrationWarning
-      className={`${rubik.variable} ${nunito.variable}`}
+      className={`${hubot.variable} ${doto.variable}`}
     >
+      <head>
+        {/* Tema oscuro antes del primer pintado (ver theme-script.ts). */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="min-h-dvh">
         <AppProviders>
           <a

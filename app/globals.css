@@ -1,30 +1,30 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* Tema oscuro manual: next-themes pone la clase .dark en <html>. */
+/* Tema oscuro manual: la clase .dark en <html> (ver presentation/theme). */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* Hallmark · genre: playful · macrostructure: console dashboard (custom)
- * theme: custom "porcelana de consola" · vibe: "consola blanca, anillo lavanda, pizarra serena"
- * paper oklch(97.4% 0.006 272) · accent oklch(56% 0.13 262) periwinkle
- * night: paper oklch(17.5% 0.028 278) · accent oklch(78% 0.11 288) lavender (.dark)
- * display Rubik · body Nunito · hud system mono · axes: light+dark / rounded-sans / cool
+ * theme: custom "consola perla" · vibe: "consola de bolsillo Y2K, cielo azul, perla y gel"
+ * day:   paper oklch(97.2% 0.01 255) · accent oklch(56% 0.19 262) electric periwinkle
+ * night: paper oklch(16% 0.035 268) · accent oklch(78% 0.12 285) lavender (.dark)
+ * type Hubot Sans (display + body) · lcd Doto · axes: light+dark / rounded-grotesk / cool
  */
 
 /* ==========================================================================
-   MICHIVERSO — sistema visual "Porcelana de consola"
+   MICHIVERSO — sistema visual "Consola perla"
 
-   Referentes: el menú de una consola familiar de sobremesa (piezas de
-   plástico blanco, botones redondos con aro, barra inferior curva con la
-   hora) y el rigor de una interfaz técnica (filetes de 1 px, etiquetas en
-   mono con mucho aire, cifras tabulares). Sin cristal: la porcelana es
-   opaca.
+   Referentes: una consola de bolsillo de plástico mate blanco (cantos
+   suaves, botones de gel, pantallas brillantes), el menú de una consola de
+   sobremesa (selección con marco azul que late) y el futurismo Y2K
+   (azul eléctrico, destellos de cuatro puntas, lecturas LCD de matriz de
+   puntos). De Apple, las esquinas continuas (squircle) y las sombras
+   largas y suaves. Nada de metal cepillado: superficies amables.
 
-   La paleta sale del logo: blanco, el aro gris lavanda y el gris pizarra
-   del gato. Un solo acento (pervinca) para foco, estado activo y progreso;
-   nunca como relleno grande.
+   La paleta sale del logo: blanco perla, el aro lavanda y el pizarra del
+   gato; el acento es un solo azul eléctrico (foco, selección, tecla A).
 
-   Todo movimiento es transform/opacity (compositor) o shader (WebGL).
+   Todo movimiento es transform/opacity/filter (compositor) o shader (WebGL).
    ========================================================================== */
 @theme {
   --ease-cozy: cubic-bezier(0.22, 1, 0.36, 1);
@@ -34,6 +34,7 @@
   --animate-shimmer: shimmer 1.8s var(--ease-soft) infinite;
   --animate-breathe: breathe 3.6s var(--ease-soft) infinite;
   --animate-blink: blink 1.1s steps(2, jump-none) infinite;
+  --animate-twinkle: twinkle 3.2s var(--ease-soft) infinite;
   @keyframes shimmer {
     from {
       transform: translateX(-100%);
@@ -58,12 +59,54 @@
       opacity: 0;
     }
   }
+  /* Destello de cuatro puntas: crece, gira un poco y se apaga. */
+  @keyframes twinkle {
+    0%,
+    62%,
+    100% {
+      transform: scale(0.2) rotate(0deg);
+      opacity: 0;
+    }
+    74% {
+      transform: scale(1) rotate(45deg);
+      opacity: 1;
+    }
+    88% {
+      transform: scale(0.5) rotate(90deg);
+      opacity: 0.4;
+    }
+  }
+}
+
+/* Fuera de @theme: Tailwind solo emite los keyframes de @theme que usa una
+   utilidad animate-*; estos se usan desde utilidades propias y clases
+   arbitrarias, así que van siempre. */
+/* Piezas sueltas (orejas, gatillos) que flotan: solo translateY. */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+/* El marco de selección late como en el menú de una consola. */
+@keyframes select-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
 }
 
 @theme inline {
-  --font-display: var(--font-rubik), ui-rounded, system-ui, sans-serif;
-  --font-sans: var(--font-nunito), ui-rounded, system-ui, sans-serif;
-  --font-hud: var(--hud-stack);
+  --font-display: var(--font-hubot), ui-rounded, system-ui, sans-serif;
+  --font-sans: var(--font-hubot), ui-rounded, system-ui, sans-serif;
+  --font-hud: var(--font-hubot), ui-rounded, system-ui, sans-serif;
+  --font-lcd: var(--font-doto), ui-monospace, monospace;
 
   --color-paper: var(--paper);
   --color-surface: var(--surface);
@@ -76,16 +119,12 @@
   --color-ink-soft: var(--ink-soft);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  --color-glint: var(--glint);
   --color-danger: var(--danger);
   --color-focus: var(--focus);
-
-  --color-alu-hi: var(--alu-hi);
-  --color-alu: var(--alu);
-  --color-alu-mid: var(--alu-mid);
-  --color-alu-lo: var(--alu-lo);
-  --color-alu-edge: var(--alu-edge);
-  --color-anod: var(--anod);
-  --color-anod-lo: var(--anod-lo);
+  --color-hairline: var(--hairline);
+  --color-gel: var(--gel);
+  --color-gel-ink: var(--gel-ink);
   --color-track: var(--track);
   --color-overlay: var(--overlay);
   --color-photo-ink: var(--photo-ink);
@@ -118,119 +157,124 @@
   --radius-3xl: 48px;
 }
 
-/* Contraste medido (WCAG 2.x) sobre --surface: tabla en ARCHITECTURE.md §8. */
+/* Contraste medido (WCAG 2.x): tabla en ARCHITECTURE.md §8. */
 :root {
-  --paper: oklch(97.4% 0.006 272);
-  --surface: oklch(99.3% 0.003 272); /* porcelana: blanco, nunca #fff */
-  --surface-2: oklch(95.8% 0.008 272);
-  --surface-3: oklch(92.6% 0.012 272);
+  --paper: oklch(97.2% 0.01 255); /* cielo pálido: fondo de la pantalla de inicio */
+  --surface: oklch(99.4% 0.003 255); /* perla: blanco, nunca #fff */
+  --surface-2: oklch(96.6% 0.008 258);
+  --surface-3: oklch(93.4% 0.014 260);
   --ring: oklch(84.6% 0.028 270); /* el aro del logo */
-  --ring-strong: oklch(62% 0.04 272); /* bordes de control, 3:1 */
-  --ink: oklch(29% 0.045 275);
+  --ring-strong: oklch(62% 0.045 268); /* bordes de control, 3:1 */
+  --ink: oklch(26% 0.05 268);
   --slate: oklch(43.8% 0.05 275); /* el gato del logo */
-  --ink-soft: oklch(49% 0.035 272);
-  --accent: oklch(56% 0.13 262); /* pervinca: foco, activo, progreso */
-  --accent-soft: oklch(92% 0.035 262);
+  --ink-soft: oklch(49% 0.035 268);
+  --accent: oklch(56% 0.19 262); /* azul eléctrico: foco, selección, tecla A */
+  --accent-soft: oklch(93% 0.04 258);
+  --glint: oklch(76% 0.14 228); /* cian: marco de selección y destellos */
   --danger: oklch(52% 0.17 25);
-  --focus: oklch(56% 0.13 262);
+  --focus: var(--accent);
 
-  /* Pantallas del Ronrón: pizarra profunda con texto lavanda. */
-  --screen: oklch(31% 0.045 275);
-  --screen-2: oklch(36% 0.045 275);
-  --screen-ink: oklch(96% 0.012 272);
-  --screen-soft: oklch(80% 0.03 272);
-  --screen-accent: oklch(82% 0.09 255);
+  /* Plástico perla: la luz cae de arriba; el canto es un filete de 1 px
+     del color de la tinta, casi transparente. Sin metal ni degradados duros. */
+  --pearl-hi: oklch(100% 0 0);
+  --pearl-lo: oklch(96.2% 0.008 258);
+  --shell-hi: oklch(99.6% 0.003 255);
+  --shell-lo: oklch(94.6% 0.013 258);
+  --hairline: oklch(26% 0.05 268 / 0.09);
+  --sheen: oklch(100% 0 0 / 0.95);
+  --shade: oklch(26% 0.05 268 / 0.06);
 
-  /* Aluminio mecanizado: cantos, botones redondos, carcasa del Ronrón.
-     Solo varía la luminosidad del mismo tono frío: un metal, no un arcoíris. */
-  --alu-hi: oklch(99% 0.003 272);
-  --alu: oklch(92% 0.009 272);
-  --alu-mid: oklch(86% 0.013 272);
-  --alu-lo: oklch(74% 0.018 272);
-  --alu-edge: oklch(66% 0.024 272);
+  /* Gel: la tecla principal, brillante como un botón Y2K. */
+  --gel-hi: oklch(62% 0.16 250);
+  --gel: oklch(52% 0.2 263);
+  --gel-lo: oklch(43% 0.19 266);
+  --gel-ink: oklch(99.4% 0.003 255);
+  --gel-gloss: oklch(100% 0 0 / 0.55);
 
-  /* Pizarra anodizada: la acción principal (A, cruceta, chip activo). */
-  --anod-hi: oklch(55% 0.055 275);
-  --anod: oklch(43% 0.05 275);
-  --anod-lo: oklch(33% 0.045 275);
-  --anod-shine: oklch(100% 0 0 / 0.28);
+  /* Pantallas del Ronrón: azul noche con texto claro y rótulos cian. */
+  --screen: oklch(25% 0.06 266);
+  --screen-2: oklch(31% 0.065 266);
+  --screen-ink: oklch(97% 0.01 255);
+  --screen-soft: oklch(81% 0.035 258);
+  --screen-accent: oklch(84% 0.1 228);
 
-  /* Tecla activa de las pestañas del Ronrón y su carril hundido. */
-  --key-hi: var(--alu-hi);
-  --key-lo: var(--alu-mid);
-  --track: var(--anod-lo);
+  /* Pestaña activa del Ronrón y su carril. */
+  --key-hi: var(--pearl-hi);
+  --key-lo: var(--pearl-lo);
+  --track: oklch(15% 0.05 268 / 0.55);
 
-  /* Texto sobre foto (pie del visor, nombres de la familia): siempre claro,
-     en los dos temas, porque va sobre la sombra de la propia foto. */
-  --photo-ink: oklch(99.3% 0.003 272);
+  /* Texto sobre foto: siempre claro, en los dos temas. */
+  --photo-ink: oklch(99.4% 0.003 255);
 
-  /* Sombras teñidas de pizarra, nunca negras. */
-  --shadow-soft: oklch(29% 0.045 275 / 0.28);
-  --shadow-deep: oklch(29% 0.045 275 / 0.5);
-  --scrim: oklch(20% 0.04 275 / 0.55);
-  /* Fondo tras un diálogo (Ronrón, paleta). */
-  --overlay: oklch(29% 0.045 275 / 0.25);
-  /* Reflejos de cristal: solo un brillo, nunca desenfoque de fondo. */
-  --glass-shine: oklch(100% 0 0 / 0.16);
-  --screen-shine: oklch(100% 0 0 / 0.07);
-
-  /* Mono del sistema para los rótulos técnicos: cero descargas. */
-  --hud-stack: ui-monospace, "SF Mono", Menlo, Consolas, "Roboto Mono", monospace;
+  /* Sombras teñidas de azul, nunca negras: largas y suaves. */
+  --shadow-soft: oklch(34% 0.09 262 / 0.14);
+  --shadow-deep: oklch(30% 0.09 262 / 0.26);
+  --scrim: oklch(20% 0.05 266 / 0.55);
+  --overlay: oklch(30% 0.08 262 / 0.22);
+  --glass-shine: oklch(100% 0 0 / 0.18);
+  --screen-shine: oklch(100% 0 0 / 0.09);
 
   --sky-fallback: oklch(78% 0.09 245);
-  --gate: var(--surface);
+  --gate: var(--paper);
+
+  /* La ola del cambio de tema lleva el color del tema al que va: estos
+     valores no cambian con .dark. */
+  --wave-day: oklch(97.2% 0.01 255);
+  --wave-day-rim: oklch(80% 0.1 240);
+  --wave-night: oklch(16% 0.035 268);
+  --wave-night-rim: oklch(62% 0.14 285);
   color-scheme: light;
 }
 
 /*
- * Tema oscuro: la misma consola en edición "noche". La carcasa pasa de
- * aluminio a grafito, la porcelana a un índigo profundo y las pantallas a
- * casi negro, para que sigan siendo lo más hondo del aparato. La pizarra
- * anodizada se vuelve lavanda (el aro del logo, encendido): A, cruceta y
- * chip activo siguen siendo lo único con color. Contraste en ARCHITECTURE.md §8.
+ * Tema oscuro: la misma consola en edición "medianoche". La perla pasa a
+ * índigo profundo, las pantallas a casi negro (siguen siendo lo más hondo
+ * del aparato) y el gel se vuelve lavanda luminoso. Ningún componente
+ * conoce el tema: solo cambian estos valores.
  */
 .dark {
-  --paper: oklch(17.5% 0.028 278);
-  --surface: oklch(23.5% 0.032 278);
-  --surface-2: oklch(20.5% 0.03 278);
-  --surface-3: oklch(28% 0.035 278);
-  --ring: oklch(36% 0.04 278);
-  --ring-strong: oklch(58% 0.05 280);
-  --ink: oklch(94.5% 0.012 280);
-  --slate: oklch(86% 0.035 285);
-  --ink-soft: oklch(76% 0.03 280);
-  --accent: oklch(78% 0.11 288);
-  --accent-soft: oklch(34% 0.07 288);
+  --paper: oklch(16% 0.035 268);
+  --surface: oklch(23% 0.04 268);
+  --surface-2: oklch(20% 0.037 268);
+  --surface-3: oklch(27.5% 0.043 268);
+  --ring: oklch(37% 0.045 272);
+  --ring-strong: oklch(60% 0.05 275);
+  --ink: oklch(95% 0.012 270);
+  --slate: oklch(87% 0.035 280);
+  --ink-soft: oklch(77% 0.03 272);
+  --accent: oklch(78% 0.12 285);
+  --accent-soft: oklch(34% 0.08 285);
+  --glint: oklch(82% 0.12 225);
   --danger: oklch(72% 0.15 22);
-  --focus: oklch(80% 0.11 288);
 
-  --screen: oklch(12.5% 0.022 280);
-  --screen-2: oklch(16% 0.026 280);
-  --screen-ink: oklch(95% 0.012 280);
-  --screen-soft: oklch(76% 0.03 280);
-  --screen-accent: oklch(83% 0.1 292);
+  --pearl-hi: oklch(31% 0.042 268);
+  --pearl-lo: oklch(25% 0.04 268);
+  --shell-hi: oklch(30% 0.042 268);
+  --shell-lo: oklch(22% 0.038 268);
+  --hairline: oklch(100% 0 0 / 0.08);
+  --sheen: oklch(100% 0 0 / 0.14);
+  --shade: oklch(0% 0 0 / 0.2);
 
-  /* Grafito: el mismo juego de luces del aluminio, en gris espacial. */
-  --alu-hi: oklch(54% 0.022 280);
-  --alu: oklch(39% 0.024 280);
-  --alu-mid: oklch(31% 0.026 280);
-  --alu-lo: oklch(23% 0.026 280);
-  --alu-edge: oklch(34% 0.03 282);
+  --gel-hi: oklch(86% 0.08 288);
+  --gel: oklch(74% 0.12 285);
+  --gel-lo: oklch(60% 0.14 282);
+  --gel-ink: oklch(19% 0.04 270);
+  --gel-gloss: oklch(100% 0 0 / 0.5);
 
-  /* Lavanda anodizada. */
-  --anod-hi: oklch(83% 0.08 290);
-  --anod: oklch(72% 0.1 290);
-  --anod-lo: oklch(57% 0.1 290);
-  --anod-shine: oklch(100% 0 0 / 0.45);
+  --screen: oklch(12% 0.03 268);
+  --screen-2: oklch(16% 0.035 268);
+  --screen-ink: oklch(95% 0.012 270);
+  --screen-soft: oklch(77% 0.03 272);
+  --screen-accent: oklch(84% 0.1 292);
 
-  --key-hi: var(--anod-hi);
-  --key-lo: var(--anod);
-  --track: oklch(8% 0.02 280);
+  --key-hi: var(--gel-hi);
+  --key-lo: var(--gel);
+  --track: oklch(6% 0.02 268 / 0.7);
 
-  --shadow-soft: oklch(6% 0.02 280 / 0.55);
-  --shadow-deep: oklch(4% 0.02 280 / 0.75);
-  --scrim: oklch(8% 0.03 280 / 0.6);
-  --overlay: oklch(8% 0.025 280 / 0.55);
+  --shadow-soft: oklch(5% 0.02 268 / 0.5);
+  --shadow-deep: oklch(3% 0.02 268 / 0.72);
+  --scrim: oklch(8% 0.03 268 / 0.6);
+  --overlay: oklch(8% 0.03 268 / 0.5);
   --glass-shine: oklch(100% 0 0 / 0.1);
   --screen-shine: oklch(100% 0 0 / 0.05);
 
@@ -283,120 +327,143 @@
 
 /* ── Utilidades propias ──────────────────────────────────────────────────── */
 
-/* Rótulo técnico: mono, mayúsculas, mucho aire, cifras tabulares. */
+/* Rótulo de HUD: Hubot en mayúsculas, con mucho aire y cifras tabulares. */
 @utility hud {
-  font-family: var(--hud-stack);
-  font-size: 0.66rem;
-  letter-spacing: 0.22em;
+  font-family: var(--font-hud);
+  font-weight: 600;
+  font-size: 0.64rem;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
 }
 
-/* Cifras de reloj y contadores (mono sin mayúsculas forzadas). */
-@utility tabular {
-  font-family: var(--hud-stack);
+/* Lectura de LCD: matriz de puntos redondos (hora, contadores, N.º). */
+@utility lcd {
+  font-family: var(--font-lcd);
+  font-variation-settings: "ROND" 100;
+  font-weight: 900;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
 }
 
-/* Porcelana con canto de aluminio: cara blanca y un bisel mecanizado
-   (claro arriba, oscuro abajo) dibujado como borde con degradado. */
-@utility porcelain {
-  border: 1.5px solid transparent;
+/* Cifras de interfaz (sin matriz de puntos). */
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+/* Esquinas continuas, como las de Apple, donde el navegador las sabe pintar. */
+@utility squircle {
+  @supports (corner-shape: squircle) {
+    corner-shape: squircle;
+  }
+}
+
+/* Perla: pieza de plástico blanco mate. Luz arriba, filete de 1 px, sombra
+   larga y suave. */
+@utility pearl {
+  background: linear-gradient(180deg, var(--pearl-hi), var(--pearl-lo));
+  box-shadow:
+    0 0 0 1px var(--hairline),
+    inset 0 1px 0 var(--sheen),
+    0 1px 2px var(--shadow-soft),
+    0 12px 28px -14px var(--shadow-deep);
+}
+
+/* Botón redondo de perla: un poco abombado (brillo radial arriba). */
+@utility pearl-button {
   background:
-    linear-gradient(180deg, var(--surface), var(--surface-2)) padding-box,
-    linear-gradient(180deg, var(--alu-hi), var(--alu-mid) 45%, var(--alu-edge)) border-box;
+    radial-gradient(120% 90% at 50% 0%, var(--sheen) 0%, transparent 58%),
+    linear-gradient(180deg, var(--pearl-hi), var(--pearl-lo));
   box-shadow:
-    inset 0 1px 0 var(--alu-hi),
-    0 14px 30px -18px var(--shadow-deep);
+    0 0 0 1px var(--hairline),
+    inset 0 1px 0 var(--sheen),
+    inset 0 -2px 3px -1px var(--shade),
+    0 2px 4px var(--shadow-soft),
+    0 10px 22px -12px var(--shadow-deep);
 }
 
-/* Botón redondo de consola: tapa de aluminio torneado. El cónico repite
-   luz y sombra como el cepillado circular de un mando de volumen. */
-@utility console-dot {
+/* Carcasa: el cuerpo de la consola (Ronrón, consola inferior). */
+@utility shell {
+  background: linear-gradient(180deg, var(--shell-hi), var(--shell-lo));
+  box-shadow:
+    0 0 0 1px var(--hairline),
+    inset 0 1.5px 0 var(--sheen),
+    inset 0 -3px 6px -3px var(--shade),
+    0 14px 30px -18px var(--shadow-soft),
+    0 50px 90px -40px var(--shadow-deep);
+}
+
+/* Gel: tecla principal con reflejo de burbuja arriba (Y2K). */
+@utility gel {
+  color: var(--gel-ink);
   background:
-    radial-gradient(120% 80% at 50% -10%, var(--alu-hi) 0%, transparent 60%),
-    conic-gradient(
-      from 200deg,
-      var(--alu-hi),
-      var(--alu) 12%,
-      var(--alu-mid) 25%,
-      var(--alu) 38%,
-      var(--alu-hi) 50%,
-      var(--alu) 62%,
-      var(--alu-mid) 75%,
-      var(--alu) 88%,
-      var(--alu-hi)
-    );
+    linear-gradient(180deg, var(--gel-gloss) 0%, transparent 46%),
+    linear-gradient(180deg, var(--gel-hi), var(--gel) 58%, var(--gel-lo));
   box-shadow:
-    0 0 0 1px var(--alu-edge),
-    inset 0 1px 0 var(--alu-hi),
-    inset 0 -3px 4px -2px var(--alu-lo),
-    0 8px 16px -10px var(--shadow-deep);
+    inset 0 0 0 1px var(--gel-lo),
+    inset 0 -3px 6px -2px var(--gel-lo),
+    0 8px 20px -8px var(--gel);
 }
 
-/* Disco de porcelana con aro de aluminio torneado (el botón de inicio). */
-@utility metal-disc {
-  border: 7px solid transparent;
-  background:
-    linear-gradient(180deg, var(--surface), var(--surface-2)) padding-box,
-    conic-gradient(
-        from 200deg,
-        var(--alu-hi),
-        var(--alu) 12%,
-        var(--alu-mid) 25%,
-        var(--alu) 38%,
-        var(--alu-hi) 50%,
-        var(--alu) 62%,
-        var(--alu-mid) 75%,
-        var(--alu) 88%,
-        var(--alu-hi)
-      )
-      border-box;
-  box-shadow:
-    0 0 0 1px var(--alu-edge),
-    inset 0 0 0 1px var(--alu-mid),
-    inset 0 2px 0 var(--alu-hi),
-    0 28px 50px -28px var(--shadow-deep);
-}
-
-/* Pizarra anodizada: la tecla principal. */
-@utility anodized {
-  color: var(--surface);
-  background: linear-gradient(180deg, var(--anod-hi), var(--anod) 55%, var(--anod-lo));
-  box-shadow:
-    0 0 0 1px var(--anod-lo),
-    inset 0 1px 0 var(--anod-shine),
-    inset 0 -2px 3px -1px var(--anod-lo),
-    0 10px 20px -12px var(--shadow-deep);
-}
-
-/* Carcasa de aluminio (el Ronrón): cepillado vertical y chaflán. */
-@utility metal-shell {
-  background: linear-gradient(180deg, var(--alu-hi), var(--alu) 14%, var(--alu-mid) 86%, var(--alu-lo));
-  box-shadow:
-    0 0 0 1px var(--alu-edge),
-    inset 0 1.5px 0 var(--alu-hi),
-    inset 0 -2px 0 var(--alu-lo),
-    0 50px 90px -44px var(--shadow-deep);
-}
-
-/* Pozo: una zona hundida en la porcelana (buscador, frontal). */
+/* Pozo: zona hundida en el plástico (buscador). */
 @utility well {
-  background: var(--paper);
+  background: var(--surface-2);
   box-shadow:
-    inset 0 2px 5px -2px var(--alu-lo),
-    inset 0 0 0 1px var(--alu-mid);
+    inset 0 1px 3px var(--shade),
+    inset 0 0 0 1px var(--hairline);
 }
 
-/* Pantalla apagada con reflejo: el brillo del cristal arriba, sin blur. */
+/* Pantalla encendida con reflejo de cristal: el brillo arriba, sin blur. */
 @utility screen-glass {
   background:
-    linear-gradient(170deg, var(--screen-shine) 0%, transparent 38%),
-    var(--screen);
+    linear-gradient(160deg, var(--screen-shine) 0%, transparent 34%),
+    linear-gradient(180deg, var(--screen-2), var(--screen));
   box-shadow:
-    0 0 0 1px var(--anod-lo),
-    inset 0 2px 12px var(--shadow-deep);
+    inset 0 0 0 1px oklch(100% 0 0 / 0.06),
+    inset 0 2px 12px oklch(0% 0 0 / 0.3),
+    0 0 0 1px var(--hairline);
+}
+
+/*
+ * Marco de selección, como el del menú de una consola: un filete azul
+ * eléctrico (3:1 o más sobre cualquier fondo del sistema) separado de la
+ * pieza, con un halo cian, que late mientras está señalada. Sustituye al
+ * anillo de foco. Es una capa aparte (::after) y solo cambia su opacidad.
+ */
+@utility select-frame {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    border-radius: inherit;
+    border: 2.5px solid var(--accent);
+    box-shadow:
+      inset 0 0 0 1px var(--surface),
+      0 0 16px -2px var(--glint);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms var(--ease-soft);
+  }
+  &:hover::after,
+  &:focus-visible::after,
+  &[data-selected="true"]::after {
+    opacity: 1;
+    animation: select-pulse 1.6s var(--ease-soft) infinite;
+  }
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+/* Rejilla de plano técnico, apenas visible, que se desvanece hacia los bordes. */
+@utility hud-grid {
+  background-image:
+    linear-gradient(to right, var(--hairline) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--hairline) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse at center, black 0%, transparent 72%);
 }
 
 @utility no-scrollbar {
@@ -404,6 +471,24 @@
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* Ola del cambio de tema (ver theme/theme-transition.ts). */
+.theme-wave {
+  position: fixed;
+  z-index: 200;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: scale(0.01);
+  will-change: transform, opacity;
+}
+.theme-wave[data-to="dark"] {
+  background: radial-gradient(circle closest-side, var(--wave-night) 0 56%, var(--wave-night-rim) 64%, transparent 71%);
+}
+.theme-wave[data-to="light"] {
+  background: radial-gradient(circle closest-side, var(--wave-day) 0 56%, var(--wave-day-rim) 64%, transparent 71%);
 }
 
 /* ── Lenis ──────────────────────────────────────────────────────────────── */
@@ -429,11 +514,16 @@ html.lenis body {
   text-transform: none;
 }
 [data-sileo-viewport] {
-  font-family: var(--font-nunito), system-ui, sans-serif;
+  font-family: var(--font-hubot), system-ui, sans-serif;
+}
+/* El hover del botón de acción cambia de color al instante: sin transición
+   de background-color (lo único de sileo que repintaba en cada frame). */
+[data-sileo-viewport] [data-sileo-button] {
+  transition: none;
 }
 
 /* sileo llama "dark" a su píldora clara (#f2f2f2): es la que encaja con la
-   porcelana. Sus colores de estado por defecto rondan 1,7–3,4:1 sobre ella;
+   perla. Sus colores de estado por defecto rondan 1,7–3,4:1 sobre ella;
    estos, tomados de la paleta, llegan a 5–6:1 (AA). */
 [data-sileo-viewport][data-theme="dark"] {
   --sileo-state-success: oklch(0.5 0.12 160);
@@ -451,14 +541,6 @@ html [data-sileo-viewport][data-theme="dark"] [data-sileo-description] {
   --sileo-state-error: var(--danger);
   --sileo-state-warning: oklch(0.84 0.12 80);
   --sileo-state-info: var(--accent);
-}
-
-/* Cambio de tema: la página vieja y la nueva se funden en el compositor
-   (solo opacidad), con la curva lenta del sistema. */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 0.6s;
-  animation-timing-function: var(--ease-soft);
 }
 
 @media (prefers-reduced-motion: reduce) {
