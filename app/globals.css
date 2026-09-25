@@ -1,10 +1,14 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Tema oscuro manual: next-themes pone la clase .dark en <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Hallmark · genre: playful · macrostructure: console dashboard (custom)
  * theme: custom "porcelana de consola" · vibe: "consola blanca, anillo lavanda, pizarra serena"
  * paper oklch(97.4% 0.006 272) · accent oklch(56% 0.13 262) periwinkle
- * display Rubik · body Nunito · hud system mono · axes: light / rounded-sans / cool
+ * night: paper oklch(17.5% 0.028 278) · accent oklch(78% 0.11 288) lavender (.dark)
+ * display Rubik · body Nunito · hud system mono · axes: light+dark / rounded-sans / cool
  */
 
 /* ==========================================================================
@@ -75,6 +79,17 @@
   --color-danger: var(--danger);
   --color-focus: var(--focus);
 
+  --color-alu-hi: var(--alu-hi);
+  --color-alu: var(--alu);
+  --color-alu-mid: var(--alu-mid);
+  --color-alu-lo: var(--alu-lo);
+  --color-alu-edge: var(--alu-edge);
+  --color-anod: var(--anod);
+  --color-anod-lo: var(--anod-lo);
+  --color-track: var(--track);
+  --color-overlay: var(--overlay);
+  --color-photo-ink: var(--photo-ink);
+
   --color-screen: var(--screen);
   --color-screen-2: var(--screen-2);
   --color-screen-ink: var(--screen-ink);
@@ -126,12 +141,101 @@
   --screen-soft: oklch(80% 0.03 272);
   --screen-accent: oklch(82% 0.09 255);
 
+  /* Aluminio mecanizado: cantos, botones redondos, carcasa del Ronrón.
+     Solo varía la luminosidad del mismo tono frío: un metal, no un arcoíris. */
+  --alu-hi: oklch(99% 0.003 272);
+  --alu: oklch(92% 0.009 272);
+  --alu-mid: oklch(86% 0.013 272);
+  --alu-lo: oklch(74% 0.018 272);
+  --alu-edge: oklch(66% 0.024 272);
+
+  /* Pizarra anodizada: la acción principal (A, cruceta, chip activo). */
+  --anod-hi: oklch(55% 0.055 275);
+  --anod: oklch(43% 0.05 275);
+  --anod-lo: oklch(33% 0.045 275);
+  --anod-shine: oklch(100% 0 0 / 0.28);
+
+  /* Tecla activa de las pestañas del Ronrón y su carril hundido. */
+  --key-hi: var(--alu-hi);
+  --key-lo: var(--alu-mid);
+  --track: var(--anod-lo);
+
+  /* Texto sobre foto (pie del visor, nombres de la familia): siempre claro,
+     en los dos temas, porque va sobre la sombra de la propia foto. */
+  --photo-ink: oklch(99.3% 0.003 272);
+
+  /* Sombras teñidas de pizarra, nunca negras. */
+  --shadow-soft: oklch(29% 0.045 275 / 0.28);
+  --shadow-deep: oklch(29% 0.045 275 / 0.5);
+  --scrim: oklch(20% 0.04 275 / 0.55);
+  /* Fondo tras un diálogo (Ronrón, paleta). */
+  --overlay: oklch(29% 0.045 275 / 0.25);
+  /* Reflejos de cristal: solo un brillo, nunca desenfoque de fondo. */
+  --glass-shine: oklch(100% 0 0 / 0.16);
+  --screen-shine: oklch(100% 0 0 / 0.07);
+
   /* Mono del sistema para los rótulos técnicos: cero descargas. */
   --hud-stack: ui-monospace, "SF Mono", Menlo, Consolas, "Roboto Mono", monospace;
 
   --sky-fallback: oklch(78% 0.09 245);
   --gate: var(--surface);
   color-scheme: light;
+}
+
+/*
+ * Tema oscuro: la misma consola en edición "noche". La carcasa pasa de
+ * aluminio a grafito, la porcelana a un índigo profundo y las pantallas a
+ * casi negro, para que sigan siendo lo más hondo del aparato. La pizarra
+ * anodizada se vuelve lavanda (el aro del logo, encendido): A, cruceta y
+ * chip activo siguen siendo lo único con color. Contraste en ARCHITECTURE.md §8.
+ */
+.dark {
+  --paper: oklch(17.5% 0.028 278);
+  --surface: oklch(23.5% 0.032 278);
+  --surface-2: oklch(20.5% 0.03 278);
+  --surface-3: oklch(28% 0.035 278);
+  --ring: oklch(36% 0.04 278);
+  --ring-strong: oklch(58% 0.05 280);
+  --ink: oklch(94.5% 0.012 280);
+  --slate: oklch(86% 0.035 285);
+  --ink-soft: oklch(76% 0.03 280);
+  --accent: oklch(78% 0.11 288);
+  --accent-soft: oklch(34% 0.07 288);
+  --danger: oklch(72% 0.15 22);
+  --focus: oklch(80% 0.11 288);
+
+  --screen: oklch(12.5% 0.022 280);
+  --screen-2: oklch(16% 0.026 280);
+  --screen-ink: oklch(95% 0.012 280);
+  --screen-soft: oklch(76% 0.03 280);
+  --screen-accent: oklch(83% 0.1 292);
+
+  /* Grafito: el mismo juego de luces del aluminio, en gris espacial. */
+  --alu-hi: oklch(54% 0.022 280);
+  --alu: oklch(39% 0.024 280);
+  --alu-mid: oklch(31% 0.026 280);
+  --alu-lo: oklch(23% 0.026 280);
+  --alu-edge: oklch(34% 0.03 282);
+
+  /* Lavanda anodizada. */
+  --anod-hi: oklch(83% 0.08 290);
+  --anod: oklch(72% 0.1 290);
+  --anod-lo: oklch(57% 0.1 290);
+  --anod-shine: oklch(100% 0 0 / 0.45);
+
+  --key-hi: var(--anod-hi);
+  --key-lo: var(--anod);
+  --track: oklch(8% 0.02 280);
+
+  --shadow-soft: oklch(6% 0.02 280 / 0.55);
+  --shadow-deep: oklch(4% 0.02 280 / 0.75);
+  --scrim: oklch(8% 0.03 280 / 0.6);
+  --overlay: oklch(8% 0.025 280 / 0.55);
+  --glass-shine: oklch(100% 0 0 / 0.1);
+  --screen-shine: oklch(100% 0 0 / 0.05);
+
+  --sky-fallback: oklch(21% 0.05 272);
+  color-scheme: dark;
 }
 
 @layer base {
@@ -195,23 +299,104 @@
   letter-spacing: 0.02em;
 }
 
-/* Porcelana: pieza opaca con aro lavanda y un brillo arriba. La sombra se
-   tiñe de la pizarra, nunca negra. */
+/* Porcelana con canto de aluminio: cara blanca y un bisel mecanizado
+   (claro arriba, oscuro abajo) dibujado como borde con degradado. */
 @utility porcelain {
-  background: linear-gradient(180deg, var(--surface), var(--surface-2));
+  border: 1.5px solid transparent;
+  background:
+    linear-gradient(180deg, var(--surface), var(--surface-2)) padding-box,
+    linear-gradient(180deg, var(--alu-hi), var(--alu-mid) 45%, var(--alu-edge)) border-box;
   box-shadow:
-    0 0 0 1.5px var(--ring),
-    inset 0 1.5px 0 oklch(100% 0 0 / 0.9),
-    0 14px 30px -18px oklch(29% 0.045 275 / 0.45);
+    inset 0 1px 0 var(--alu-hi),
+    0 14px 30px -18px var(--shadow-deep);
 }
 
-/* Botón redondo de consola: blanco, aro, icono pizarra. */
+/* Botón redondo de consola: tapa de aluminio torneado. El cónico repite
+   luz y sombra como el cepillado circular de un mando de volumen. */
 @utility console-dot {
-  background: linear-gradient(180deg, var(--surface), var(--surface-2));
+  background:
+    radial-gradient(120% 80% at 50% -10%, var(--alu-hi) 0%, transparent 60%),
+    conic-gradient(
+      from 200deg,
+      var(--alu-hi),
+      var(--alu) 12%,
+      var(--alu-mid) 25%,
+      var(--alu) 38%,
+      var(--alu-hi) 50%,
+      var(--alu) 62%,
+      var(--alu-mid) 75%,
+      var(--alu) 88%,
+      var(--alu-hi)
+    );
   box-shadow:
-    0 0 0 2px var(--ring),
-    inset 0 1.5px 0 oklch(100% 0 0 / 0.9),
-    0 8px 18px -12px oklch(29% 0.045 275 / 0.55);
+    0 0 0 1px var(--alu-edge),
+    inset 0 1px 0 var(--alu-hi),
+    inset 0 -3px 4px -2px var(--alu-lo),
+    0 8px 16px -10px var(--shadow-deep);
+}
+
+/* Disco de porcelana con aro de aluminio torneado (el botón de inicio). */
+@utility metal-disc {
+  border: 7px solid transparent;
+  background:
+    linear-gradient(180deg, var(--surface), var(--surface-2)) padding-box,
+    conic-gradient(
+        from 200deg,
+        var(--alu-hi),
+        var(--alu) 12%,
+        var(--alu-mid) 25%,
+        var(--alu) 38%,
+        var(--alu-hi) 50%,
+        var(--alu) 62%,
+        var(--alu-mid) 75%,
+        var(--alu) 88%,
+        var(--alu-hi)
+      )
+      border-box;
+  box-shadow:
+    0 0 0 1px var(--alu-edge),
+    inset 0 0 0 1px var(--alu-mid),
+    inset 0 2px 0 var(--alu-hi),
+    0 28px 50px -28px var(--shadow-deep);
+}
+
+/* Pizarra anodizada: la tecla principal. */
+@utility anodized {
+  color: var(--surface);
+  background: linear-gradient(180deg, var(--anod-hi), var(--anod) 55%, var(--anod-lo));
+  box-shadow:
+    0 0 0 1px var(--anod-lo),
+    inset 0 1px 0 var(--anod-shine),
+    inset 0 -2px 3px -1px var(--anod-lo),
+    0 10px 20px -12px var(--shadow-deep);
+}
+
+/* Carcasa de aluminio (el Ronrón): cepillado vertical y chaflán. */
+@utility metal-shell {
+  background: linear-gradient(180deg, var(--alu-hi), var(--alu) 14%, var(--alu-mid) 86%, var(--alu-lo));
+  box-shadow:
+    0 0 0 1px var(--alu-edge),
+    inset 0 1.5px 0 var(--alu-hi),
+    inset 0 -2px 0 var(--alu-lo),
+    0 50px 90px -44px var(--shadow-deep);
+}
+
+/* Pozo: una zona hundida en la porcelana (buscador, frontal). */
+@utility well {
+  background: var(--paper);
+  box-shadow:
+    inset 0 2px 5px -2px var(--alu-lo),
+    inset 0 0 0 1px var(--alu-mid);
+}
+
+/* Pantalla apagada con reflejo: el brillo del cristal arriba, sin blur. */
+@utility screen-glass {
+  background:
+    linear-gradient(170deg, var(--screen-shine) 0%, transparent 38%),
+    var(--screen);
+  box-shadow:
+    0 0 0 1px var(--anod-lo),
+    inset 0 2px 12px var(--shadow-deep);
 }
 
 @utility no-scrollbar {
@@ -258,6 +443,22 @@ html.lenis body {
 }
 html [data-sileo-viewport][data-theme="dark"] [data-sileo-description] {
   color: var(--ink-soft);
+}
+/* En tema oscuro va la píldora oscura de sileo ("light"), con los estados
+   en tonos claros de la misma paleta. */
+[data-sileo-viewport][data-theme="light"] {
+  --sileo-state-success: oklch(0.8 0.12 160);
+  --sileo-state-error: var(--danger);
+  --sileo-state-warning: oklch(0.84 0.12 80);
+  --sileo-state-info: var(--accent);
+}
+
+/* Cambio de tema: la página vieja y la nueva se funden en el compositor
+   (solo opacidad), con la curva lenta del sistema. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.6s;
+  animation-timing-function: var(--ease-soft);
 }
 
 @media (prefers-reduced-motion: reduce) {

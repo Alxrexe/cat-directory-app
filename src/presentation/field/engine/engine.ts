@@ -1,5 +1,6 @@
 import gsap from "gsap";
 import {
+  Color,
   ColorManagement,
   LinearSRGBColorSpace,
   OrthographicCamera,
@@ -36,6 +37,8 @@ export interface FieldEngineOptions {
   reducedMotion: boolean;
   fonts: AtlasFonts;
   capacity: number;
+  /** Tema con el que nace (luego, `setTheme`). */
+  theme: FieldTheme;
   onHover: (target: OrbTarget | null) => void;
   /** Posición del orbe señalado en cada frame (para la etiqueta flotante). */
   onHoverMove: (x: number, y: number, size: number) => void;
@@ -44,24 +47,51 @@ export interface FieldEngineOptions {
   onExplore: () => void;
 }
 
+export type FieldTheme = "light" | "dark";
+
+interface FieldPalette {
+  orb: OrbPalette;
+  backdrop: BackdropPalette;
+  veil: string;
+}
+
 /**
- * Paleta del logo: orbes de porcelana, orejas lavanda (el aro), monograma
- * pizarra (el gato) y un anillo pervinca para el orbe señalado.
+ * Paleta del logo. De día: orbes de porcelana, orejas lavanda (el aro),
+ * monograma pizarra (el gato) y un anillo pervinca para el orbe señalado.
+ * De noche: orbes lavanda con un halo suave, estrellas en el fondo y el
+ * velo del color de la pantalla de inicio oscura (--surface de .dark).
  */
-const PALETTE: { orb: OrbPalette; backdrop: BackdropPalette; veil: string } = {
-  orb: {
-    orb: "#fbfbfe",
-    shade: "#d3d9ea",
-    ink: "#4a506e",
-    ear: "#c5ccdf",
-    ring: "#5c6cc9",
-    shadowColor: "#2c3350",
-    shadow: 0.18,
-    glowColor: "#ffffff",
-    glow: 0,
+const PALETTES: Record<FieldTheme, FieldPalette> = {
+  light: {
+    orb: {
+      orb: "#fbfbfe",
+      shade: "#d3d9ea",
+      ink: "#4a506e",
+      ear: "#c5ccdf",
+      ring: "#5c6cc9",
+      shadowColor: "#2c3350",
+      shadow: 0.18,
+      glowColor: "#ffffff",
+      glow: 0,
+    },
+    backdrop: { wave: "#ffffff", rim: "#e6e9f4", waveAlpha: 0.85, stars: 0 },
+    veil: "#fbfbfe",
   },
-  backdrop: { wave: "#ffffff", rim: "#e6e9f4", waveAlpha: 0.85, stars: 0 },
-  veil: "#fbfbfe",
+  dark: {
+    orb: {
+      orb: "#dcd6fb",
+      shade: "#968ed8",
+      ink: "#262840",
+      ear: "#aaa1ea",
+      ring: "#c7b8ff",
+      shadowColor: "#03040c",
+      shadow: 0.4,
+      glowColor: "#9d8cf5",
+      glow: 0.75,
+    },
+    backdrop: { wave: "#c4bbf7", rim: "#ece7ff", waveAlpha: 0.5, stars: 1 },
+    veil: "#1a1d2d",
+  },
 };
 
 const TUNNEL_COLORS = ["#c5ccdf", "#9aa6d6", "#5c6cc9", "#ffffff", "#aab3cf", "#7d88b8"];
@@ -104,10 +134,11 @@ export function createFieldEngine(options: FieldEngineOptions) {
   const camera = new OrthographicCamera(0, 1, 0, 1, -10, 10);
 
   const atlas = createGlyphAtlas(options.capacity, options.fonts);
-  const orbs = createOrbLayer(atlas, PALETTE.orb);
-  const backdrop = createBackdropLayer(PALETTE.backdrop);
+  const palette = PALETTES[options.theme];
+  const orbs = createOrbLayer(atlas, palette.orb);
+  const backdrop = createBackdropLayer(palette.backdrop);
   const tunnel = createTunnelLayer(TUNNEL_COLORS);
-  const veil = createVeilLayer(PALETTE.veil);
+  const veil = createVeilLayer(palette.veil);
   veil.mesh.renderOrder = 10;
   scene.add(backdrop.mesh, orbs.mesh, tunnel.mesh, veil.mesh);
   tunnel.mesh.visible = false;
@@ -131,6 +162,8 @@ export function createFieldEngine(options: FieldEngineOptions) {
   let hoverKey = -1;
   let hoverTarget: OrbTarget | null = null;
   let tunnelPhase = 0;
+  let theme = options.theme;
+  let themeTween: gsap.core.Tween | null = null;
 
   // Buffers de ordenación reutilizados (sin basura por frame).
   const drawX = new Float32Array(MAX_ORBS);
@@ -421,6 +454,44 @@ export function createFieldEngine(options: FieldEngineOptions) {
       gsap.to(flow, { speed: dimmed ? 0.25 : 1, duration: 1.2, ease: "sine.inOut" });
     },
 
+    /**
+     * Cambio de tema: los colores se funden en el shader (un tween de 0 a 1
+     * que mezcla cada color de origen con el de destino). Nada se recrea.
+     */
+    setTheme(next: FieldTheme) {
+      if (next === theme) return;
+      theme = next;
+      const to = PALETTES[next];
+      const colors: Array<[Color, string]> = [
+        [orbs.uniforms.uOrb.value, to.orb.orb],
+        [orbs.uniforms.uShade.value, to.orb.shade],
+        [orbs.uniforms.uInk.value, to.orb.ink],
+        [orbs.uniforms.uEar.value, to.orb.ear],
+        [orbs.uniforms.uRing.value, to.orb.ring],
+        [orbs.uniforms.uShadowColor.value, to.orb.shadowColor],
+        [orbs.uniforms.uGlowColor.value, to.orb.glowColor],
+        [backdrop.uniforms.uWave.value, to.backdrop.wave],
+        [backdrop.uniforms.uRim.value, to.backdrop.rim],
+        [veil.uniforms.uColor.value, to.veil],
+      ];
+      const from = colors.map(([color]) => color.clone());
+      const target = colors.map(([, hex]) => new Color(hex));
+      const numbers: Array<[{ value: number }, number]> = [
+        [orbs.uniforms.uShadow, to.orb.shadow],
+        [orbs.uniforms.uGlow, to.orb.glow],
+        [backdrop.uniforms.uWaveAlpha, to.backdrop.waveAlpha],
+        [backdrop.uniforms.uStars, to.backdrop.stars],
+      ];
+      const start = numbers.map(([uniform]) => uniform.value);
+      const mix = { t: 0 };
+      const apply = () => {
+        colors.forEach(([color], i) => color.copy(from[i]).lerp(target[i], mix.t));
+        numbers.forEach(([uniform, value], i) => (uniform.value = start[i] + (value - start[i]) * mix.t));
+      };
+      themeTween?.kill();
+      themeTween = gsap.to(mix, { t: 1, duration: motion ? 0.9 : 0.01, ease: "sine.inOut", onUpdate: apply });
+    },
+
     /** Pantalla de inicio: velo lleno y túnel en marcha lenta. */
     beginLink() {
       veil.uniforms.uAlpha.value = 1;
@@ -473,6 +544,7 @@ export function createFieldEngine(options: FieldEngineOptions) {
 
     dispose() {
       stop();
+      themeTween?.kill();
       window.removeEventListener("pointermove", onPointerMove);
       document.documentElement.removeEventListener("pointerleave", onPointerLeave);
       canvas.removeEventListener("pointerdown", onPointerDown);

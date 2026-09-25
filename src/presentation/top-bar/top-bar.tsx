@@ -3,19 +3,19 @@
 import Link from "next/link";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { CatMark } from "../brand/cat-mark";
-import { SoundToggle } from "../components/layout/sound-toggle";
 import { CommandPalette } from "../features/command-palette/command-palette";
 import { cn } from "../lib/cn";
 import { readyGsap } from "../lib/gsap";
 import { useDeviceStore } from "../stores/device-store";
 import { useDiscoveryStore } from "../stores/discovery-store";
 import { ConsoleClock, DiscoveryMeter, NetworkIndicator } from "./status";
+import { ThemeToggle } from "./theme-toggle";
 
 /**
  * Barra de sistema, como la fila superior del menú de una consola:
  * a la izquierda el "perfil" (la marca del Michiverso), a la derecha una
  * cápsula de estado (hora, red, razas descubiertas) separada por filetes
- * de 1 px, y los botones redondos de búsqueda y sonido.
+ * de 1 px, y dos botones redondos: el tema (sol/luna) y la búsqueda.
  *
  * No es una franja: son piezas de porcelana sueltas sobre el cielo.
  */
@@ -96,10 +96,10 @@ export function TopBar({ visible: wanted = true, total }: { visible?: boolean; t
           </Suspense>
         </div>
         <Suspense fallback={null}>
-          <CommandPalette />
+          <ThemeToggle />
         </Suspense>
         <Suspense fallback={null}>
-          <SoundToggle />
+          <CommandPalette />
         </Suspense>
       </div>
     </header>
@@ -107,5 +107,5 @@ export function TopBar({ visible: wanted = true, total }: { visible?: boolean; t
 }
 
 function Divider({ className = "" }: { className?: string }) {
-  return <span aria-hidden="true" className={`h-6 w-px shrink-0 bg-ring ${className}`} />;
+  return <span aria-hidden="true" className={`h-6 w-px shrink-0 bg-alu-mid ${className}`} />;
 }

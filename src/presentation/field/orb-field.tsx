@@ -4,6 +4,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import type { FieldBreed, FieldEngine, OrbTarget } from "./engine/engine";
 import { loadFieldEngine, resolveAtlasFonts } from "./load-engine";
 import { readyGsap } from "../lib/gsap";
+import { currentColorTheme, useColorTheme } from "../theme/use-color-theme";
 
 interface OrbFieldProps {
   breeds: FieldBreed[];
@@ -34,6 +35,7 @@ export function OrbField(props: OrbFieldProps) {
   const labelRef = useRef<HTMLDivElement>(null);
   const [engine, setEngine] = useState<FieldEngine | null>(null);
   const [hovered, setHovered] = useState<OrbTarget | null>(null);
+  const { theme } = useColorTheme();
 
   const events = useEffectEvent((kind: "pick" | "explore" | "ready" | "failed", payload?: unknown) => {
     if (kind === "pick") props.onPick(payload as OrbTarget);
@@ -63,6 +65,9 @@ export function OrbField(props: OrbFieldProps) {
             reducedMotion,
             fonts,
             capacity: Math.max(capacity, 100),
+            // El motor nace ya con el tema de la página (la clase de <html>),
+            // sin un fotograma con la paleta equivocada.
+            theme: currentColorTheme(),
             onHover: (target) => setHovered(target),
             onHoverMove: (x, y, size) => {
               const label = labelRef.current;
@@ -98,6 +103,9 @@ export function OrbField(props: OrbFieldProps) {
   useEffect(() => {
     engine?.setDimmed(props.dimmed);
   }, [engine, props.dimmed]);
+  useEffect(() => {
+    engine?.setTheme(theme);
+  }, [engine, theme]);
 
   const hoverChanged = useEffectEvent((slug: string | null) => props.onHoverChange?.(slug));
   useEffect(() => {

@@ -17,8 +17,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [queryClient] = useState(createQueryClient);
 
   return (
-    // El Michiverso vive siempre en tema claro, también con el sistema en oscuro.
-    <ThemeProvider attribute="class" forcedTheme="light" enableSystem={false} disableTransitionOnChange>
+    // Claro por defecto; el oscuro es una elección del visitante (botón de la
+    // barra de sistema), no del sistema operativo.
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
       <QueryClientProvider client={queryClient}>
         <UseCasesProvider>
           {children}
