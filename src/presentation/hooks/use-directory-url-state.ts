@@ -2,7 +2,7 @@
 
 import { usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
-import { directorySearch, parseDirectoryParams, type DirectoryParams } from "../lib/directory-params";
+import { directorySearch, parseDirectoryParams, type CoatFilter, type DirectoryParams } from "../lib/directory-params";
 
 /**
  * La URL es la fuente de verdad de `q` y `page`.
@@ -30,6 +30,7 @@ export function useDirectoryUrlState() {
 
   const setQuery = useCallback((q: string) => update({ q }), [update]);
   const setPage = useCallback((page: number) => update({ page }), [update]);
+  const setCoat = useCallback((coat: CoatFilter) => update({ coat }), [update]);
 
-  return { params, setQuery, setPage };
+  return { params, setQuery, setPage, setCoat };
 }

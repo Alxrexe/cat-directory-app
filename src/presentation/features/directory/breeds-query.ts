@@ -1,6 +1,6 @@
 import { infiniteQueryOptions, type InfiniteData } from "@tanstack/react-query";
 import { hasNextPage, type BreedPage } from "@domain/breed/breed-page";
-import type { ClientUseCases } from "@infrastructure/container/client";
+import type { ClientUseCases } from "@infrastructure/container/client-lazy";
 
 export const BREEDS_QUERY_KEY = ["breeds", "directory"] as const;
 

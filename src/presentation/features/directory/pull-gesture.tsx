@@ -3,7 +3,7 @@
 import { useDrag } from "@use-gesture/react";
 import { ArrowDown, LoaderCircle } from "lucide-react";
 import { animate, domAnimation, LazyMotion, m, useMotionValue, useTransform } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type RefObject } from "react";
 
 const THRESHOLD = 72;
 const MAX_PULL = 110;
@@ -12,6 +12,10 @@ const HOLD = 56;
 interface PullGestureProps {
   onRefresh: () => Promise<unknown>;
   refreshing: boolean;
+  /** Elemento sobre el que se tira (la lista de la consola). */
+  target: RefObject<HTMLElement | null>;
+  /** Solo se puede tirar con la lista arriba del todo. */
+  isAtTop: () => boolean;
 }
 
 /**
@@ -27,12 +31,12 @@ interface PullGestureProps {
  * Es un atajo visual: el botón "Recargar" de la barra hace lo mismo y es el
  * camino accesible, así que el indicador va oculto a lectores de pantalla.
  */
-export default function PullGesture({ onRefresh, refreshing }: PullGestureProps) {
+export default function PullGesture({ onRefresh, refreshing, target, isAtTop }: PullGestureProps) {
   const pull = useMotionValue(0);
   const [armed, setArmed] = useState(false);
   const rotate = useTransform(pull, [0, THRESHOLD], [0, 180]);
   const opacity = useTransform(pull, [0, 24, THRESHOLD], [0, 0.6, 1]);
-  const y = useTransform(pull, (value) => value - 44);
+  const y = useTransform(pull, (value) => value - 36);
 
   useEffect(() => {
     if (!refreshing) void animate(pull, 0, { duration: 0.3, ease: [0.16, 1, 0.3, 1] });
@@ -40,7 +44,7 @@ export default function PullGesture({ onRefresh, refreshing }: PullGestureProps)
 
   useDrag(
     ({ first, active, movement: [, my], memo }) => {
-      const eligible: boolean = first ? window.scrollY <= 0 && !refreshing : Boolean(memo);
+      const eligible: boolean = first ? isAtTop() && !refreshing : Boolean(memo);
       if (!eligible) return false;
 
       const distance = Math.min(MAX_PULL, Math.max(0, my) * 0.5);
@@ -60,9 +64,11 @@ export default function PullGesture({ onRefresh, refreshing }: PullGestureProps)
       return false;
     },
     {
-      target: typeof window === "undefined" ? undefined : window,
+      target,
       axis: "y",
-      filterTaps: true,
+      // Sin `filterTaps`: use-gesture añadiría un click en captura que se
+      // traga los clics que no vengan precedidos de un toque (ratón en una
+      // tableta, pruebas automáticas) y las filas dejarían de abrirse.
       pointer: { touch: true },
       eventOptions: { passive: true },
     },
@@ -73,12 +79,12 @@ export default function PullGesture({ onRefresh, refreshing }: PullGestureProps)
       <m.div
         aria-hidden="true"
         style={{ y, opacity }}
-        className="pointer-events-none fixed top-0 left-1/2 z-40 -ml-5 flex size-10 items-center justify-center border border-border bg-background text-foreground"
+        className="pointer-events-none absolute top-0 left-1/2 z-10 -ml-5 flex size-10 items-center justify-center rounded-full bg-slate text-surface"
       >
         {refreshing ? (
-          <LoaderCircle className="size-4 animate-spin text-primary" />
+          <LoaderCircle className="size-4 animate-spin" />
         ) : (
-          <m.span style={{ rotate }} className={armed ? "text-primary" : undefined}>
+          <m.span style={{ rotate }} className={armed ? "scale-110" : undefined}>
             <ArrowDown className="size-4" />
           </m.span>
         )}

@@ -3,6 +3,7 @@
 import { Search } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Button } from "../../components/ui/button";
+import { Hint } from "../../components/ui/hint";
 import { useIdleModule } from "../../lib/idle";
 
 // cmdk, el diálogo de Radix y el cajón de vaul se descargan al acercar el
@@ -38,20 +39,20 @@ export function CommandPalette() {
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={show}
-        onPointerEnter={() => setRequested(true)}
-        aria-haspopup="dialog"
-        aria-keyshortcuts="Meta+K Control+K"
-        className="gap-3"
-      >
-        <Search aria-hidden="true" />
-        <span className="hidden sm:inline">Ir a una raza</span>
-        <kbd className="label-mono hidden text-faint sm:inline">{shortcut}</kbd>
-        <span className="sr-only sm:hidden">Ir a una raza</span>
-      </Button>
+      <Hint label={`Ir a una raza · ${shortcut}`}>
+        <Button
+          variant="console"
+          size="icon-lg"
+          onClick={show}
+          onPointerEnter={() => setRequested(true)}
+          aria-haspopup="dialog"
+          aria-keyshortcuts="Meta+K Control+K"
+          aria-label="Ir a una raza"
+          className="max-sm:size-11"
+        >
+          <Search className="size-5" aria-hidden="true" />
+        </Button>
+      </Hint>
       {PaletteDialog && <PaletteDialog open={open} onOpenChange={setOpen} />}
     </>
   );

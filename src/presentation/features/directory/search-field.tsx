@@ -1,21 +1,37 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { Search, X } from "lucide-react";
 import { useEffect, useEffectEvent, useImperativeHandle, useRef, type Ref } from "react";
-import { useForm, useWatch } from "react-hook-form";
-import * as z from "zod/mini";
+import { useForm, useWatch, type Resolver } from "react-hook-form";
 import { useDebouncedValue } from "../../hooks/use-debounced-value";
+import { useMediaQuery } from "../../hooks/use-media-query";
 import { SEARCH_MAX_LENGTH } from "../../lib/directory-params";
 import { cn } from "../../lib/cn";
+import { loadOnce } from "../../lib/idle";
+import type { SearchValues } from "./search-schema";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
-const searchSchema = z.object({
-  q: z.string().check(z.maxLength(SEARCH_MAX_LENGTH, `Máximo ${SEARCH_MAX_LENGTH} caracteres`)),
-});
-type SearchValues = z.infer<typeof searchSchema>;
+// Zod y su resolver llegan con la primera tecla, no con la página. Sin red
+// (el chunk no baja) se aplica el mismo límite a mano.
+const loadSchema = () => loadOnce(() => import("./search-schema"));
+
+const resolver: Resolver<SearchValues> = async (values, context, options) => {
+  try {
+    return await (await loadSchema()).searchResolver(values, context, options);
+  } catch {
+    return { values, errors: {} };
+  }
+};
+
+async function parseSearch(query: string): Promise<string | null> {
+  try {
+    return (await loadSchema()).parseSearch(query);
+  } catch {
+    return query.length <= SEARCH_MAX_LENGTH ? query.trim() : null;
+  }
+}
 
 export interface SearchFieldHandle {
   focus: () => void;
@@ -29,15 +45,30 @@ interface SearchFieldProps {
   onQueryChange: (query: string) => void;
   /** Enter o flecha abajo: el foco pasa a la lista. */
   onEnterList: () => void;
+  onFocus?: () => void;
+  onEscapeEmpty?: () => void;
   listId: string;
   resultsLabel: string;
   ref?: Ref<SearchFieldHandle>;
 }
 
-export function SearchField({ defaultQuery, onQueryChange, onEnterList, listId, resultsLabel, ref }: SearchFieldProps) {
+/**
+ * Buscador de la consola. react-hook-form + Zod validan la entrada; el
+ * debounce (300 ms) separa lo que se escribe de lo que se publica en la URL.
+ */
+export function SearchField({
+  defaultQuery,
+  onQueryChange,
+  onEnterList,
+  onFocus,
+  onEscapeEmpty,
+  listId,
+  resultsLabel,
+  ref,
+}: SearchFieldProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const form = useForm<SearchValues>({
-    resolver: zodResolver(searchSchema),
+    resolver,
     defaultValues: { q: defaultQuery },
     mode: "onChange",
   });
@@ -45,12 +76,20 @@ export function SearchField({ defaultQuery, onQueryChange, onEnterList, listId, 
   const debounced = useDebouncedValue(value, SEARCH_DEBOUNCE_MS);
   const error = form.formState.errors.q?.message;
 
-  // El debounce ya lo hizo useDebouncedValue; aquí solo se publica.
-  const publish = useEffectEvent((query: string) => {
-    const parsed = searchSchema.safeParse({ q: query });
-    if (parsed.success) onQueryChange(parsed.data.q.trim());
+  const publish = useEffectEvent((query: string | null) => {
+    if (query !== null) onQueryChange(query);
   });
-  useEffect(() => publish(debounced), [debounced]);
+  const settled = useRef(defaultQuery);
+  useEffect(() => {
+    // Al montar, lo escrito es lo que ya está en la URL: nada que publicar.
+    if (debounced === settled.current) return;
+    settled.current = debounced;
+    let current = true;
+    void parseSearch(debounced).then((query) => current && publish(query));
+    return () => {
+      current = false;
+    };
+  }, [debounced]);
 
   const clear = () => {
     form.setValue("q", "", { shouldValidate: true });
@@ -62,23 +101,24 @@ export function SearchField({ defaultQuery, onQueryChange, onEnterList, listId, 
 
   const { ref: registerRef, ...field } = form.register("q");
 
+  // En móvil los ejemplos no caben: el placeholder se acorta.
+  const wide = useMediaQuery("(min-width: 640px)", true);
+
   return (
-    <form
-      role="search"
-      aria-label="Directorio"
-      onSubmit={form.handleSubmit(() => onEnterList())}
-      className="min-w-0 flex-1"
-    >
+    <form role="search" aria-label="Razas" onSubmit={form.handleSubmit(() => onEnterList())} className="min-w-0 flex-1">
       <LabelPrimitive.Root htmlFor="breed-search" className="sr-only">
         Buscar raza por nombre
       </LabelPrimitive.Root>
       <div
         className={cn(
-          "group relative flex items-center border-b border-input transition-colors focus-within:border-foreground",
-          error && "border-destructive focus-within:border-destructive",
+          // Un pozo en la porcelana: fondo algo más hondo y sombra interior.
+          "group relative flex h-12 items-center rounded-full bg-paper shadow-[inset_0_2px_5px_-2px_var(--ring-strong)] ring-[1.5px] ring-ring",
+          // Anillo de foco en su propia capa: aparece fundiéndose (opacidad).
+          "after:pointer-events-none after:absolute after:inset-0 after:rounded-full after:opacity-0 after:ring-2 after:ring-accent after:transition-opacity after:duration-200 focus-within:after:opacity-100",
+          error && "ring-danger after:ring-danger",
         )}
       >
-        <Search className="pointer-events-none absolute left-0 size-4 text-faint group-focus-within:text-foreground" aria-hidden="true" />
+        <Search className="pointer-events-none absolute left-4 size-[1.1rem] text-slate" aria-hidden="true" />
         <input
           id="breed-search"
           type="search"
@@ -87,23 +127,25 @@ export function SearchField({ defaultQuery, onQueryChange, onEnterList, listId, 
           spellCheck={false}
           enterKeyHint="search"
           maxLength={SEARCH_MAX_LENGTH + 10}
-          placeholder="Buscar raza: Bengal, Sphynx, Persian…"
+          placeholder={wide ? "Busca un michi: Bengal, Sphynx, Persian…" : "Busca un michi…"}
           aria-controls={listId}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? "breed-search-error" : "breed-search-hint"}
-          className="h-11 w-full min-w-0 bg-transparent pr-16 pl-7 text-base outline-none placeholder:text-faint [&::-webkit-search-cancel-button]:hidden"
+          className="h-full w-full min-w-0 rounded-full bg-transparent pr-12 pl-11 text-[0.95rem] text-ink outline-none placeholder:text-ink-soft [&::-webkit-search-cancel-button]:hidden"
           {...field}
           ref={(node) => {
             registerRef(node);
             inputRef.current = node;
           }}
+          onFocus={onFocus}
           onKeyDown={(event) => {
             if (event.key === "ArrowDown") {
               event.preventDefault();
               onEnterList();
-            } else if (event.key === "Escape" && value) {
+            } else if (event.key === "Escape") {
               event.preventDefault();
-              clear();
+              if (value) clear();
+              else onEscapeEmpty?.();
             }
           }}
         />
@@ -111,19 +153,19 @@ export function SearchField({ defaultQuery, onQueryChange, onEnterList, listId, 
           <button
             type="button"
             onClick={clear}
-            className="absolute right-0 flex size-9 items-center justify-center text-muted-foreground hover:text-foreground"
+            className="absolute right-1.5 isolate grid size-9 place-items-center rounded-full text-slate before:absolute before:inset-0 before:-z-10 before:rounded-full before:bg-slate/10 before:opacity-0 before:transition-opacity hover:before:opacity-100"
             aria-label="Limpiar búsqueda"
           >
             <X className="size-4" aria-hidden="true" />
           </button>
         ) : (
-          <kbd className="label-mono pointer-events-none absolute right-1 hidden border border-border px-1.5 py-0.5 text-faint md:block">
+          <kbd className="tabular pointer-events-none absolute right-3 hidden size-6 place-items-center rounded-full text-[0.72rem] text-slate ring-[1.5px] ring-ring-strong md:grid">
             /
           </kbd>
         )}
       </div>
       {error ? (
-        <p id="breed-search-error" className="mt-1 text-xs text-destructive">
+        <p id="breed-search-error" className="mt-1 pl-4 text-xs text-danger">
           {error}
         </p>
       ) : (

@@ -26,7 +26,7 @@ export function Highlight({ text, query }: { text: string; query: string }) {
   return (
     <>
       {chars.slice(0, from).join("")}
-      <mark className="bg-transparent text-primary underline decoration-1 underline-offset-[0.2em]">
+      <mark className="bg-transparent text-[var(--highlight,var(--slate))] underline decoration-2 underline-offset-[0.18em]">
         {chars.slice(from, to).join("")}
       </mark>
       {chars.slice(to).join("")}

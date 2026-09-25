@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useEffectEvent, useMemo, useState } from "react";
 import type { Breed } from "@domain/breed/breed";
 import { absolutePosition, type BreedPage } from "@domain/breed/breed-page";
@@ -48,10 +48,15 @@ export function useBreedDirectory({ initialPages, renderedAt }: Options) {
   // hidratar: leerla antes daría un HTML distinto al del SSR. Si hay datos
   // en vivo, mandan ellos (ver `pages`), así que no hace falta descartarla.
   const hydrated = useHydrated();
-  const snapshot = useMemo<BreedSnapshot | null>(
-    () => (hydrated && !hasServerData ? firstPageSnapshot.recall() : null),
-    [hydrated, hasServerData, firstPageSnapshot],
-  );
+  const { data: snapshot = null } = useQuery<BreedSnapshot | null>({
+    queryKey: ["first-page-snapshot"],
+    queryFn: () => firstPageSnapshot.recall(),
+    enabled: hydrated && !hasServerData,
+    // Es localStorage: ni caduca ni depende de la red.
+    staleTime: Number.POSITIVE_INFINITY,
+    networkMode: "always",
+    retry: false,
+  });
 
   const firstPage = query.data?.pages[0];
   useEffect(() => {

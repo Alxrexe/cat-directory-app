@@ -3,9 +3,8 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Command } from "cmdk";
-import { ArrowRight, LayoutList, Monitor, Moon, Plus, Sun } from "lucide-react";
+import { ArrowRight, LayoutList, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Drawer } from "vaul";
 import { describeCountry } from "@domain/breed/country";
@@ -34,10 +33,10 @@ export default function PaletteDialog({ open, onOpenChange }: PaletteDialogProps
     return (
       <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
         <DialogPrimitive.Portal>
-          <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-foreground/20 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
+          <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-ink/30 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
           <DialogPrimitive.Content
             aria-describedby={undefined}
-            className="fixed top-[14vh] left-1/2 z-50 w-[min(40rem,calc(100vw-2rem))] -translate-x-1/2 border border-border bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-2"
+            className="fixed top-[14vh] left-1/2 z-50 w-[min(40rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-[28px] bg-surface text-ink shadow-[0_30px_70px_-24px_var(--ink)] ring-[1.5px] ring-ring data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-2"
           >
             <DialogPrimitive.Title className="sr-only">Ir a una raza</DialogPrimitive.Title>
             {body}
@@ -50,12 +49,12 @@ export default function PaletteDialog({ open, onOpenChange }: PaletteDialogProps
   return (
     <Drawer.Root open={open} onOpenChange={onOpenChange}>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-50 bg-foreground/25" />
+        <Drawer.Overlay className="fixed inset-0 z-50 bg-ink/30" />
         <Drawer.Content
           aria-describedby={undefined}
-          className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col border-t border-border bg-popover text-popover-foreground outline-none"
+          className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-[32px] bg-surface text-ink outline-none"
         >
-          <div className="mx-auto mt-3 mb-1 h-1 w-10 bg-border" aria-hidden="true" />
+          <div className="mx-auto mt-3 mb-1 h-1.5 w-12 rounded-full bg-ink/15" aria-hidden="true" />
           <Drawer.Title className="sr-only">Ir a una raza</Drawer.Title>
           {body}
         </Drawer.Content>
@@ -66,7 +65,6 @@ export default function PaletteDialog({ open, onOpenChange }: PaletteDialogProps
 
 function PaletteBody({ open, close }: { open: boolean; close: () => void }) {
   const router = useRouter();
-  const { setTheme } = useTheme();
   const { listBreedsPage } = useUseCases();
   const directoryHref = useNavigationStore((state) => state.directoryHref);
   const setLastVisited = useNavigationStore((state) => state.setLastVisited);
@@ -93,10 +91,10 @@ function PaletteBody({ open, close }: { open: boolean; close: () => void }) {
       <Command.Input
         autoFocus
         placeholder="Escribe el nombre de una raza…"
-        className="h-14 w-full border-b border-border bg-transparent px-5 text-base outline-none placeholder:text-faint"
+        className="h-14 w-full border-b-[1.5px] border-ring bg-transparent px-5 font-display text-lg outline-none placeholder:text-ink-soft"
       />
       <Command.List data-lenis-prevent className="max-h-[min(26rem,60vh)] overflow-y-auto overscroll-contain p-2">
-        <Command.Empty className="px-3 py-6 text-sm text-muted-foreground">
+        <Command.Empty className="px-3 py-6 text-sm text-ink-soft">
           {isFetching ? "Cargando razas…" : "Ninguna raza cargada coincide."}
         </Command.Empty>
 
@@ -113,7 +111,7 @@ function PaletteBody({ open, close }: { open: boolean; close: () => void }) {
               }
             >
               <span className="min-w-0 flex-1 truncate">{breed.name}</span>
-              <span className="truncate text-xs text-muted-foreground">
+              <span className="truncate text-xs text-ink-soft">
                 {describeCountry(breed.country)?.primary}
               </span>
             </Item>
@@ -126,18 +124,9 @@ function PaletteBody({ open, close }: { open: boolean; close: () => void }) {
         </Group>
 
         <Group heading="Acciones">
-          <Item value="ir al directorio" onSelect={() => run(() => router.push(directoryHref))}>
-            <LayoutList aria-hidden="true" /> Ir al directorio
+          <Item value="ir al michiverso directorio" onSelect={() => run(() => router.push(directoryHref))}>
+            <LayoutList aria-hidden="true" /> Ir al Michiverso
             <ArrowRight className="ml-auto" aria-hidden="true" />
-          </Item>
-          <Item value="tema claro" onSelect={() => run(() => setTheme("light"))}>
-            <Sun aria-hidden="true" /> Tema claro
-          </Item>
-          <Item value="tema oscuro" onSelect={() => run(() => setTheme("dark"))}>
-            <Moon aria-hidden="true" /> Tema oscuro
-          </Item>
-          <Item value="tema del sistema" onSelect={() => run(() => setTheme("system"))}>
-            <Monitor aria-hidden="true" /> Tema del sistema
           </Item>
         </Group>
       </Command.List>
@@ -149,7 +138,7 @@ function Group({ heading, children }: { heading: string; children: ReactNode }) 
   return (
     <Command.Group
       heading={heading}
-      className="[&_[cmdk-group-heading]]:label-mono py-1 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-muted-foreground"
+      className="py-1 [&_[cmdk-group-heading]]:hud [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-ink-soft"
     >
       {children}
     </Command.Group>
@@ -159,7 +148,7 @@ function Group({ heading, children }: { heading: string; children: ReactNode }) 
 function Item({ children, ...props }: React.ComponentProps<typeof Command.Item>) {
   return (
     <Command.Item
-      className="flex cursor-pointer items-center gap-3 px-3 py-2.5 text-sm outline-none select-none data-[selected=true]:bg-muted data-[selected=true]:text-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground"
+      className="flex cursor-pointer items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold outline-none select-none data-[selected=true]:bg-surface-2 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-ink-soft"
       {...props}
     >
       {children}

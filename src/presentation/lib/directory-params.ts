@@ -1,16 +1,20 @@
 import { MAX_RESTORED_PAGES } from "@application/use-cases/restore-breed-pages";
+import { COAT_FAMILIES, type CoatFamily } from "@domain/breed/coat";
 
 /**
- * Estado del directorio que vive en la URL: `?q=` (búsqueda) y `?page=`
- * (página en pantalla). Lo leen igual el servidor, para el primer render, y
+ * Estado del directorio que vive en la URL: `?q=` (búsqueda), `?page=`
+ * (página en pantalla) y `?pelaje=` (filtro por familia de pelaje). Lo leen igual el servidor, para el primer render, y
  * el cliente, así que el parseo es uno solo. La URL es entrada del usuario:
  * un valor inválido no rompe la página, cae al valor por defecto.
  */
 export const SEARCH_MAX_LENGTH = 60;
 
+export type CoatFilter = CoatFamily | "all";
+
 export interface DirectoryParams {
   q: string;
   page: number;
+  coat: CoatFilter;
 }
 
 type RawParams = Record<string, string | string[] | undefined>;
@@ -28,15 +32,21 @@ function parsePage(raw: unknown): number {
   return Number.isInteger(page) && page >= 1 && page <= MAX_RESTORED_PAGES ? page : 1;
 }
 
+function parseCoat(raw: unknown): CoatFilter {
+  const value = first(raw);
+  return typeof value === "string" && (COAT_FAMILIES as readonly string[]).includes(value) ? (value as CoatFamily) : "all";
+}
+
 export function parseDirectoryParams(input: RawParams | URLSearchParams): DirectoryParams {
   const raw: RawParams = input instanceof URLSearchParams ? Object.fromEntries(input.entries()) : input;
-  return { q: parseQuery(raw.q), page: parsePage(raw.page) };
+  return { q: parseQuery(raw.q), page: parsePage(raw.page), coat: parseCoat(raw.pelaje) };
 }
 
 /** Query string sin los valores por defecto: `/` es la home limpia. */
-export function directorySearch({ q, page }: DirectoryParams): string {
+export function directorySearch({ q, page, coat }: DirectoryParams): string {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
+  if (coat !== "all") params.set("pelaje", coat);
   if (page > 1) params.set("page", String(page));
   const search = params.toString();
   return search ? `?${search}` : "";

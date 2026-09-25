@@ -1,36 +1,34 @@
 "use client";
 
-import { useSyncExternalStore, type ReactNode } from "react";
+import { useSyncExternalStore, type RefObject } from "react";
 import { useIdleModule } from "../../lib/idle";
 
 const loadGesture = () => import("./pull-gesture");
 const coarsePointer = () => window.matchMedia("(pointer: coarse)").matches;
 
 interface PullToRefreshProps {
+  /** La lista está a la vista: solo entonces tiene sentido el gesto. */
+  enabled: boolean;
   onRefresh: () => Promise<unknown>;
   refreshing: boolean;
-  children: ReactNode;
+  target: RefObject<HTMLElement | null>;
+  isAtTop: () => boolean;
 }
 
 /**
- * "Tirar para recargar" solo existe en pantallas táctiles, y nadie tira de
- * la lista en el primer segundo: el gesto se descarga cuando el navegador
- * queda ocioso, fuera del camino crítico de la carga. En escritorio no se
- * descarga nunca; ahí está el botón "Recargar" de la barra.
+ * "Tirar para recargar" solo existe en pantallas táctiles y con la lista
+ * desplegada: el gesto (use-gesture + motion, ~50 kB) se descarga la
+ * primera vez que se abre la lista. En escritorio no se descarga nunca;
+ * ahí está el botón "Recargar" de la consola.
  */
-export function PullToRefresh({ onRefresh, refreshing, children }: PullToRefreshProps) {
+export function PullToRefresh({ enabled, ...props }: PullToRefreshProps) {
   const touch = useSyncExternalStore(() => () => {}, coarsePointer, () => false);
-  return (
-    <>
-      {touch && <TouchGesture onRefresh={onRefresh} refreshing={refreshing} />}
-      {children}
-    </>
-  );
+  return touch && enabled ? <TouchGesture {...props} /> : null;
 }
 
-function TouchGesture({ onRefresh, refreshing }: Omit<PullToRefreshProps, "children">) {
-  const gesture = useIdleModule(loadGesture);
+function TouchGesture(props: Omit<PullToRefreshProps, "enabled">) {
+  const gesture = useIdleModule(loadGesture, { now: true });
   if (!gesture) return null;
   const PullGesture = gesture.default;
-  return <PullGesture onRefresh={onRefresh} refreshing={refreshing} />;
+  return <PullGesture {...props} />;
 }
