@@ -22,12 +22,7 @@ function resolve(target: EventTarget | null) {
   return null;
 }
 
-/**
- * Sonido de interfaz por delegación: cuatro listeners en el documento,
- * sin marcar cada elemento, así que las filas que monta la virtualización
- * suenan sin registrarse. Siempre activo; el motor se descarga con la
- * primera pulsación o tecla (antes el navegador no deja sonar nada).
- */
+/** Delegación en el documento: las filas virtualizadas suenan sin registrarse. */
 export function SoundLayer() {
   useEffect(() => {
     let play: ((sound: SoundName) => void) | null = null;

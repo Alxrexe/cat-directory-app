@@ -12,24 +12,13 @@ interface FullImageProps {
   quality?: number;
   className?: string;
   onLoad?: () => void;
-  /** Lo que se ve si la foto no llega (Wikimedia limita ráfagas con un 429). */
+  /** Wikimedia responde 429 a las ráfagas. */
   fallback?: ReactNode;
 }
 
 /**
- * Una foto siempre completa y un contenedor siempre lleno.
- *
- * Las fotos de Wikimedia tienen proporciones muy distintas. Recortarlas
- * (`cover`) corta orejas y colas; encajarlas (`contain`) deja franjas. Aquí
- * la foto va entera, y detrás la misma foto ampliada y desenfocada rellena
- * el hueco con sus propios colores, como el fondo de una carátula.
- *
- * El fondo usa una miniatura de 16 px de la misma foto (menos de 1 KB): al
- * desenfocarla se ve igual que la grande, se decodifica al instante y, por
- * su baja densidad de datos, el navegador no la toma como el elemento de
- * mayor pintado (LCP), que sigue siendo la foto nítida.
- *
- * Si la foto falla, en lugar del icono de imagen rota se ve `fallback`.
+ * Foto entera (`contain`) sobre la misma foto desenfocada, que rellena el
+ * hueco. El fondo es una miniatura de 16 px: menos de 1 KB.
  */
 export function FullImage({ src, alt, sizes, priority = false, quality, className, onLoad, fallback }: FullImageProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);

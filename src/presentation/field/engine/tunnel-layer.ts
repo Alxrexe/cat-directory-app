@@ -9,12 +9,7 @@ import {
   Vector2,
 } from "three";
 
-/**
- * Túnel de "enlace": cientos de trazos de luz pastel que salen del centro
- * hacia los bordes, cada vez más rápido. La perspectiva se calcula en el
- * vertex shader (1/profundidad), así que la CPU no toca ni un vértice: solo
- * cambian dos uniformes por frame (tiempo y velocidad).
- */
+/** La perspectiva va en el vertex shader: por frame solo cambian dos uniformes. */
 const STREAKS = 520;
 
 const vertexShader = /* glsl */ `

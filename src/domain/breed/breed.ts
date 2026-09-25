@@ -1,12 +1,6 @@
 import { toBreedSlug, type BreedSlug } from "./slug";
 
-/**
- * Raza tal como la entiende la aplicación.
- *
- * La API devuelve cadenas vacías cuando no conoce un dato ("origin": ""). Aquí
- * esa ausencia se modela como `null`, para que la UI no tenga que distinguir
- * entre "vacío" y "desconocido" y no pinte filas en blanco.
- */
+/** La API manda cadenas vacías para lo que no sabe; aquí son `null`. */
 export interface Breed {
   readonly slug: BreedSlug;
   readonly name: string;

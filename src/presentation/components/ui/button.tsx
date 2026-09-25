@@ -8,15 +8,7 @@ import { cn } from "../../lib/cn";
 const hoverLayer =
   "before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:opacity-0 before:transition-opacity before:duration-200 hover:before:opacity-100";
 
-/**
- * Botones de consola. Tres voces:
- * - `default`: gel azul (la acción principal de la vista).
- * - `outline`: perla (acciones secundarias).
- * - `console`: botón redondo de perla del menú, para iconos, con el marco
- *   de selección que late al señalarlo.
- * Al pulsarlos bajan un píxel, como una tecla. Solo se animan transform y
- * opacidad; el fondo de hover es una capa que se funde.
- */
+/** default: gel (acción principal) · outline: perla · console: botón redondo del menú. */
 export const buttonVariants = cva(
   "relative isolate inline-flex shrink-0 items-center justify-center gap-2 rounded-full font-display font-medium whitespace-nowrap select-none transition-transform duration-200 ease-[var(--ease-cozy)] active:translate-y-px disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[1.1em]",
   {

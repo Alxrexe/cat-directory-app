@@ -19,12 +19,7 @@ interface PaletteDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/**
- * Salto rápido a cualquier raza cargada (⌘K). Comparte la consulta paginada
- * con el directorio: si ya bajaste tres páginas, aquí están las tres; si
- * entras directo a un detalle, pide la primera. En pantallas pequeñas se
- * abre como cajón inferior (vaul), que se cierra deslizando.
- */
+/** ⌘K. Comparte la consulta paginada con el directorio; en móvil es un cajón. */
 export default function PaletteDialog({ open, onOpenChange }: PaletteDialogProps) {
   const desktop = useMediaQuery("(min-width: 768px)", true);
   const body = <PaletteBody open={open} close={() => onOpenChange(false)} />;

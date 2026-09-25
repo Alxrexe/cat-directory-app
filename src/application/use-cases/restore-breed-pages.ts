@@ -10,11 +10,7 @@ export interface RestoreBreedPagesDeps {
   breeds: BreedRepository;
 }
 
-/**
- * Páginas 1..N, para reconstruir en el servidor la vista de un enlace con
- * `?page=N`. La primera va sola porque es la que dice cuántas hay; el resto
- * sale en paralelo con techo. N se ajusta a la última página real.
- */
+/** Páginas 1..N para `?page=N`. La primera va sola porque dice cuántas hay. */
 export function createRestoreBreedPages({ breeds }: RestoreBreedPagesDeps) {
   return async function restoreBreedPages(
     upTo: number,

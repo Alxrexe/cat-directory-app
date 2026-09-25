@@ -39,13 +39,11 @@ const vertexShader = /* glsl */ `
   varying float vAppear;
 
   void main() {
-    // Entrada: los orbes aparecen desde el centro hacia fuera.
+    // Aparecen del centro hacia fuera.
     float d01 = clamp(length(aOffset - uCenter) / (uDiag * 0.5), 0.0, 1.0);
     float appear = smoothstep(0.0, 1.0, clamp(uIntro * 1.7 - d01 * 0.7, 0.0, 1.0));
 
-    // Flotación suave e individual (se apaga con movimiento reducido).
     float bob = sin(uTime * 1.1 + aSeed * 6.2831) * 2.2 * uMotion;
-    // Un pequeño salto al aparecer (sube por encima de 1 y se asienta).
     float pop = 1.0 + 0.14 * sin(appear * 3.14159) * (1.0 - appear * 0.4);
     float size = aSize * mix(0.35, 1.0, appear) * pop * (0.84 + 0.16 * aMatch);
 
@@ -115,20 +113,18 @@ const fragmentShader = /* glsl */ `
     vec2 q = vQ;
     float aa = length(fwidth(q)) * 0.9;
 
-    // Silueta: cabeza redonda + dos orejas, unidas con mínimo suave.
     vec2 headC = vec2(0.0, -0.06);
     float head = length(q - headC) - 0.9;
-    // Orejas pequeñas y estrechas: asoman apenas sobre la cabeza.
     float earL = sdTriangle(q, vec2(-0.75, 0.36), vec2(-0.58, 0.86), vec2(-0.39, 0.66)) - 0.045;
     float earR = sdTriangle(q, vec2(0.75, 0.36), vec2(0.58, 0.86), vec2(0.39, 0.66)) - 0.045;
     float shape = smin(head, min(earL, earR), 0.16);
 
-    // Descarte temprano: casi todo el quad es aire.
+    // Casi todo el quad es aire.
     if (shape > 0.9) discard;
 
     float body = 1.0 - smoothstep(-aa, aa, shape);
 
-    // Volumen de perla: normal de esfera sobre la cabeza.
+    // Normal de esfera para dar volumen.
     vec2 hp = (q - headC) / 0.9;
     float r2 = clamp(dot(hp, hp), 0.0, 1.0);
     vec3 n = normalize(vec3(hp, sqrt(1.0 - r2) + 0.001));
@@ -137,18 +133,14 @@ const fragmentShader = /* glsl */ `
     col = mix(col, uShade, smoothstep(0.78, 1.0, sqrt(r2)) * 0.28);
     col += pow(max(0.0, dot(n, normalize(vec3(-0.3, 0.55, 0.78)))), 28.0) * 0.28;
 
-    // Canto suave: una banda fina en el borde de la silueta, un poco más
-    // honda abajo y con luz arriba, como el filo de una pieza de plástico.
     float edgeBand = smoothstep(-0.07, -0.02, shape);
     vec3 rimCol = mix(mix(uShade, uInk, 0.16), vec3(1.0), smoothstep(-0.7, 0.9, q.y));
     col = mix(col, rimCol, edgeBand * 0.35);
 
-    // Interior de las orejas.
     float inL = sdTriangle(q, vec2(-0.66, 0.47), vec2(-0.575, 0.74), vec2(-0.47, 0.62)) - 0.02;
     float inR = sdTriangle(q, vec2(0.66, 0.47), vec2(0.575, 0.74), vec2(0.47, 0.62)) - 0.02;
     col = mix(col, uEar, (1.0 - smoothstep(-aa, aa, min(inL, inR))) * 0.85);
 
-    // Glifo del atlas (monograma + nombre), teñido con la tinta del tema.
     vec2 guv = (vec2(q.x, -q.y) + vec2(0.74, 0.8)) / vec2(1.48, 1.48);
     float inside = step(0.0, guv.x) * step(guv.x, 1.0) * step(0.0, guv.y) * step(guv.y, 1.0);
     vec2 cell = vec2(mod(vCell, uGrid), floor(vCell / uGrid));
@@ -157,17 +149,14 @@ const fragmentShader = /* glsl */ `
 
     vec4 outc = vec4(0.0);
 
-    // Sombra teñida bajo el orbe (desaparece al separarse con la lupa).
     float sh = exp(-pow(length((q - vec2(0.0, -1.05)) / vec2(0.82, 0.2)), 2.0) * 2.2);
     outc = over(outc, uShadowColor, sh * uShadow * (1.0 - vLens * 0.6));
 
-    // Halo: de noche en todos (base), de día solo en el señalado.
     float glow = exp(-max(shape, 0.0) * 5.0) * (1.0 - body);
     float lit = max(vLens, vHover);
     outc = over(outc, uGlowColor, glow * uGlow * mix(uGlowBase, 1.0, lit));
 
-    // Marco de selección, como en el menú de una consola: un anillo separado
-    // de la silueta que late (azul de día, lavanda de noche).
+    // Marco de selección separado de la silueta, latiendo.
     float ring = 1.0 - smoothstep(0.035, 0.035 + aa * 1.5, abs(shape - 0.12));
     float pulse = 0.72 + 0.28 * sin(uTime * 5.0);
     outc = over(outc, uRing, ring * vHover * pulse);
@@ -189,7 +178,7 @@ export interface OrbPalette {
   shadow: number;
   glowColor: string;
   glow: number;
-  /** Halo que tienen todos los orbes (0: solo el señalado). */
+  /** Halo de todos los orbes; 0 deja solo el del señalado. */
   glowBase: number;
 }
 

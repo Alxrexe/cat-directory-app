@@ -7,13 +7,7 @@ import { useConnectionStore } from "../stores/connection-store";
 
 const UseCasesContext = createContext<ClientUseCases | null>(null);
 
-/**
- * Inyección de dependencias de la UI. Los componentes piden casos de uso,
- * nunca adaptadores; en tests se pasa `value` con dobles.
- *
- * La infraestructura del navegador llega en diferido: se precarga cuando el
- * navegador queda ocioso, antes de que nadie pida la página 2.
- */
+/** La UI pide casos de uso, nunca adaptadores; en tests se pasan dobles por `value`. */
 export function UseCasesProvider({ children, value }: { children: ReactNode; value?: ClientUseCases }) {
   const [container] = useState(() =>
     value

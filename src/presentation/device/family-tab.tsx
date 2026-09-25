@@ -10,10 +10,7 @@ import type { DeviceScreenProps } from "./device-screen";
 
 const loadBars = () => import("../features/breed-detail/coat-bars");
 
-/**
- * Pestaña Familia del Ronrón: razas emparentadas (carrusel arrastrable) y
- * el reparto de pelajes del Michiverso. Se carga aparte (ver device-screen).
- */
+/** Emparentadas y reparto de pelajes. Chunk aparte. */
 export default function FamilyTab({ breed, related, relatedPhotos, coats, total, tab, onOpenRelated }: DeviceScreenProps) {
   const [viewportRef] = useEmblaCarousel({ align: "start", dragFree: true, containScroll: "trimSnaps" });
   const bars = useIdleModule(loadBars, { now: tab === "familia", idle: false });

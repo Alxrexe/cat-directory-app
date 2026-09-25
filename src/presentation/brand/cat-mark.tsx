@@ -1,13 +1,6 @@
 import type { SVGProps } from "react";
 
-/**
- * La marca del Michiverso: la cabeza de un gato en pizarra, con ojos y
- * bigotes, dentro del aro lavanda de un botón de consola. Es el logo, el
- * avatar de la barra de sistema y el sello de las pantallas de aviso.
- *
- * viewBox 100×100. `ring={false}` deja solo la cabeza (para iconos
- * pequeños sobre una pieza que ya tiene aro).
- */
+/** El logo. viewBox 100×100; `ring={false}` deja solo la cabeza. */
 export const CAT_HEAD_PATH =
   "M31.5 26.5C33.5 26 39 30.5 43.5 36C47.6 35 52.4 35 56.5 36C61 30.5 66.5 26 68.5 26.5C70.8 27.2 71.8 36 70 43.5C73.4 48.2 75 53 75 58C75 70 63.8 77 50 77C36.2 77 25 70 25 58C25 53 26.6 48.2 30 43.5C28.2 36 29.2 27.2 31.5 26.5Z";
 

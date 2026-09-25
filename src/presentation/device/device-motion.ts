@@ -1,4 +1,4 @@
-import type { Gsap } from "../lib/gsap";
+import { EASE, finished, finishAll, play, playEach } from "../lib/motion";
 
 /** Punto de la pantalla del que nace el Ronrón (el orbe o la fila pulsada). */
 export interface DeviceOrigin {
@@ -7,14 +7,19 @@ export interface DeviceOrigin {
   size: number;
 }
 
-const LID_CLOSED = -96; // grados: la tapa, plegada tras la bisagra
-const PERSPECTIVE = 1400;
+export interface DeviceMotion {
+  finished: Promise<unknown>;
+  /** Salta al estado final (otra raza, cierre a mitad de la apertura). */
+  finish: () => void;
+}
+
+const LID_OPEN = "perspective(1400px) rotateX(0deg)";
+const LID_CLOSED = "perspective(1400px) rotateX(-96deg)";
 
 function parts(device: HTMLElement) {
-  const all = (selector: string) => Array.from(device.querySelectorAll<HTMLElement>(selector));
+  const all = (selector: string) => device.querySelectorAll<HTMLElement>(selector);
   return {
     lid: device.querySelector<HTMLElement>("[data-device-lid]"),
-    hinge: device.querySelector<HTMLElement>("[data-device-hinge]"),
     screens: all("[data-screen]"),
     ears: all("[data-device-ears] > *"),
     shoulders: all("[data-device-shoulder]"),
@@ -22,85 +27,108 @@ function parts(device: HTMLElement) {
   };
 }
 
-/** Desplazamiento y escala que llevan el Ronrón (centrado) hasta el origen. */
-function toOrigin(device: HTMLElement, origin: DeviceOrigin | null) {
+/** Transformación que lleva el Ronrón (centrado) hasta el orbe de origen. */
+function atOrigin(device: HTMLElement, origin: DeviceOrigin | null) {
   const rect = device.getBoundingClientRect();
-  if (!origin) return { x: 0, y: 30, scale: 0.9 };
-  return {
-    x: origin.x - (rect.left + rect.width / 2),
-    y: origin.y - (rect.top + Math.min(rect.height, window.innerHeight) / 2),
-    scale: Math.max(0.08, (origin.size * 1.4) / rect.width),
-  };
+  if (!origin) return "translate(0px, 30px) scale(0.9)";
+  const x = origin.x - (rect.left + rect.width / 2);
+  const y = origin.y - (rect.top + Math.min(rect.height, window.innerHeight) / 2);
+  const scale = Math.max(0.08, (origin.size * 1.4) / rect.width);
+  return `translate(${x}px, ${y}px) scale(${scale})`;
 }
 
-/**
- * Apertura del Ronrón, como una consola de bolsillo que se abre:
- *
- *  1. El aparato, cerrado (la tapa plegada tras la bisagra), sale del orbe
- *     y viaja al centro creciendo.
- *  2. La tapa gira sobre la bisagra hasta quedar abierta, con un pequeño
- *     rebote (rotateX con perspectiva; su cara trasera no se pinta).
- *  3. Las pantallas se encienden como un tubo: una raya que se abre en
- *     vertical con un destello (scaleY + brightness).
- *  4. Orejas y gatillos llegan flotando; los botones saltan a su sitio.
- *
- * Todo es transform, opacity y filter: el compositor lo mueve sin repintar.
- */
-export function playDeviceOpen(gsap: Gsap, device: HTMLElement, origin: DeviceOrigin | null) {
+const motion = (animations: Array<Animation | null>): DeviceMotion => ({
+  finished: finished(animations),
+  finish: () => finishAll(animations),
+});
+
+/** Sale cerrado del orbe, abre la tapa y enciende las pantallas. Al acabar no queda nada aplicado. */
+export function playDeviceOpen(device: HTMLElement, origin: DeviceOrigin | null): DeviceMotion {
   const { lid, screens, ears, shoulders, controls } = parts(device);
-  const from = toOrigin(device, origin);
-  const tl = gsap.timeline();
-  tl.set(lid, { transformPerspective: PERSPECTIVE, transformOrigin: "50% 100%", rotationX: LID_CLOSED })
-    .set(screens, { transformOrigin: "50% 50%", scaleY: 0.03, opacity: 0, filter: "brightness(2.4)" })
-    .fromTo(
-      device,
-      { x: from.x, y: from.y, scale: from.scale, opacity: 0 },
-      { x: 0, y: 0, scale: 1, opacity: 1, duration: 0.8, ease: "expo.out" },
-      0,
-    )
-    .to(lid, { rotationX: 0, duration: 0.95, ease: "back.out(1.2)" }, 0.26)
-    .to(
+  if (lid) lid.style.transformOrigin = "50% 100%";
+  return motion([
+    play(device, [{ transform: atOrigin(device, origin), opacity: 0 }, { transform: "none", opacity: 1 }], {
+      duration: 800,
+      easing: EASE.expo,
+      fill: "backwards",
+    }),
+    play(lid, [{ transform: LID_CLOSED }, { transform: LID_OPEN }], {
+      duration: 950,
+      delay: 260,
+      easing: EASE.back,
+      fill: "backwards",
+    }),
+    ...playEach(
       screens,
-      { scaleY: 1, opacity: 1, filter: "brightness(1)", duration: 0.55, stagger: 0.09, ease: "expo.out" },
-      0.72,
-    )
-    .fromTo(
+      () => [
+        { transform: "scaleY(0.03)", opacity: 0, filter: "brightness(2.4)" },
+        { transform: "none", opacity: 1, filter: "brightness(1)" },
+      ],
+      { duration: 550, delay: 720, stagger: 90, easing: EASE.expo, fill: "backwards" },
+    ),
+    ...playEach(
       ears,
-      { y: 30, scale: 0.35, opacity: 0 },
-      { y: 0, scale: 1, opacity: 1, duration: 0.75, stagger: 0.08, ease: "back.out(2.2)" },
-      0.62,
-    )
-    .fromTo(
-      shoulders,
-      { y: 22, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.6, stagger: 0.07, ease: "back.out(2)" },
-      0.74,
-    )
-    .fromTo(
-      controls,
-      { scale: 0.6, opacity: 0 },
-      { scale: 1, opacity: 1, duration: 0.55, stagger: 0.06, ease: "back.out(2.4)" },
-      0.5,
-    )
-    // Al terminar no queda ningún filtro ni perspectiva puestos: el aparato
-    // vuelve a ser una capa normal (sin coste mientras se usa).
-    .set(screens, { clearProps: "filter,transform,opacity" })
-    .set(lid, { clearProps: "transform" });
-  return tl;
+      () => [{ transform: "translateY(30px) scale(0.35)", opacity: 0 }, { transform: "none", opacity: 1 }],
+      { duration: 750, delay: 620, stagger: 80, easing: EASE.backStrong, fill: "backwards" },
+    ),
+    ...playEach(shoulders, () => [{ transform: "translateY(22px)", opacity: 0 }, { transform: "none", opacity: 1 }], {
+      duration: 600,
+      delay: 740,
+      stagger: 70,
+      easing: EASE.back,
+      fill: "backwards",
+    }),
+    ...playEach(controls, () => [{ transform: "scale(0.6)", opacity: 0 }, { transform: "none", opacity: 1 }], {
+      duration: 550,
+      delay: 500,
+      stagger: 60,
+      easing: EASE.backStrong,
+      fill: "backwards",
+    }),
+  ]);
 }
 
-/** Cierre: el camino inverso, más corto (pantallas, tapa, vuelta al orbe). */
-export function playDeviceClose(gsap: Gsap, device: HTMLElement, origin: DeviceOrigin | null) {
+/** Cierre: el camino inverso, más corto. Deja todo oculto hasta desmontarse. */
+export function playDeviceClose(device: HTMLElement, origin: DeviceOrigin | null): DeviceMotion {
   const { lid, screens, ears, shoulders } = parts(device);
-  const to = toOrigin(device, origin);
-  const tl = gsap.timeline();
-  tl.to(screens, { scaleY: 0.03, opacity: 0, filter: "brightness(2.4)", duration: 0.2, ease: "power2.in" }, 0)
-    .to([...ears, ...shoulders], { y: 18, opacity: 0, duration: 0.25, stagger: 0.03, ease: "power2.in" }, 0)
-    .to(
-      lid,
-      { transformPerspective: PERSPECTIVE, transformOrigin: "50% 100%", rotationX: LID_CLOSED, duration: 0.36, ease: "power2.in" },
-      0.08,
-    )
-    .to(device, { x: to.x, y: to.y, scale: to.scale, opacity: 0, duration: 0.42, ease: "power3.in" }, 0.3);
-  return tl;
+  if (lid) lid.style.transformOrigin = "50% 100%";
+  return motion([
+    ...playEach(
+      screens,
+      () => [
+        { transform: "none", opacity: 1, filter: "brightness(1)" },
+        { transform: "scaleY(0.03)", opacity: 0, filter: "brightness(2.4)" },
+      ],
+      { duration: 200, easing: EASE.in, fill: "forwards" },
+    ),
+    ...playEach([...ears, ...shoulders], () => [{ transform: "none", opacity: 1 }, { transform: "translateY(18px)", opacity: 0 }], {
+      duration: 250,
+      stagger: 30,
+      easing: EASE.in,
+      fill: "forwards",
+    }),
+    play(lid, [{ transform: LID_OPEN }, { transform: LID_CLOSED }], {
+      duration: 360,
+      delay: 80,
+      easing: EASE.in,
+      fill: "forwards",
+    }),
+    play(device, [{ transform: "none", opacity: 1 }, { transform: atOrigin(device, origin), opacity: 0 }], {
+      duration: 420,
+      delay: 300,
+      easing: EASE.in,
+      fill: "forwards",
+    }),
+  ]);
+}
+
+/** Cambio de raza dentro del Ronrón: las piezas se deslizan en ese sentido. */
+export function playDeviceSlide(device: HTMLElement, direction: -1 | 1): DeviceMotion {
+  return motion(
+    playEach(
+      device.querySelectorAll("[data-device-part]"),
+      () => [{ transform: `translateX(${direction * 36}px)`, opacity: 0 }, { transform: "none", opacity: 1 }],
+      { duration: 550, stagger: 50, easing: EASE.expo, fill: "backwards" },
+    ),
+  );
 }

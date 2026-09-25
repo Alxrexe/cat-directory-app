@@ -6,26 +6,18 @@ import { useEffect, useMemo } from "react";
 import { useUseCases } from "../providers/use-cases-provider";
 import { useConnectionStore } from "../stores/connection-store";
 import { describeError } from "../lib/error-copy";
-import { readyGsap } from "../lib/gsap";
 import { useIdleModule, usePageSettled } from "../lib/idle";
+import { motionArmed } from "../lib/motion";
 import { notify } from "../lib/notify";
 import { playCue } from "../lib/sound";
 
-// SplitType anima el texto palabra a palabra con GSAP; va en un chunk
-// aparte. Solo se usa si GSAP ya llegó (el visitante interactuó) en el
-// momento en que llega el dato: en una ficha recién abierta el dato aparece
-// como texto plano y la carga no paga GSAP + SplitType.
+// Entrada palabra a palabra, en su propio chunk y solo después del primer gesto.
 const loadFactText = () => import("../features/breed-detail/fact-text");
 
-/**
- * Dato curioso aleatorio con su propio ciclo de carga, independiente de la
- * ficha (que es estática y llega al instante). `gcTime: 0`: al cerrar el
- * Ronrón se descarta, y la próxima visita trae otro dato.
- */
+/** Con `gcTime: 0` cada visita a la ficha trae un dato nuevo. */
 export function useRandomFact(slug: string) {
   const { getRandomFact } = useUseCases();
-  // En una ficha abierta desde un enlace, el dato (y el cliente HTTP que lo
-  // trae) espera a que la página termine de cargar: no compite con la foto.
+  // Después del load: en una ficha abierta por enlace no compite con la foto.
   const settled = usePageSettled();
   const query = useQuery({
     queryKey: ["random-fact", slug],
@@ -54,12 +46,10 @@ export type RandomFactQuery = ReturnType<typeof useRandomFact>;
 export function FactLcd({ fact }: { fact: RandomFactQuery }) {
   const retry = useConnectionStore((state) => state.retry);
   const paused = fact.fetchStatus === "paused";
-  // "Cargando" también mientras la consulta espera a que la página se asiente.
   const loading = !paused && (fact.isFetching || fact.isPending);
   const text = fact.data?.text;
-  // Se decide al llegar cada dato: si GSAP aparece después, este dato no se
-  // re-anima (se vería el texto desaparecer y volver).
-  const animate = useMemo(() => Boolean(text) && readyGsap() !== null, [text]);
+  // Se decide al llegar cada dato, para no re-animar uno que ya se ve.
+  const animate = useMemo(() => Boolean(text) && motionArmed(), [text]);
   const factModule = useIdleModule(loadFactText, { now: animate, idle: false });
   const FactText = animate ? factModule?.default : undefined;
 
@@ -67,8 +57,7 @@ export function FactLcd({ fact }: { fact: RandomFactQuery }) {
     <section
       aria-labelledby="fact-title"
       aria-busy={loading}
-      // En escritorio la tira ocupa la altura que le da la cruceta (h-full) y
-      // el texto largo se desplaza por dentro: el Ronrón no cambia de tamaño.
+      // Toma la altura de la fila; un dato largo se desplaza por dentro.
       data-screen
       className="squircle rounded-[26px] screen-glass p-1.5 lg:flex lg:h-full lg:flex-col"
     >
@@ -110,8 +99,6 @@ export function FactLcd({ fact }: { fact: RandomFactQuery }) {
               <p className="mt-1 text-sm text-screen-soft">{describeError(fact.error).description} Pulsa A para reintentar.</p>
             </div>
           ) : fact.data ? (
-            // Un dato largo se desplaza dentro de la tira, con el último
-            // renglón fundido para que se note que sigue.
             <blockquote
               lang="en"
               tabIndex={0}

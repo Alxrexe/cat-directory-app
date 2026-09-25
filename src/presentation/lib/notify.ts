@@ -1,19 +1,9 @@
 import { loadOnce } from "./idle";
 
 /**
- * Avisos (toasts) de la app, sobre sileo.
- *
- * El resto de la UI solo conoce esta API: `notify.error(título, opciones)`.
- * La librería queda detrás, así que cambiarla es cambiar este archivo y
- * `components/ui/toaster.tsx`.
- *
- * sileo muestra un solo aviso a la vez: el nuevo transforma al que está en
- * pantalla ("Sin conexión" → "Conexión restablecida") en vez de apilarse.
- *
- * Un aviso siempre llega después de algo (un fallo, una recarga), nunca en
- * el primer frame, así que sileo y su <Toaster> se cargan con la primera
- * interacción o con el primer aviso, lo que ocurra antes. `notify` espera a que el Toaster
- * esté montado: un aviso nunca se pierde por llegar antes que él.
+ * Avisos sobre sileo; el resto de la UI solo conoce `notify`. sileo se carga
+ * con la primera interacción o el primer aviso, y `notify` espera a que el
+ * <Toaster> esté montado para no perder avisos tempranos.
  */
 export interface NotifyOptions {
   description?: string;
@@ -24,11 +14,7 @@ export interface NotifyOptions {
 
 type Kind = "success" | "error" | "warning" | "info";
 
-/**
- * Un solo módulo para el <Toaster> y para `sileo`: si cada uno se pidiera
- * por separado, el segundo podría necesitar otra descarga justo cuando no
- * hay red, que es cuando más falta hace el aviso.
- */
+// Toaster y sileo en un solo chunk: sin red no puede faltar la segunda mitad.
 export const loadToasterModule = () => import("../components/ui/toaster");
 
 let requestToaster: (() => void) | null = null;
@@ -64,8 +50,7 @@ async function show(kind: Kind, title: string, options: NotifyOptions = {}) {
         : undefined,
     });
   } catch {
-    // Sin red y sin sileo descargado todavía: el aviso no puede pintarse.
-    // El estado sigue visible en la UI (píldora de red, pie de la lista).
+    // Sin red y sin sileo: el estado sigue visible en la barra y en la lista.
   }
 }
 

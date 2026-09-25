@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useEffectEvent, useId, useMemo, useRef, useState, type Ref } from "react";
 import type { BreedDossier } from "@application/use-cases/get-breed-dossier";
 import { cn } from "../lib/cn";
-import { readyGsap } from "../lib/gsap";
+import { EASE, motionArmed, play } from "../lib/motion";
 import { notify } from "../lib/notify";
 import { playCue } from "../lib/sound";
 import { useDiscoveryStore } from "../stores/discovery-store";
@@ -24,16 +24,11 @@ export interface RonronDeviceProps {
 }
 
 /**
- * El Ronrón: el dispositivo de bolsillo del Michiverso.
- *
- * Una consola de bolsillo de dos piezas, como una DS: la tapa con el visor
- * (la foto completa) y la pantalla de datos con pestañas; la base con la
- * pantalla del dato curioso y controles físicos que funcionan de verdad.
- * Las orejas y los gatillos flotan sueltos sobre la tapa:
+ * La ficha como consola de bolsillo de dos piezas (tapa y base).
  *   ◀ ▶ (cruceta o flechas)   raza anterior / siguiente
  *   ▲ ▼  L R                  pestaña anterior / siguiente
  *   A                         otro dato curioso
- *   B / Esc                   cerrar (o volver al Michiverso)
+ *   B / Esc                   cerrar
  */
 export function RonronDevice({ dossier, catalog, mode, onClose, onNavigate, rootRef }: RonronDeviceProps) {
   const { breed, previous, next, profile } = dossier;
@@ -42,7 +37,7 @@ export function RonronDevice({ dossier, catalog, mode, onClose, onNavigate, root
   const earsRef = useRef<HTMLDivElement>(null);
   const fact = useRandomFact(breed.slug);
 
-  // Colección: marcar como descubierta (después de leer lo guardado).
+  // Hay que rehidratar antes de marcar, o se pisaría lo guardado.
   useEffect(() => {
     let alive = true;
     void Promise.resolve(useDiscoveryStore.persist.rehydrate()).then(() => {
@@ -56,20 +51,25 @@ export function RonronDevice({ dossier, catalog, mode, onClose, onNavigate, root
     };
   }, [breed.slug]);
 
-  // Las orejas se mueven un poco cada vez que cambia la raza (el giro va
-  // en la pieza de fuera; la de dentro sigue flotando con CSS).
+  // Al abrir, las orejas ya entran con la apertura: el meneo es solo al cambiar de raza.
+  const firstSlug = useRef(breed.slug);
   useEffect(() => {
     const ears = earsRef.current?.children;
-    const gsap = readyGsap();
-    if (!gsap || !ears || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const tl = gsap.timeline({ delay: 0.35 });
-    tl.to(ears[0], { rotate: -9, duration: 0.14, ease: "power2.out" })
-      .to(ears[0], { rotate: 0, duration: 0.6, ease: "elastic.out(1, 0.4)" })
-      .to(ears[1], { rotate: 9, duration: 0.14, ease: "power2.out" }, 0.08)
-      .to(ears[1], { rotate: 0, duration: 0.6, ease: "elastic.out(1, 0.4)" });
-    return () => {
-      tl.kill();
-    };
+    if (!ears || breed.slug === firstSlug.current || !motionArmed()) return;
+    const wiggle = (ear: Element, angle: number, delay: number) =>
+      play(
+        ear,
+        [
+          { transform: "rotate(0deg)" },
+          { transform: `rotate(${angle}deg)`, offset: 0.18 },
+          { transform: `rotate(${-angle * 0.4}deg)`, offset: 0.45 },
+          { transform: `rotate(${angle * 0.15}deg)`, offset: 0.72 },
+          { transform: "rotate(0deg)" },
+        ],
+        { duration: 720, delay, easing: EASE.out },
+      );
+    const moves = [wiggle(ears[0], -9, 350), wiggle(ears[1], 9, 430)];
+    return () => moves.forEach((move) => move?.cancel());
   }, [breed.slug]);
 
   const moveTab = useCallback((step: -1 | 1) => {
@@ -104,7 +104,6 @@ export function RonronDevice({ dossier, catalog, mode, onClose, onNavigate, root
     }
   }, [breed.slug, breed.name]);
 
-  // Atajos de teclado mientras el Ronrón está en pantalla.
   const onKey = useEffectEvent((event: KeyboardEvent) => {
     const target = event.target as HTMLElement | null;
     if (target?.closest("input, textarea, [contenteditable='true']")) return;
@@ -146,9 +145,7 @@ export function RonronDevice({ dossier, catalog, mode, onClose, onNavigate, root
 
   return (
     <article ref={rootRef} aria-labelledby="ronron-name" className="relative mx-auto w-full max-w-[1100px] pt-[5rem] sm:pt-[6.25rem]">
-      {/* Orejas: dos piezas sueltas que flotan sobre la tapa, con aire entre
-          ellas y la carcasa. La de fuera se mueve con GSAP (el meneo al
-          cambiar de raza); la de dentro flota con CSS (compositor). */}
+      {/* El meneo va en la pieza de fuera y la flotación (CSS) en la de dentro: no se pisan. */}
       <div ref={earsRef} aria-hidden="true" data-device-ears>
         <div className="absolute top-2 left-[9%] w-[4.5rem] origin-bottom sm:top-1.5 sm:left-[10%] sm:w-[6.5rem]">
           <Ear className="-rotate-[14deg] animate-[float_5.5s_var(--ease-soft)_infinite]" />
@@ -158,7 +155,6 @@ export function RonronDevice({ dossier, catalog, mode, onClose, onNavigate, root
         </div>
       </div>
 
-      {/* Gatillos L/R: sueltos también, flotando entre las orejas. */}
       <div className="absolute top-12 left-[27%] z-0 hidden sm:block" data-device-shoulder>
         <div className="animate-[float_4.8s_var(--ease-soft)_-1.2s_infinite]">
           <ShoulderButton letter="L" aria-label="Pestaña anterior" onClick={() => moveTab(-1)} />
@@ -170,18 +166,12 @@ export function RonronDevice({ dossier, catalog, mode, onClose, onNavigate, root
         </div>
       </div>
 
-      {/*
-        Tapa: el visor y la pantalla de datos, a la misma altura (la pantalla
-        toma la del visor con h-0 + min-h-full y desplaza su contenido por
-        dentro: cambiar de pestaña no mueve nada). Gira sobre la bisagra al
-        abrirse (ver device-motion.ts).
-      */}
+      {/* La pantalla toma la altura del visor (h-0 + min-h-full): cambiar de pestaña no mueve nada. */}
       <div data-device-lid className="shell squircle relative z-10 rounded-[40px] p-3 [backface-visibility:hidden] sm:p-4">
         <Sparkle className="absolute -top-3 -right-2 size-7 text-glint" />
         <div className="grid gap-3 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)]">
           <div data-device-part>
-            {/* Cada bloque en su <Suspense>: nada suspende, pero React hidrata
-                por tandas cortas en vez de una sola tarea larga. */}
+            {/* Nada suspende: los <Suspense> reparten la hidratación en tareas cortas. */}
             <Suspense fallback={null}>
               <DeviceVisor
                 name={breed.name}
@@ -213,19 +203,13 @@ export function RonronDevice({ dossier, catalog, mode, onClose, onNavigate, root
         </div>
       </div>
 
-      {/* Bisagra: dos topes y la ranura entre tapa y base. */}
       <div aria-hidden="true" data-device-hinge className="relative mx-auto flex h-3 w-[62%] items-center gap-2 sm:h-3.5">
         <span className="shell h-full w-14 rounded-full sm:w-20" />
         <span className="h-1.5 flex-1 rounded-full bg-[var(--shade)] shadow-[inset_0_1px_2px_var(--shadow-soft)]" />
         <span className="shell h-full w-14 rounded-full sm:w-20" />
       </div>
 
-      {/*
-        Base, como la mitad inferior de una DS: cruceta, la pantalla del dato
-        curioso y B/A, cada uno en su pista (áreas con nombre: la misma pieza
-        cambia de sitio sin duplicarse); al pie, la marca, los atajos y el
-        altavoz. En móvil y tableta el dato va arriba, a todo lo ancho.
-      */}
+      {/* Áreas con nombre: el dato va entre cruceta y B/A en escritorio y encima en móvil. */}
       <div data-device-base className="shell squircle relative z-10 rounded-[40px] p-3 sm:p-4">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-4 [grid-template-areas:'fact_fact_fact'_'pad_mid_btn'] sm:gap-x-6 lg:gap-x-7 lg:gap-y-3 lg:[grid-template-areas:'pad_fact_btn'_'mid_mid_mid']">
           <div data-device-part className="min-w-0 [grid-area:fact] lg:h-0 lg:min-h-full">
@@ -249,8 +233,6 @@ export function RonronDevice({ dossier, catalog, mode, onClose, onNavigate, root
             </Suspense>
           </div>
 
-          {/* Marca con su LED, los dos atajos y el altavoz. En tableta van
-              apilados entre la cruceta y B/A; en escritorio forman el pie. */}
           <div className="flex min-w-0 flex-col items-center gap-3 [grid-area:mid] max-sm:invisible lg:flex-row lg:justify-between lg:px-2">
             <p className="flex items-center gap-2.5 lg:w-48" aria-hidden="true">
               <Wordmark />
@@ -297,10 +279,6 @@ export function RonronDevice({ dossier, catalog, mode, onClose, onNavigate, root
   );
 }
 
-/**
- * Oreja suelta: un triángulo de esquinas muy redondas en el plástico de la
- * carcasa, con el interior en gel lavanda, un brillo de burbuja y un LED.
- */
 function Ear({ className }: { className?: string }) {
   const id = useId();
   return (
@@ -322,18 +300,13 @@ function Ear({ className }: { className?: string }) {
         strokeWidth="1.5"
       />
       <path d="M40 80 Q31 80 36 71 L54 39 Q60 29 66 39 L84 71 Q89 80 80 80 Z" fill={`url(#${id}-gel)`} opacity="0.85" />
-      {/* Brillo de burbuja en el gel y un LED diminuto: el toque "cyber". */}
       <ellipse cx="55" cy="52" rx="3.2" ry="6" transform="rotate(28 55 52)" fill="var(--gel-gloss)" />
       <circle cx="60" cy="72" r="2.6" fill="var(--glint)" />
     </svg>
   );
 }
 
-/**
- * "RONRÓN" como marca de la carcasa: Hubot extendida, en el pizarra del
- * logo. Es un logotipo, no texto de lectura (el nombre accesible del
- * dispositivo está en el título de la ficha).
- */
+// Logotipo decorativo: el nombre accesible está en el título de la ficha.
 function Wordmark() {
   return (
     <span className="font-display text-[0.95rem] leading-none font-extrabold tracking-[0.2em] text-slate/75">
@@ -342,11 +315,7 @@ function Wordmark() {
   );
 }
 
-/**
- * Código de barras de la pieza, como la etiqueta de un aparato. Decorativo:
- * las barras salen del nombre de la raza (siempre las mismas para cada una)
- * y se pintan en un solo elemento con un degradado de franjas duras.
- */
+// Decorativo. Un solo elemento con un degradado de franjas, no una barra por nodo.
 function Barcode({ seed }: { seed: string }) {
   const background = useMemo(() => {
     const stops: string[] = [];
@@ -360,7 +329,7 @@ function Barcode({ seed }: { seed: string }) {
   return <span aria-hidden="true" className="block h-5 opacity-45" style={background} />;
 }
 
-/** Anchos de 1 a 3 px a partir de un hash FNV-1a del texto. */
+/** Anchos de 1 a 3 px a partir de un hash FNV-1a: siempre los mismos por raza. */
 function barWidths(seed: string): number[] {
   const widths: number[] = [];
   let h = 2166136261;

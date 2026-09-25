@@ -2,10 +2,7 @@ import type { Breed } from "./breed";
 import { coatFamily } from "./coat";
 import { describeCountry } from "./country";
 
-/**
- * Razas emparentadas con otra: primero las del mismo país, luego las que
- * comparten familia de pelaje. Nunca incluye a la propia raza.
- */
+/** Primero las del mismo país, luego las de la misma familia de pelaje. */
 export function relatedBreeds(target: Breed, catalog: readonly Breed[], limit = 8): readonly Breed[] {
   const country = describeCountry(target.country)?.primary.toLowerCase() ?? null;
   const family = coatFamily(target.coat);

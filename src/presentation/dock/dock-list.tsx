@@ -46,7 +46,7 @@ interface DockListProps {
   onSpotlight: (slug: string | null) => void;
   onExitTop: () => void;
   footer?: React.ReactNode;
-  /** Contenedor con scroll, compartido con el gesto de recarga. */
+  /** Compartido con el gesto de recarga. */
   scrollRef: RefObject<HTMLDivElement | null>;
   ref?: Ref<DockListHandle>;
 }
@@ -64,14 +64,8 @@ function focusPendingRow(list: HTMLElement | null, pending: RefObject<number | n
 }
 
 /**
- * Lista de la consola, virtualizada sobre su propio contenedor: con 98 razas
- * o con 10 000, en el DOM hay las filas visibles más un margen.
- *
- * - Scroll infinito: al acercarse al final pide la página siguiente.
- * - Teclado: un tabulador entra (tabindex itinerante) y las flechas,
- *   Inicio/Fin y RePág/AvPág recorren las filas.
- * - `?page=` refleja la página de la fila que está arriba; al abrir un
- *   enlace con `?page=3` la lista se desplaza hasta esa página.
+ * Lista virtualizada con scroll infinito. Tabindex itinerante (un tabulador
+ * entra, las flechas recorren) y `?page=` sigue a la fila de arriba.
  */
 export function DockList(props: DockListProps) {
   const { id, entries, setSize, query, busy, canAutoLoad, onReachEnd, onVisiblePageChange, restorePage, scrollRef, ref } = props;
@@ -87,7 +81,6 @@ export function DockList(props: DockListProps) {
   });
   const items = virtualizer.getVirtualItems();
 
-  // ── Foco itinerante ────────────────────────────────────────────────────
   const [activeIndex, setActiveIndex] = useState(0);
   const active = Math.min(activeIndex, Math.max(0, entries.length - 1));
   const pendingFocus = useRef<number | null>(null);
@@ -126,7 +119,6 @@ export function DockList(props: DockListProps) {
     focusRow(moves[event.key]);
   };
 
-  // ── Restaurar `?page=` ─────────────────────────────────────────────────
   const restored = useRef(false);
   const restore = useEffectEvent(() => {
     restored.current = true;
@@ -138,7 +130,6 @@ export function DockList(props: DockListProps) {
     if (!restored.current && entries.length > 0) restore();
   }, [entries.length]);
 
-  // ── Scroll infinito ────────────────────────────────────────────────────
   const lastVisible = virtualizer.range?.endIndex ?? -1;
   const measured = (virtualizer.scrollRect?.height ?? 0) > 0;
   useEffect(() => {
@@ -146,7 +137,6 @@ export function DockList(props: DockListProps) {
     if (lastVisible >= entries.length - 1 - LOAD_AHEAD) onReachEnd();
   }, [canAutoLoad, measured, lastVisible, entries.length, onReachEnd]);
 
-  // ── Página visible → URL ───────────────────────────────────────────────
   const topPage = entries[virtualizer.range?.startIndex ?? 0]?.page;
   useEffect(() => {
     if (!restored.current || !topPage) return;
@@ -234,7 +224,7 @@ const DockRow = memo(function DockRow({ entry, index, active, query, onFocusRow,
       onPointerEnter={() => onSpotlight(breed.slug)}
       onPointerLeave={() => onSpotlight(null)}
       onClick={(event: MouseEvent<HTMLAnchorElement>) => onOpen(breed.slug, event.currentTarget.getBoundingClientRect())}
-      className="group relative isolate flex h-16 items-center gap-3 rounded-2xl px-2 outline-offset-[-3px] before:absolute before:inset-0 before:-z-10 before:rounded-2xl before:bg-[linear-gradient(180deg,var(--pearl-hi),var(--pearl-lo))] before:opacity-0 before:shadow-[0_0_0_1px_var(--hairline),inset_0_1px_0_var(--sheen),0_10px_22px_-14px_var(--shadow-deep)] before:transition-opacity before:duration-200 hover:before:opacity-100 focus-visible:before:opacity-100"
+      className="group relative isolate flex h-16 items-center gap-3 rounded-2xl px-2 outline-offset-[-3px] transition-transform duration-150 ease-[var(--ease-cozy)] active:scale-[0.985] before:absolute before:inset-0 before:-z-10 before:rounded-2xl before:bg-[linear-gradient(180deg,var(--pearl-hi),var(--pearl-lo))] before:opacity-0 before:shadow-[0_0_0_1px_var(--hairline),inset_0_1px_0_var(--sheen),0_10px_22px_-14px_var(--shadow-deep)] before:transition-opacity before:duration-200 hover:before:opacity-100 focus-visible:before:opacity-100"
     >
       <span className="relative grid size-11 shrink-0 place-items-center">
         <OrbShape className="absolute inset-0 size-full" pearl innerEar="var(--pearl-hi)" />

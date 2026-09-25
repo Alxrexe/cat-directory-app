@@ -1,10 +1,6 @@
 /**
- * Reintento con backoff exponencial y jitter.
- *
- * Sin jitter, cuando la API se cae, todos los clientes que fallaron a la vez
- * reintentan en el mismo milisegundo y la vuelven a tumbar. Con "equal
- * jitter" la mitad del retardo es fija (garantiza que esperamos) y la otra
- * mitad aleatoria (reparte a los clientes en el tiempo).
+ * Backoff exponencial con "equal jitter": sin azar, todos los clientes que
+ * fallaron a la vez reintentan juntos y vuelven a tumbar la API.
  */
 export interface RetryPolicy {
   /** Reintentos después del primer intento. 3 ⇒ hasta 4 peticiones. */

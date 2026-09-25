@@ -6,7 +6,6 @@ import { queryResponseSchema, type QueryResponse, type WikiPage } from "./schema
 
 export interface WikipediaProfileRepositoryConfig {
   http: HttpClient;
-  /** Lado de la miniatura que se pide, en px. */
   thumbnailSize?: number;
 }
 
@@ -14,10 +13,7 @@ export interface WikipediaProfileRepositoryConfig {
 const TITLES_PER_QUERY = 50;
 const EXTRACTS_PER_QUERY = 20;
 
-/**
- * Títulos candidatos para una raza, del más específico al más genérico.
- * "Bengal" a secas es una región; "Bengal cat" es la raza.
- */
+/** Del más específico al más genérico: "Bengal cat" antes que "Bengal". */
 export function wikiCandidates(breedName: string): string[] {
   const base = breedName
     .replace(/\[\d+\]/g, "")
@@ -27,7 +23,7 @@ export function wikiCandidates(breedName: string): string[] {
   return [`${base} cat`, `${base} (cat)`, base];
 }
 
-/** Solo se acepta un artículo que se describe a sí mismo como gato o raza. */
+/** "Bengal" a secas es una región: el artículo tiene que hablar de gatos. */
 export function isCatArticle(page: WikiPage | undefined): page is WikiPage {
   return Boolean(page && !page.missing && !page.invalid && /\bcat\b|\bbreed\b|felis/i.test(page.description ?? ""));
 }
@@ -36,7 +32,6 @@ function chunk<T>(items: readonly T[], size: number): T[][] {
   return Array.from({ length: Math.ceil(items.length / size) }, (_, i) => items.slice(i * size, i * size + size));
 }
 
-/** Sigue normalizaciones y redirecciones hasta el título final de cada página. */
 function resolvePages(response: QueryResponse) {
   const normalized = new Map(response.query?.normalized?.map((m) => [m.from, m.to]));
   const redirects = new Map(response.query?.redirects?.map((m) => [m.from, m.to]));
@@ -61,12 +56,9 @@ interface Match {
 }
 
 /**
- * Adaptador secundario: `BreedProfileRepository` sobre la API de MediaWiki.
- *
- * Todo va por lotes y en serie (nunca en paralelo): tres rondas de títulos
- * candidatos en inglés (foto, descripción y enlace al artículo en español)
- * y después los extractos, en español cuando existe el artículo y en inglés
- * si no. Para las 98 razas son unas diez peticiones, cacheadas un día.
+ * Perfiles desde MediaWiki, por lotes y en serie: tres rondas de títulos
+ * candidatos y después los extractos (en español si existe el artículo).
+ * Unas diez peticiones para las 98 razas.
  */
 export function createWikipediaProfileRepository(config: WikipediaProfileRepositoryConfig): BreedProfileRepository {
   const thumbnailSize = config.thumbnailSize ?? 800;

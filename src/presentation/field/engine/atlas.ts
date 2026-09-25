@@ -14,12 +14,8 @@ export interface AtlasFonts {
 }
 
 /**
- * Atlas de glifos: una celda de 256 px por raza con su monograma y su nombre
- * corto, dibujados en blanco. El shader solo usa el canal alfa y lo tiñe con
- * el color de tinta del tema, así que el mismo atlas sirve para día y noche.
- *
- * Se dibuja con canvas 2D (una vez por raza) y se sube como textura; el
- * nombre es pequeño a propósito: se lee cuando la lupa agranda el orbe.
+ * Una celda de 256 px por raza, en blanco: el shader tiñe el alfa con la tinta
+ * del tema, así que el mismo atlas sirve de día y de noche.
  */
 export function createGlyphAtlas(capacity: number, fonts: AtlasFonts) {
   const grid = Math.max(1, Math.ceil(Math.sqrt(Math.max(1, capacity))));

@@ -1,10 +1,6 @@
 import type { Breed } from "./breed";
 
-/**
- * El pelaje llega escrito de quince maneras ("Semi Long", "Semi-long",
- * "Long/short", "Rex (Short/Long)"...). Para comparar razas hace falta
- * reducirlo a un puñado de familias.
- */
+/** El pelaje llega escrito de quince maneras ("Semi Long", "Semi-long"...): se reduce a familias. */
 export type CoatFamily = "short" | "semi-long" | "long" | "mixed" | "rex" | "hairless" | "unknown";
 
 export const COAT_FAMILIES: readonly CoatFamily[] = [

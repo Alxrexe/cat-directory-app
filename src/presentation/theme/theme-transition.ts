@@ -2,28 +2,18 @@
 
 import { applyColorTheme, type ColorTheme } from "./use-color-theme";
 
-/** Diámetro del disco de la ola antes de escalarlo (se rasteriza una vez). */
+/** Se rasteriza una vez a este tamaño y después solo se escala. */
 const WAVE_SIZE = 64;
-/** Radio del núcleo opaco dentro del disco (el resto es el halo). */
+/** Fracción opaca del disco; el resto es el halo. */
 const CORE = 0.56;
 
 const COVER_MS = 560;
 const REVEAL_MS = 560;
 
 /**
- * Cambio de tema con una ola de luz, como pasar de canal en una consola:
- *
- *  1. Tapar: un disco del color del tema nuevo, con un halo, crece desde
- *     el botón hasta cubrir la pantalla (solo `transform: scale`).
- *  2. Cambiar: con todo tapado, el tema cambia de golpe (clase `.dark`),
- *     el cielo cambia de video y el campo WebGL empieza a fundir su paleta.
- *  3. Destapar: la ola se desvanece y se abre un poco (opacidad + escala) y
- *     aparece la interfaz ya en el tema nuevo.
- *
- * La ola es un único elemento de 64 px: el navegador lo pinta una vez y la
- * GPU solo lo escala y lo funde (Web Animations sobre transform/opacity, que
- * corren en el compositor aunque el hilo principal esté ocupado con el
- * cambio de tema). Sin movimiento reducido o sin `animate`, cambio directo.
+ * Una ola del color del tema nuevo tapa la pantalla desde el botón, el tema
+ * cambia debajo (el recálculo de estilos queda oculto) y la ola se disuelve.
+ * Solo transform/opacity: corre en el compositor aunque el hilo esté ocupado.
  */
 export async function switchColorTheme(
   next: ColorTheme,
@@ -55,9 +45,7 @@ export async function switchColorTheme(
     }).finished;
 
     applyColorTheme(next);
-    // El póster del cielo nuevo, si aún no estaba, tiene un momento (acotado)
-    // para llegar mientras la ola tapa; después, dos frames para que el
-    // navegador pinte el tema nuevo antes de destaparlo.
+    // Un momento para el póster del cielo nuevo y dos frames para pintar debajo.
     await Promise.race([options.beforeReveal ?? Promise.resolve(), wait(420)]);
     await nextFrames(2);
 

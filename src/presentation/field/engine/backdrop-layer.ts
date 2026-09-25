@@ -1,14 +1,6 @@
 import { Color, DoubleSide, Mesh, PlaneGeometry, ShaderMaterial, Vector2 } from "three";
 
-/**
- * Capa de fondo del campo (detrás de los orbes):
- * - La "onda" de la lupa: una burbuja translúcida con borde brillante y
- *   ondulaciones concéntricas que sigue al puntero. Hace que el zoom de los
- *   orbes se lea como una lente física y no como un simple escalado.
- * - En tema oscuro, un polvo de estrellas que titila muy despacio.
- *
- * Un solo quad a pantalla completa; todo se calcula en el fragment shader.
- */
+/** Fondo del campo: la onda de la lupa y, de noche, las estrellas. Un quad a pantalla completa. */
 const vertexShader = /* glsl */ `
   uniform vec2 uRes;
   varying vec2 vPx;
@@ -41,7 +33,7 @@ const fragmentShader = /* glsl */ `
   void main() {
     vec4 outc = vec4(0.0);
 
-    // Estrellas (solo de noche): una por celda, con titileo lento.
+    // Una estrella por celda, como mucho.
     if (uStars > 0.001) {
       vec2 cellSize = vec2(46.0);
       vec2 cell = floor(vPx / cellSize);
@@ -53,7 +45,6 @@ const fragmentShader = /* glsl */ `
       outc = over(outc, vec3(0.93, 0.9, 1.0), s * 0.75 * uStars);
     }
 
-    // Onda de la lupa.
     if (uLens > 0.001) {
       float r = length(vPx - uMouse) / uRadius;
       float disc = exp(-r * r * 1.8);
@@ -112,12 +103,7 @@ export function createBackdropLayer(palette: BackdropPalette) {
   };
 }
 
-/**
- * Velo a pantalla completa, por encima del campo: el fondo de la pantalla de
- * inicio mientras dura el enlace. Al llegar se abre como un iris desde el
- * centro (un hueco que crece con un borde de luz iridiscente) y deja ver
- * el campo de orbes: todo en el fragment shader, la CPU solo mueve el radio.
- */
+/** Velo de la pantalla de inicio. Al llegar se abre como un iris; la CPU solo mueve el radio. */
 export function createVeilLayer(color: string, rim: readonly [string, string]) {
   const geometry = new PlaneGeometry(1, 1);
   const uniforms = {
@@ -125,9 +111,8 @@ export function createVeilLayer(color: string, rim: readonly [string, string]) {
     uColor: { value: new Color(color) },
     uAlpha: { value: 0 },
     uGlow: { value: 0 },
-    /** Radio del iris en píxeles (0: cerrado). */
+    /** En píxeles; 0 es cerrado. */
     uIris: { value: 0 },
-    /** Intensidad del borde de luz del iris. */
     uRim: { value: 0 },
     uRimA: { value: new Color(rim[0]) },
     uRimB: { value: new Color(rim[1]) },
@@ -156,17 +141,14 @@ export function createVeilLayer(color: string, rim: readonly [string, string]) {
         vec2 center = uRes * 0.5;
         vec2 d = vPx - center;
         float dist = length(d);
-        // Un centro un poco más luminoso: la "boca" del enlace.
         float r = dist / length(center);
         vec3 c = mix(uColor, vec3(1.0), (1.0 - smoothstep(0.0, 0.6, r)) * uGlow);
 
-        // Iris: dentro del radio el velo desaparece, con un borde suave.
         float open = step(0.5, uIris);
         float feather = 18.0 + uIris * 0.05;
         float veil = mix(1.0, smoothstep(uIris - feather, uIris, dist), open);
         vec4 outc = vec4(c, uAlpha * veil);
 
-        // Borde de luz iridiscente: el color gira con el ángulo.
         float width = 8.0 + uIris * 0.025;
         float band = exp(-pow((dist - uIris) / width, 2.0)) * open * uRim;
         float hue = 0.5 + 0.5 * sin(atan(d.y, d.x) * 2.0 + uIris * 0.004);

@@ -1,11 +1,6 @@
 import type { ColorTheme } from "../theme/use-color-theme";
 
-/**
- * Cielos del Michiverso: de día "Blue sky", de noche "Night sky". Los
- * originales 4K (80 MB cada uno) se recodificaron a 10 s en bucle: WebM VP9
- * de ~130 KB y MP4 H.264 de respaldo, en 1920 y 1280 px, más un póster WebP
- * de 10 KB. Ver `public/media`.
- */
+// Recodificados de originales 4K de 80 MB: 10 s en bucle, VP9 (~130 KB) y H.264 de respaldo.
 export const SKY = {
   light: { poster: "/media/sky-day-poster.webp", video: "/media/sky-day" },
   dark: { poster: "/media/sky-night-poster.webp", video: "/media/sky-night" },
@@ -13,10 +8,7 @@ export const SKY = {
 
 const posters = new Map<ColorTheme, Promise<void>>();
 
-/**
- * Adelanta y decodifica el póster de un cielo (al acercar el puntero al
- * botón de tema). La promesa se comparte: pedirlo dos veces no descarga dos.
- */
+/** La promesa se comparte: pedirlo dos veces no descarga dos. */
 export function preloadSkyPoster(theme: ColorTheme): Promise<void> {
   let pending = posters.get(theme);
   if (!pending) {

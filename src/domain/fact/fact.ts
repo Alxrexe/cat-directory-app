@@ -15,11 +15,7 @@ export function createCatFact(text: string): CatFact {
   return Object.freeze({ text: clean });
 }
 
-/**
- * El Michiverso es para toda la familia. El catálogo de catfact.ninja mezcla
- * curiosidades con unos pocos datos crudos (pieles, gatos que se comen,
- * castigos de muerte); esos temas concretos no se muestran.
- */
+/** Es para toda la familia: fuera los pocos datos crudos del catálogo. */
 const UNSUITABLE = /\b(skins?|eaten|hitler|sexually|fertili[sz]er|by death)\b/i;
 
 export function isFamilyFriendly(fact: CatFact): boolean {

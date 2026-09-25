@@ -1,11 +1,6 @@
 import { create } from "zustand";
 
-/**
- * Fases de la simulación:
- * - `gate`: pantalla de inicio (botón "Empezar simulación").
- * - `linking`: el túnel mientras se carga el motor, el cielo y los orbes.
- * - `running`: el campo de orbes, la consola y el Ronrón.
- */
+/** gate: pantalla de inicio · linking: carga · running: campo y consola. */
 export type SimulationPhase = "gate" | "linking" | "running";
 
 export interface LinkStep {
@@ -16,11 +11,7 @@ export interface LinkStep {
 
 interface SimulationState {
   phase: SimulationPhase;
-  /**
-   * Ya se entró en esta visita. Vive solo en memoria: una carga nueva de la
-   * página vuelve a la pantalla de inicio; volver al campo navegando desde
-   * una ficha, no.
-   */
+  /** Solo en memoria: recargar vuelve a la pantalla de inicio. */
   entered: boolean;
   markEntered: () => void;
   steps: LinkStep[];

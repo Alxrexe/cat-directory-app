@@ -1,12 +1,6 @@
 import { useId, type SVGProps } from "react";
 
-/**
- * El orbe-gato en SVG: la misma silueta que dibuja el shader del campo
- * (cabeza redonda + dos orejas), para usarla en la interfaz: logo, botón de
- * inicio, iconos de la lista y el marco del visor del Ronrón.
- *
- * viewBox 100×100. Las puntas de las orejas se redondean con el trazo.
- */
+/** La misma silueta que dibuja el shader del campo. viewBox 100×100. */
 export const ORB_PATH_HEAD = { cx: 50, cy: 57, r: 38 };
 export const ORB_PATH_EARS = ["M23 38 L30.5 22 L40.5 30 Z", "M77 38 L69.5 22 L59.5 30 Z"];
 export const ORB_PATH_INNER_EARS = ["M27.5 34.5 L31 26.5 L36 30.5 Z", "M72.5 34.5 L69 26.5 L64 30.5 Z"];

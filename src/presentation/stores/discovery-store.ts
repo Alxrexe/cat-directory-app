@@ -7,10 +7,7 @@ interface DiscoveryState {
   discover: (slug: string) => boolean;
 }
 
-/**
- * Colección de "michis descubiertos": un toque de juego. Cada raza abierta
- * por primera vez se marca como nueva y suma al contador de la barra.
- */
+/** Razas ya abiertas: la primera vez salen como nuevas. */
 export const useDiscoveryStore = create<DiscoveryState>()(
   persist(
     (set, get) => ({

@@ -16,11 +16,7 @@ interface ConnectionState {
   clearRetry: () => void;
 }
 
-/**
- * Estado de la conexión, compartido por toda la UI. Lo alimentan dos
- * fuentes: los eventos online/offline del navegador y el cliente HTTP, que
- * avisa de cada reintento a través de la raíz de composición.
- */
+/** Lo alimentan los eventos online/offline y los reintentos del cliente HTTP. */
 export const useConnectionStore = create<ConnectionState>()((set) => ({
   online: true,
   retry: null,

@@ -1,9 +1,4 @@
-/**
- * `Promise.all` con techo de peticiones simultáneas. La API limita a 100
- * peticiones por minuto y por IP; disparar cuarenta páginas a la vez al
- * restaurar un enlace compartido sería la forma más rápida de agotarlo.
- * Conserva el orden de entrada en la salida.
- */
+/** `Promise.all` con techo (la API limita a 100 peticiones por minuto). Conserva el orden. */
 export async function mapWithConcurrency<T, R>(
   items: readonly T[],
   limit: number,

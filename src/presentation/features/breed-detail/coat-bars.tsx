@@ -6,11 +6,7 @@ interface CoatBarsProps {
   data: Array<{ family: string; label: string; count: number; current: boolean }>;
 }
 
-/**
- * Barras horizontales en la pantalla LCD: la familia de esta raza, encendida.
- * La animación propia de recharts (que reescribe atributos SVG en cada
- * frame) está apagada: el gráfico entra con un fundido de la pestaña.
- */
+/** Sin la animación de recharts: reescribe el SVG en cada frame. */
 export default function CoatBars({ data }: CoatBarsProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">

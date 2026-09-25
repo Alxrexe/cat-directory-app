@@ -7,18 +7,8 @@ import { THEME_SCRIPT } from "@presentation/theme/theme-script";
 import { SITE_URL } from "./site-url";
 import "./globals.css";
 
-/**
- * Una sola voz, más una pantalla:
- * - Hubot Sans: la tipografía del Michiverso, en todo (marca, títulos,
- *   interfaz y lectura). Grotesca de esquinas redondeadas, entre robot y
- *   juguete: tecnológica sin frialdad. En mayúsculas y con mucho aire es la
- *   voz de los rótulos del HUD. Se precarga: es la del primer pintado.
- * - Doto: matriz de puntos redondos, solo para las lecturas de LCD (hora,
- *   contadores, N.º). 6 kB, sin precarga.
- *
- * Sin el eje de anchura de Hubot: con él, el archivo pesaba 93 kB (el
- * doble) y retrasaba el primer pintado en móvil.
- */
+// Hubot Sans para todo (sin su eje de anchura, que duplicaba el archivo a 93 kB)
+// y Doto solo para las cifras de LCD.
 const hubot = Hubot_Sans({
   variable: "--font-hubot",
   subsets: ["latin"],
@@ -36,7 +26,7 @@ const doto = Doto({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Michiverso — Simulación de razas de gato",
+    default: "Michiverso · Simulación de razas de gato",
     template: "%s · Michiverso",
   },
   description:

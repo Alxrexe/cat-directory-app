@@ -8,16 +8,9 @@ import { createHttpClient } from "../http/http-client";
 import { createWikipediaProfileRepository } from "../wikipedia/wikipedia-profile-repository";
 
 /**
- * Raíz de composición del servidor.
- *
- * Aquí, y solo aquí, se decide qué adaptador implementa cada puerto. Las
- * peticiones llevan `next.revalidate`: cada página de la API queda en la
- * caché de datos de Next y se revalida en segundo plano, así que el SSR de
- * la home y el SSG del detalle no dependen de que la API responda en ese
- * instante.
- *
- * El servidor reintenta menos y más rápido que el cliente: un usuario
- * esperando el primer byte no debe pagar la paciencia de un reintento largo.
+ * Raíz de composición del servidor. Las páginas de la API quedan en la caché
+ * de datos de Next (revalidate), y aquí se reintenta menos que en el cliente:
+ * el primer byte no puede esperar a un backoff largo.
  */
 const http = createHttpClient({
   timeoutMs: 6000,
@@ -31,11 +24,7 @@ const breeds = createCatfactBreedRepository({
   onDroppedRows: (count, page) => console.warn(`[catfact] página ${page}: ${count} filas descartadas por esquema`),
 });
 
-/**
- * Wikipedia pide identificarse con un User-Agent propio y limita las
- * ráfagas: las peticiones van en serie, cacheadas un día, y con más
- * paciencia en los reintentos que la API de razas (un 429 trae Retry-After).
- */
+// Wikipedia exige User-Agent propio y limita ráfagas: en serie, cacheado un día.
 const wikipediaHttp = createHttpClient({
   timeoutMs: 8000,
   retry: { retries: 3, baseDelayMs: 800, maxDelayMs: 4000 },
@@ -59,6 +48,6 @@ export const serverUseCases = {
   restoreBreedPages: cache((upTo: number) => restoreBreedPages(upTo)),
   getBreedDossier: cache((slug: string) => getBreedDossier(slug)),
   loadCatalog: cache(() => loadCatalog()),
-  /** Calienta la caché de perfiles antes de generar las fichas en paralelo. */
+  /** Calienta la caché de perfiles antes de generar las 98 fichas en paralelo. */
   warmProfiles: cache(async () => loadProfiles(await loadCatalog())),
 };

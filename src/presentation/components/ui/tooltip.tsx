@@ -3,11 +3,7 @@
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import type { ReactElement } from "react";
 
-/**
- * Tooltip de Radix. No se importa directamente: lo carga `Hint` cuando el
- * navegador queda ocioso (floating-ui pesa más que todo el resto de la
- * cabecera y el tooltip nunca es necesario para el primer pintado).
- */
+/** Lo carga `Hint` en ocioso: floating-ui pesa más que el resto de la cabecera. */
 export default function RadixHint({ label, children }: { label: string; children: ReactElement }) {
   return (
     <TooltipPrimitive.Provider delayDuration={250}>

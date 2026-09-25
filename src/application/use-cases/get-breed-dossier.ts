@@ -7,19 +7,16 @@ import type { BreedPhoto, BreedProfile } from "@domain/breed/profile";
 import type { RequestOptions } from "../ports/breed-repository";
 import type { BreedProfileRepository } from "../ports/breed-profile-repository";
 
-/** Todo lo que la vista de detalle necesita de una raza. */
 export interface BreedDossier {
   readonly breed: Breed;
-  /** Posición 1-based en el directorio. */
+  /** 1-based. */
   readonly position: number;
   readonly total: number;
   readonly previous: Breed | null;
   readonly next: Breed | null;
   readonly related: readonly Breed[];
   readonly coats: readonly CoatShare[];
-  /** Foto y resumen, si la fuente de perfiles los tiene. */
   readonly profile: BreedProfile | null;
-  /** Fotos de las emparentadas, por slug. */
   readonly relatedPhotos: Readonly<Record<string, BreedPhoto | null>>;
 }
 
@@ -28,16 +25,13 @@ const CATALOG_PAGE_CAP = 200;
 
 export interface GetBreedDossierDeps {
   restoreBreedPages: (upTo: number, options?: RequestOptions & { cap?: number }) => Promise<BreedPage[]>;
-  /** Opcional: sin él, el dossier sale sin foto ni resumen. */
   profiles?: BreedProfileRepository;
   onProfilesError?: (error: unknown) => void;
 }
 
 /**
- * La API no tiene endpoint por raza: la única forma de encontrar una es
- * recorrer el listado. Este caso de uso vive en el servidor, donde cada
- * página queda en la caché de datos de Next, así que recorrerlas cuesta una
- * vez por periodo de revalidación y no una vez por visita.
+ * La API no tiene endpoint por raza, así que se recorre el listado. Corre en
+ * el servidor, con cada página en la caché de datos de Next.
  */
 export function createGetBreedDossier({ restoreBreedPages, profiles, onProfilesError }: GetBreedDossierDeps) {
   async function loadCatalog(options?: RequestOptions): Promise<readonly Breed[]> {
@@ -69,11 +63,8 @@ export function createGetBreedDossier({ restoreBreedPages, profiles, onProfilesE
     };
   }
 
-  /**
-   * Los perfiles se piden para el catálogo entero de una vez: la fuente
-   * trabaja por lotes y el resultado queda en caché para todas las fichas.
-   * Si falla, la ficha sale igual, sin foto: un perfil nunca tumba un dato.
-   */
+  // Perfiles del catálogo entero de una vez (la fuente trabaja por lotes).
+  // Si fallan, la ficha sale igual, sin foto.
   async function loadProfiles(catalog: readonly Breed[], options?: RequestOptions) {
     if (!profiles) return new Map<string, BreedProfile>();
     try {

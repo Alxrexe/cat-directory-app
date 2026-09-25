@@ -42,11 +42,7 @@ interface DockFooterProps {
   onRetry: () => void;
 }
 
-/**
- * Lo que hay bajo la última fila. Siempre explica por qué la lista acaba
- * ahí: cargando, en pausa sin red, falló (tras reintentar), filtrando, o
- * de verdad no hay más.
- */
+/** Siempre explica por qué la lista acaba ahí. */
 export function DockFooter(props: DockFooterProps) {
   const { loaded, total, nextPage, lastPage } = props;
 

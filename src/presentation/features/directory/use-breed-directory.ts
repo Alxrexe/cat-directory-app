@@ -13,9 +13,8 @@ import { BREEDS_QUERY_KEY, breedsQueryOptions, toPagesData, type BreedPagesData 
 export interface DirectoryEntry {
   readonly breed: Breed;
   readonly name: string;
-  /** Posición 1-based en el directorio completo. */
+  /** 1-based. */
   readonly position: number;
-  /** Página de la API de la que salió. */
   readonly page: number;
 }
 
@@ -27,7 +26,7 @@ export type RefreshResult = { ok: true; total: number } | { ok: false; error: un
 interface Options {
   /** Páginas resueltas en el servidor (vacío si la API falló durante el SSR). */
   initialPages: readonly BreedPage[];
-  /** Momento del render en el servidor: marca la edad de `initialPages`. */
+  /** Marca la edad de `initialPages`. */
   renderedAt: number;
 }
 
@@ -43,16 +42,13 @@ export function useBreedDirectory({ initialPages, renderedAt }: Options) {
     initialDataUpdatedAt: hasServerData ? renderedAt : undefined,
   });
 
-  // ── Copia local ────────────────────────────────────────────────────────
-  // Solo se consulta si el servidor no pudo traer datos. Se lee después de
-  // hidratar: leerla antes daría un HTML distinto al del SSR. Si hay datos
-  // en vivo, mandan ellos (ver `pages`), así que no hace falta descartarla.
+  // La copia local solo se lee si el SSR falló, y después de hidratar para no
+  // desviarse del HTML del servidor.
   const hydrated = useHydrated();
   const { data: snapshot = null } = useQuery<BreedSnapshot | null>({
     queryKey: ["first-page-snapshot"],
     queryFn: () => firstPageSnapshot.recall(),
     enabled: hydrated && !hasServerData,
-    // Es localStorage: ni caduca ni depende de la red.
     staleTime: Number.POSITIVE_INFINITY,
     networkMode: "always",
     retry: false,
@@ -63,9 +59,7 @@ export function useBreedDirectory({ initialPages, renderedAt }: Options) {
     if (firstPage) firstPageSnapshot.remember(firstPage);
   }, [firstPage, firstPageSnapshot]);
 
-  // ── Reconexión ─────────────────────────────────────────────────────────
-  // React Query reanuda solo lo que quedó en pausa; lo que llegó a fallar
-  // (p. ej. tras agotar los reintentos) se relanza aquí al volver la red.
+  // React Query reanuda lo pausado, no lo fallido: eso se relanza al volver la red.
   const resumeAfterReconnect = useEffectEvent(() => {
     if (query.isFetchNextPageError) void query.fetchNextPage();
     else if (!query.data && query.isError) void query.refetch();
@@ -74,7 +68,6 @@ export function useBreedDirectory({ initialPages, renderedAt }: Options) {
     if (online) resumeAfterReconnect();
   }, [online]);
 
-  // ── Entradas planas para la lista ──────────────────────────────────────
   const pages = useMemo(
     () => query.data?.pages ?? (snapshot ? [snapshot.page] : []),
     [query.data, snapshot],
@@ -99,9 +92,7 @@ export function useBreedDirectory({ initialPages, renderedAt }: Options) {
 
   const retryNextPage = useCallback(() => void fetchNextPage(), [fetchNextPage]);
 
-  // ── Recargar desde la página 1 ─────────────────────────────────────────
-  // La lista actual no se toca hasta tener la página nueva: si la recarga
-  // falla, el usuario conserva todo lo que ya tenía.
+  // La lista no se toca hasta tener la página nueva: si falla, no se pierde nada.
   const [refreshing, setRefreshing] = useState(false);
   const refresh = useCallback(async (): Promise<RefreshResult> => {
     setRefreshing(true);

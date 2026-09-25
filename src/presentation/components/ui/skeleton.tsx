@@ -1,10 +1,6 @@
 import type { ComponentProps } from "react";
 import { cn } from "../../lib/cn";
 
-/**
- * Bloque de carga. El brillo es un pseudo-elemento que solo se traslada
- * (transform), así que corre en el compositor sin repintar el bloque.
- */
 export function Skeleton({ className, ...props }: ComponentProps<"div">) {
   return (
     <div

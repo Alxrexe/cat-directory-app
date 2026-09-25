@@ -13,11 +13,7 @@ export interface ClientContainerOptions {
   onRetry?: HttpClientConfig["onRetry"];
 }
 
-/**
- * Raíz de composición del navegador. No se importa directamente: la carga
- * `createLazyClientContainer` (client-lazy.ts) la primera vez que hace
- * falta, para que Zod y los adaptadores no viajen con el primer pintado.
- */
+/** Raíz del navegador. Solo la importa client-lazy.ts, la primera vez que hace falta. */
 export function createClientContainer(options: ClientContainerOptions = {}) {
   const http = createHttpClient({
     timeoutMs: 8000,

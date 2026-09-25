@@ -10,15 +10,8 @@ interface BreedPageProps {
 }
 
 /**
- * Ficha a pantalla completa: SSG con revalidación cada hora, la misma que
- * las páginas de la API. Todas las razas conocidas en el build se generan
- * como HTML estático; una raza nueva se genera en su primera visita
- * (`dynamicParams`). Si la API no responde en el build, no se genera
- * ninguna y todas pasan a generarse bajo demanda: el build nunca falla por
- * culpa de un tercero.
- *
- * Al navegar desde el Michiverso esta ruta no se usa: la intercepta
- * `@modal/(.)razas/[slug]` y el Ronrón se abre como modal sobre los orbes.
+ * SSG + ISR cada hora. Si la API cae durante el build, las fichas se generan
+ * bajo demanda. Desde el campo, esta ruta la intercepta el modal.
  */
 export const revalidate = 3600;
 export const dynamicParams = true;

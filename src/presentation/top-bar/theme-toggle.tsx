@@ -10,14 +10,7 @@ import { preloadSkyPoster } from "../sky/sky-media";
 import { switchColorTheme } from "../theme/theme-transition";
 import { currentColorTheme, useColorTheme, type ColorTheme } from "../theme/use-color-theme";
 
-/**
- * Interruptor de tema: botón redondo de perla con el sol o la luna.
- *
- * El icono lo elige el CSS (`dark:`), no React: llega bien pintado del
- * servidor aunque el tema aún no se conozca. El cambio es una ola de luz
- * que nace del botón (ver theme-transition.ts); el campo de orbes, en
- * WebGL, funde su paleta en el shader mientras la ola lo tapa.
- */
+/** El icono lo elige el CSS: llega bien pintado aunque el tema aún no se sepa. */
 export function ThemeToggle() {
   const { theme } = useColorTheme();
   const hydrated = useHydrated();

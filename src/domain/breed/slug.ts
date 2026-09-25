@@ -1,10 +1,4 @@
-/**
- * Identidad de una raza.
- *
- * La API no expone ids: la única clave estable es el nombre. El slug se deriva
- * de él de forma determinista, así que el servidor y el cliente llegan al mismo
- * valor sin coordinarse y la URL de detalle es legible y compartible.
- */
+/** La API no expone ids: el slug se deriva del nombre, igual en servidor y cliente. */
 export type BreedSlug = string & { readonly __brand: "BreedSlug" };
 
 // Letras que NFD no descompone y que, sin este mapa, desaparecerían del slug.

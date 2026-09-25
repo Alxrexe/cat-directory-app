@@ -5,11 +5,6 @@ import type { ClientContainerOptions, createClientContainer } from "./client";
 
 type EagerClientUseCases = ReturnType<typeof createClientContainer>;
 
-/**
- * Casos de uso del navegador tal como los ve la UI. Son los mismos que los
- * de `createClientContainer`, salvo la copia local, que es asíncrona: su
- * lectura puede esperar a que llegue la infraestructura.
- */
 export interface ClientUseCases {
   listBreedsPage: EagerClientUseCases["listBreedsPage"];
   getRandomFact: EagerClientUseCases["getRandomFact"];
@@ -20,16 +15,12 @@ export interface ClientUseCases {
 }
 
 /**
- * Raíz de composición diferida. La primera página llega del servidor, así
- * que al arrancar el navegador no necesita ni el cliente HTTP ni los
- * esquemas de Zod ni los adaptadores: se descargan (un chunk aparte) la
- * primera vez que se usa un caso de uso, o antes con `preload()` cuando el
- * navegador queda ocioso. La UI no nota la diferencia: todo ya era asíncrono.
+ * Raíz de composición diferida: la primera página llega del servidor, así que
+ * el cliente HTTP, Zod y los adaptadores se descargan al primer uso.
  */
 export function createLazyClientContainer(options: ClientContainerOptions = {}) {
   let container: Promise<EagerClientUseCases> | null = null;
-  // La copia local no corre prisa: se guarda cuando la infraestructura ya
-  // está (por uso o por la precarga en ocioso), sin adelantar la descarga.
+  // Guardar la copia local no justifica adelantar la descarga.
   let pendingSnapshot: BreedPage | null = null;
 
   const load = () =>
@@ -41,8 +32,7 @@ export function createLazyClientContainer(options: ClientContainerOptions = {}) 
         return loaded;
       },
       (cause: unknown) => {
-        // Sin red el chunk no llega: se olvida el intento para repetirlo
-        // luego, y el fallo habla el idioma de los puertos.
+        // Sin red el chunk no llega: se reintenta luego y se falla como un puerto.
         container = null;
         throw new DataSourceError("network", "No se pudo descargar el cliente de datos", { cause });
       },
@@ -68,7 +58,6 @@ export function createLazyClientContainer(options: ClientContainerOptions = {}) 
 
   return {
     useCases,
-    /** Descarga la infraestructura sin usarla todavía. */
     preload: () => {
       load().catch(() => {});
     },

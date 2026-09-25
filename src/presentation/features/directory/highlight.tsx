@@ -1,10 +1,6 @@
 import { normalizeForSearch } from "@domain/breed/search";
 
-/**
- * Resalta la coincidencia sin romper los acentos: se normaliza carácter a
- * carácter para poder traducir la posición encontrada en el texto
- * normalizado a la posición en el texto original.
- */
+/** Normaliza carácter a carácter para llevar la posición encontrada al texto con acentos. */
 export function Highlight({ text, query }: { text: string; query: string }) {
   const needle = normalizeForSearch(query);
   if (!needle) return <>{text}</>;

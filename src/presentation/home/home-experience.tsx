@@ -30,18 +30,15 @@ interface HomeExperienceProps {
   renderedAt: number;
 }
 
-/** El enlace dura al menos esto, aunque todo cargue antes: es parte del viaje. */
+/** El enlace dura al menos esto aunque todo cargue antes. */
 const MIN_LINK_MS = 2400;
-/** Desde que se abre el iris hasta que la barra y la consola se montan. */
+/** Del iris a que entren la barra y la consola. */
 const ASSEMBLE_MS = 1250;
 
 /**
- * La Home entera: pantalla de inicio → túnel → cielo con orbes + consola.
- *
- * El estado de servidor (páginas de razas) vive en React Query vía
- * `useBreedDirectory`; la URL guarda búsqueda, pelaje y página; Zustand
- * reparte la fase de la simulación, el Ronrón abierto y el origen del orbe
- * pulsado. El campo 3D solo recibe datos: nunca decide nada de negocio.
+ * Home: pantalla de inicio, enlace, campo y consola. Las páginas viven en
+ * React Query, búsqueda/pelaje/página en la URL y la fase en Zustand; el
+ * campo 3D solo recibe datos.
  */
 export function HomeExperience({ initialPages, serverError, renderedAt }: HomeExperienceProps) {
   const router = useRouter();
@@ -49,13 +46,14 @@ export function HomeExperience({ initialPages, serverError, renderedAt }: HomeEx
   const { params, setQuery, setPage, setCoat } = useDirectoryUrlState();
   const [restorePage] = useState(params.page);
 
-  // Al cargar la página, siempre la pantalla de inicio. Si se vuelve al campo
-  // navegando (desde una ficha) en la misma visita, el campo sigue abierto.
+  // Cargar la página siempre pasa por la pantalla de inicio; volver de una ficha, no.
   const [skipGate] = useState(() => useSimulationStore.getState().entered);
   const [phase, setPhase] = useState<SimulationPhase>(skipGate ? "running" : "gate");
   const [gateMounted, setGateMounted] = useState(!skipGate);
   const [tunnelVisible, setTunnelVisible] = useState(false);
   const [arriving, setArriving] = useState(false);
+  // El motor se crea con el primer movimiento del puntero: al pulsar ya está listo.
+  const [warm, setWarm] = useState(false);
   const [fieldFailed, setFieldFailed] = useState(false);
   const [spotlight, setSpotlight] = useState<string | null>(null);
   const engineRef = useRef<FieldEngine | null>(null);
@@ -70,7 +68,6 @@ export function HomeExperience({ initialPages, serverError, renderedAt }: HomeEx
 
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
-  // ── Filtros (nombre + pelaje) sobre lo cargado ─────────────────────────
   const { q: query, coat } = params;
   const filtering = query.length > 0 || coat !== "all";
   const results = useMemo(() => {
@@ -100,7 +97,6 @@ export function HomeExperience({ initialPages, serverError, renderedAt }: HomeEx
     [directory.entries],
   );
 
-  // ── Fase de la simulación ──────────────────────────────────────────────
   useEffect(() => {
     phaseRef.current = phase;
     useSimulationStore.getState().setPhase(phase);
@@ -126,6 +122,11 @@ export function HomeExperience({ initialPages, serverError, renderedAt }: HomeEx
   const start = useCallback(() => {
     startedAt.current = performance.now();
     setPhase("linking");
+    const engine = engineRef.current;
+    if (engine) {
+      engine.beginLink();
+      setTunnelVisible(true);
+    }
   }, []);
 
   const onEngineReady = useCallback(
@@ -133,6 +134,7 @@ export function HomeExperience({ initialPages, serverError, renderedAt }: HomeEx
       engineRef.current = engine;
       completeStep("engine");
       completeStep("orbs");
+      if (phaseRef.current === "gate") return;
       if (phaseRef.current === "linking") {
         engine.beginLink();
         setTunnelVisible(true);
@@ -152,15 +154,12 @@ export function HomeExperience({ initialPages, serverError, renderedAt }: HomeEx
     });
   }, [completeStep]);
 
-  // Llegada: todos los pasos reales listos y el enlace ha durado lo mínimo.
   const allDone = steps.every((step) => step.done);
   useEffect(() => {
     if (phase !== "linking" || !allDone) return;
     const wait = Math.max(0, MIN_LINK_MS - (performance.now() - startedAt.current));
     let enter: ReturnType<typeof setTimeout>;
     const timer = setTimeout(() => {
-      // El iris del campo se abre y, a la vez, la pantalla de inicio se
-      // atraviesa; cuando el campo ya se ve, la barra y la consola se montan.
       void engineRef.current?.arrive();
       setArriving(true);
       playCue("ready");
@@ -178,7 +177,6 @@ export function HomeExperience({ initialPages, serverError, renderedAt }: HomeEx
     };
   }, [phase, allDone]);
 
-  // ── Abrir una raza en el Ronrón ────────────────────────────────────────
   const openFromOrb = useCallback(
     (target: OrbTarget) => {
       useSimulationStore.getState().setOrigin({ x: target.x, y: target.y, size: target.size });
@@ -200,7 +198,6 @@ export function HomeExperience({ initialPages, serverError, renderedAt }: HomeEx
 
   const prefetch = useCallback((slug: string | null) => slug && router.prefetch(`/razas/${slug}`), [router]);
 
-  // ── Explorar el campo despierta la página siguiente ────────────────────
   const { hasNextPage, loadMore } = directory;
   const explore = useCallback(() => {
     if (!hasNextPage) return;
@@ -208,7 +205,7 @@ export function HomeExperience({ initialPages, serverError, renderedAt }: HomeEx
     loadMore();
   }, [hasNextPage, loadMore]);
 
-  // ── Avisos de fallo (después de agotar los reintentos) ─────────────────
+  // Los avisos llegan después de agotar los reintentos del cliente HTTP.
   const { nextPageError, initialError, retryNextPage, retryInitial, refresh } = directory;
   useEffect(() => {
     if (!nextPageError) return;
@@ -258,7 +255,6 @@ export function HomeExperience({ initialPages, serverError, renderedAt }: HomeEx
     [refresh, setPage],
   );
 
-  // "/" enfoca el buscador desde cualquier sitio.
   const focusSearch = useEffectEvent(() => dockRef.current?.focusSearch());
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -283,8 +279,9 @@ export function HomeExperience({ initialPages, serverError, renderedAt }: HomeEx
     <>
       <h1 className="sr-only">Michiverso: directorio de razas de gato</h1>
 
-      {phase !== "gate" && !fieldFailed && (
+      {(phase !== "gate" || warm) && !fieldFailed && (
         <OrbField
+          dormant={phase === "gate"}
           breeds={fieldBreeds}
           capacity={directory.total || fieldBreeds.length}
           matchMask={matchMask}
@@ -300,11 +297,7 @@ export function HomeExperience({ initialPages, serverError, renderedAt }: HomeEx
         />
       )}
 
-      {/*
-        Cada pieza en su propio <Suspense>: nada suspende (todo llega en el
-        HTML), pero así React hidrata por partes y cede el hilo entre una y
-        otra en vez de hacerlo en una sola tarea larga.
-      */}
+      {/* Nada suspende: los <Suspense> reparten la hidratación en tareas cortas. */}
       {gateMounted && (
         <Suspense fallback={null}>
           <StartGate
@@ -313,6 +306,7 @@ export function HomeExperience({ initialPages, serverError, renderedAt }: HomeEx
             tunnelVisible={tunnelVisible}
             total={directory.total}
             onStart={start}
+            onWarm={() => setWarm(true)}
             onLeft={() => setGateMounted(false)}
           />
         </Suspense>

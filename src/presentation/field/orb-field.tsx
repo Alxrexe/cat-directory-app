@@ -3,33 +3,25 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import type { FieldBreed, FieldEngine, OrbTarget } from "./engine/engine";
 import { loadFieldEngine, resolveAtlasFonts } from "./load-engine";
-import { readyGsap } from "../lib/gsap";
 import { currentColorTheme, useColorTheme } from "../theme/use-color-theme";
 
 interface OrbFieldProps {
   breeds: FieldBreed[];
-  /** Capacidad del atlas: total de razas del directorio. */
   capacity: number;
   matchMask: Uint8Array | null;
   spotlight: string | null;
   dimmed: boolean;
   reducedMotion: boolean;
+  dormant: boolean;
   onReady: (engine: FieldEngine) => void;
   onPick: (target: OrbTarget) => void;
   onExplore: () => void;
   onFailed: () => void;
-  /** Orbe señalado (para precargar su ficha). */
   onHoverChange?: (slug: string | null) => void;
-  /** Toque en el cielo (fuera de la consola). */
   onPress?: () => void;
 }
 
-/**
- * Puente entre React y el motor del campo. El motor vive fuera de React: se
- * crea una vez y recibe los cambios (razas, búsqueda, tema) por su API, sin
- * re-render del canvas. La etiqueta del orbe señalado se mueve escribiendo
- * `transform` en cada frame, nunca con estado de React.
- */
+/** El motor vive fuera de React; la etiqueta se mueve por `transform` en cada frame. */
 export function OrbField(props: OrbFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
@@ -47,6 +39,7 @@ export function OrbField(props: OrbFieldProps) {
   const initial = useEffectEvent(() => ({
     reducedMotion: props.reducedMotion,
     capacity: props.capacity,
+    dormant: props.dormant,
   }));
 
   useEffect(() => {
@@ -54,7 +47,7 @@ export function OrbField(props: OrbFieldProps) {
     if (!canvas) return;
     let disposed = false;
     let created: FieldEngine | null = null;
-    const { reducedMotion, capacity } = initial();
+    const { reducedMotion, capacity, dormant } = initial();
 
     void Promise.all([loadFieldEngine(), resolveAtlasFonts()])
       .then(([module, fonts]) => {
@@ -65,9 +58,8 @@ export function OrbField(props: OrbFieldProps) {
             reducedMotion,
             fonts,
             capacity: Math.max(capacity, 100),
-            // El motor nace ya con el tema de la página (la clase de <html>),
-            // sin un fotograma con la paleta equivocada.
             theme: currentColorTheme(),
+            dormant,
             onHover: (target) => setHovered(target),
             onHoverMove: (x, y, size) => {
               const label = labelRef.current;
@@ -80,8 +72,11 @@ export function OrbField(props: OrbFieldProps) {
           events("failed"); // sin WebGL: la consola sigue funcionando sola
           return;
         }
-        setEngine(created);
-        events("ready", created);
+        return created.warmUp().then(() => {
+          if (disposed || !created) return;
+          setEngine(created);
+          events("ready", created);
+        });
       })
       .catch(() => events("failed"));
 
@@ -112,19 +107,6 @@ export function OrbField(props: OrbFieldProps) {
     hoverChanged(hovered?.slug ?? null);
   }, [hovered?.slug]);
 
-  // Entrada/salida suave de la etiqueta.
-  useEffect(() => {
-    const label = labelRef.current;
-    if (!label) return;
-    readyGsap()?.to(label.firstElementChild, {
-      opacity: hovered ? 1 : 0,
-      scale: hovered ? 1 : 0.9,
-      y: hovered ? 0 : 6,
-      duration: 0.28,
-      ease: "power3.out",
-    });
-  }, [hovered]);
-
   return (
     <>
       <canvas
@@ -134,7 +116,9 @@ export function OrbField(props: OrbFieldProps) {
         className="fixed inset-0 z-10 block h-dvh w-screen touch-none select-none"
       />
       <div ref={labelRef} aria-hidden="true" className="pointer-events-none fixed top-0 left-0 z-20 will-change-transform">
-        <div className="pearl squircle flex origin-bottom flex-col items-center rounded-2xl px-4 py-2 opacity-0">
+        <div
+          className={`pearl squircle flex origin-bottom flex-col items-center rounded-2xl px-4 py-2 transition-[opacity,transform] duration-300 ease-[var(--ease-cozy)] ${hovered ? "opacity-100 [transform:none]" : "opacity-0 [transform:translateY(6px)_scale(0.9)]"}`}
+        >
           <span className="font-display text-lg leading-tight text-ink">{hovered?.name}</span>
           <span className="text-xs font-semibold text-ink-soft">{hovered?.country ?? "País sin registrar"} · clic para abrir</span>
         </div>

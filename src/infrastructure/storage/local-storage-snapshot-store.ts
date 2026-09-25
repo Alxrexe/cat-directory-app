@@ -24,13 +24,7 @@ const storedSnapshotSchema = z.object({
   }),
 });
 
-/**
- * Adaptador secundario sobre `localStorage`.
- *
- * Cada acceso va en try/catch: en navegación privada, con el almacenamiento
- * lleno o bloqueado, `localStorage` lanza. Una copia que no se puede leer o
- * escribir no es un error para el usuario; simplemente no hay copia.
- */
+/** Cada acceso en try/catch: en modo privado o sin espacio, localStorage lanza. */
 export function createLocalStorageSnapshotStore(storage: () => Storage | undefined): BreedSnapshotStore {
   return {
     read() {

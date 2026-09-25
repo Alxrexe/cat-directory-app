@@ -12,11 +12,7 @@ export function onIdle(callback: () => void, timeout = 2000): () => void {
 
 const cache = new Map<() => Promise<unknown>, Promise<unknown>>();
 
-/**
- * Importa el módulo una sola vez, lo pidan cuantos componentes lo pidan.
- * Si la descarga falla (sin red), se olvida el intento para poder repetirlo:
- * una promesa rechazada en caché dejaría el módulo inservible para siempre.
- */
+/** Una sola importación por módulo; si falla, se olvida para poder reintentar. */
 export function loadOnce<T>(loader: () => Promise<T>): Promise<T> {
   let pending = cache.get(loader);
   if (!pending) {
@@ -30,17 +26,15 @@ export function loadOnce<T>(loader: () => Promise<T>): Promise<T> {
 }
 
 interface IdleModuleOptions {
-  /** Hace falta ya (el usuario lo está usando): se pide sin esperar. */
+  /** Pedirlo ya, sin esperar al ocio. */
   now?: boolean;
-  /** Si además se precarga en ocioso. `false` para lo que quizá nunca se use. */
+  /** Precargar en ocioso. `false` para lo que quizá nunca se use. */
   idle?: boolean;
 }
 
 /**
- * Módulo que no hace falta para el primer pintado (menús, tooltips,
- * gráficos...). Devuelve `null` hasta que llega; el componente pinta
- * mientras tanto su versión básica, y si la descarga falla se queda en ella
- * (nunca lanza al render, a diferencia de `React.lazy`).
+ * Como `React.lazy` pero sin lanzar: devuelve `null` hasta que llega el
+ * módulo y el componente pinta su versión básica mientras tanto (o si falla).
  */
 export function useIdleModule<T>(loader: () => Promise<T>, { now = false, idle = true }: IdleModuleOptions = {}): T | null {
   const [module, setModule] = useState<T | null>(null);
@@ -50,7 +44,6 @@ export function useIdleModule<T>(loader: () => Promise<T>, { now = false, idle =
     const load = () =>
       void loadOnce(loader)
         .then((loaded) => alive && setModule(() => loaded))
-        // Sin red: el componente sigue en su versión básica y lo reintenta al volver.
         .catch(() => window.addEventListener("online", load, { once: true }));
     if (now) load();
     const cancel = !now && idle ? onIdle(load) : () => {};
@@ -64,12 +57,7 @@ export function useIdleModule<T>(loader: () => Promise<T>, { now = false, idle =
   return module;
 }
 
-/**
- * `true` cuando la página ya cargó (evento load) y el navegador tuvo un
- * momento libre. Para lo que no debe competir con el primer pintado: el
- * video del cielo, el dato curioso. Si la página ya había cargado (se llegó
- * navegando), es cuestión de un frame.
- */
+/** `true` tras el evento load y un momento de ocio: para lo que no debe competir con el LCP. */
 export function usePageSettled(): boolean {
   const [settled, setSettled] = useState(false);
   useEffect(() => {

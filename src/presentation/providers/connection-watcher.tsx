@@ -6,15 +6,7 @@ import { useConnectionStore } from "../stores/connection-store";
 import { playCue } from "../lib/sound";
 import { notify } from "../lib/notify";
 
-/**
- * Traduce los eventos online/offline del navegador a estado y a un aviso.
- * El aviso de "sin conexión" no caduca: se transforma en "conexión
- * restablecida" en cuanto vuelve la red.
- *
- * React Query arranca creyendo que hay red y solo se entera por eventos: si
- * la conexión ya se había caído antes de hidratar, se lo decimos aquí para
- * que pause las peticiones en vez de gastarlas en reintentos.
- */
+/** Si la red ya se había caído antes de hidratar, React Query no se entera solo. */
 export function ConnectionWatcher() {
   const setOnline = useConnectionStore((state) => state.setOnline);
 

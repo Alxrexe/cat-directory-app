@@ -4,10 +4,6 @@ import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react"
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "../lib/cn";
 
-/**
- * Controles físicos del Ronrón. Cada uno es un <button> real con nombre
- * accesible; el "hundimiento" al pulsar es un translateY de 2 px.
- */
 const press =
   "transition-transform duration-150 ease-[var(--ease-cozy)] active:translate-y-0.5 disabled:opacity-35 disabled:active:translate-y-0";
 
@@ -30,9 +26,6 @@ export function DPad({
   canLeft: boolean;
   canRight: boolean;
 }) {
-  // Cruceta de plástico perla, del mismo color que la carcasa y un punto
-  // más honda (como la de una consola de bolsillo blanca). Un solo bloque de
-  // luz arriba y sombra abajo repartido en los brazos, y un hoyuelo central.
   const arm =
     "grid place-items-center bg-[linear-gradient(180deg,var(--surface-2),var(--surface-3))] text-slate/75 hover:text-slate [&_svg]:size-5 shadow-[inset_0_1px_0_var(--sheen),inset_0_-2.5px_0_var(--shade)]";
   return (
@@ -74,7 +67,6 @@ export function RoundButton({
         type="button"
         className={cn(
           "select-frame grid size-14 place-items-center rounded-full font-display text-xl font-bold sm:size-15",
-          // A es la acción principal (gel azul); B, perla.
           tone === "a" ? "gel" : "pearl-button text-slate",
           press,
           className,
@@ -106,10 +98,6 @@ export function PillButton({ children, className, ...props }: ComponentProps<"bu
   );
 }
 
-/**
- * Gatillo L/R: una pieza aparte que flota sobre la carcasa (como las
- * orejas), no pegada a ella.
- */
 export function ShoulderButton({ letter, className, ...props }: ComponentProps<"button"> & { letter: string }) {
   return (
     <button
@@ -126,10 +114,7 @@ export function ShoulderButton({ letter, className, ...props }: ComponentProps<"
   );
 }
 
-/**
- * Rejilla de altavoz: 4 × 3 perforaciones en el plástico, pintadas con un
- * degradado radial que se repite (un solo elemento, no doce).
- */
+/** 4 × 3 perforaciones con un degradado que se repite: un elemento, no doce. */
 export function Speaker() {
   return (
     <span

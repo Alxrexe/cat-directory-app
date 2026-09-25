@@ -6,14 +6,7 @@ import { useColorTheme } from "../../theme/use-color-theme";
 
 export { sileo } from "sileo";
 
-/**
- * Contenedor de avisos de sileo, arriba y al centro, justo bajo la barra de
- * sistema (como las notificaciones de una consola): abajo tapaban la
- * consola de búsqueda. La sección que monta es `aria-live="polite"`.
- *
- * Se carga en diferido desde <ToasterHost>; `onMounted` corre después de
- * que sileo se suscriba a su store (los efectos del hijo van primero).
- */
+/** Arriba: abajo tapaba la consola. `onMounted` corre cuando sileo ya escucha su store. */
 export default function Toaster({ onMounted }: { onMounted?: () => void }) {
   useEffect(() => {
     onMounted?.();

@@ -39,11 +39,9 @@ export interface SearchFieldHandle {
 }
 
 interface SearchFieldProps {
-  /** Valor inicial, leído de `?q=`. */
   defaultQuery: string;
-  /** Valor ya "asentado" (con debounce): es lo que se escribe en la URL. */
+  /** Ya con debounce: es lo que va a la URL. */
   onQueryChange: (query: string) => void;
-  /** Enter o flecha abajo: el foco pasa a la lista. */
   onEnterList: () => void;
   onFocus?: () => void;
   onEscapeEmpty?: () => void;
@@ -52,10 +50,6 @@ interface SearchFieldProps {
   ref?: Ref<SearchFieldHandle>;
 }
 
-/**
- * Buscador de la consola. react-hook-form + Zod validan la entrada; el
- * debounce (300 ms) separa lo que se escribe de lo que se publica en la URL.
- */
 export function SearchField({
   defaultQuery,
   onQueryChange,
@@ -81,7 +75,6 @@ export function SearchField({
   });
   const settled = useRef(defaultQuery);
   useEffect(() => {
-    // Al montar, lo escrito es lo que ya está en la URL: nada que publicar.
     if (debounced === settled.current) return;
     settled.current = debounced;
     let current = true;
@@ -101,7 +94,6 @@ export function SearchField({
 
   const { ref: registerRef, ...field } = form.register("q");
 
-  // En móvil los ejemplos no caben: el placeholder se acorta.
   const wide = useMediaQuery("(min-width: 640px)", true);
 
   return (
@@ -111,9 +103,7 @@ export function SearchField({
       </LabelPrimitive.Root>
       <div
         className={cn(
-          // Un pozo en el plástico: fondo algo más hondo y sombra interior.
           "well group relative flex h-12 items-center rounded-full",
-          // Anillo de foco en su propia capa: aparece fundiéndose (opacidad).
           "after:pointer-events-none after:absolute after:inset-0 after:rounded-full after:opacity-0 after:ring-2 after:ring-accent after:transition-opacity after:duration-200 focus-within:after:opacity-100",
           error && "after:opacity-100 after:ring-danger",
         )}

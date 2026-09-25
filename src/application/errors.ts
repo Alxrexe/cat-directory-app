@@ -1,10 +1,4 @@
-/**
- * Contrato de fallo de los puertos de datos.
- *
- * Cualquier adaptador (HTTP, caché, un mock en tests) rechaza con
- * `DataSourceError`, así que la UI decide qué mostrar mirando `kind` y no el
- * mensaje de `fetch` de turno, que cambia entre navegadores.
- */
+/** Todos los adaptadores rechazan con esto: la UI decide por `kind`, no por el mensaje. */
 export type DataSourceErrorKind =
   | "offline" //         el navegador no tiene red
   | "timeout" //         la API no respondió a tiempo

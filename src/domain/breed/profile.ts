@@ -1,8 +1,4 @@
-/**
- * Perfil enriquecido de una raza: foto y resumen enciclopédico. catfact.ninja
- * solo trae cinco campos de texto; el perfil sale de otra fuente y es
- * opcional: una raza sin perfil sigue siendo una raza completa.
- */
+/** Foto y resumen de otra fuente (Wikipedia). Opcional. */
 export interface BreedPhoto {
   readonly url: string;
   readonly width: number;

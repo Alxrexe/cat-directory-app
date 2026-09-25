@@ -4,10 +4,7 @@ export interface RequestOptions {
   signal?: AbortSignal;
 }
 
-/**
- * Puerto secundario: de dónde salen las razas.
- * Rechaza siempre con `DataSourceError` (ver application/errors).
- */
+/** Rechaza siempre con `DataSourceError`. */
 export interface BreedRepository {
   getPage(page: number, options?: RequestOptions): Promise<BreedPage>;
 }

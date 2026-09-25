@@ -12,8 +12,7 @@ import { createBackdropLayer, createVeilLayer, type BackdropPalette } from "./ba
 import { createOrbLayer, MAX_ORBS, type OrbPalette } from "./orb-layer";
 import { createTunnelLayer } from "./tunnel-layer";
 
-// Los colores se escriben en sRGB y se pintan tal cual: sin conversión de
-// espacio de color, los hex del sistema visual llegan intactos al shader.
+// Los hex de la paleta llegan al shader tal cual, sin conversión de espacio de color.
 ColorManagement.enabled = false;
 
 
@@ -37,13 +36,13 @@ export interface FieldEngineOptions {
   reducedMotion: boolean;
   fonts: AtlasFonts;
   capacity: number;
-  /** Tema con el que nace (luego, `setTheme`). */
   theme: FieldTheme;
+  /** Sin bucle hasta `beginLink`/`reveal`: se crea detrás de la pantalla de inicio. */
+  dormant?: boolean;
   onHover: (target: OrbTarget | null) => void;
-  /** Posición del orbe señalado en cada frame (para la etiqueta flotante). */
   onHoverMove: (x: number, y: number, size: number) => void;
   onPick: (target: OrbTarget) => void;
-  /** El usuario "viajó" por el campo (rueda, arrastre): momento de cargar más. */
+  /** Se recorrió bastante campo (rueda, arrastre): hora de pedir otra página. */
   onExplore: () => void;
 }
 
@@ -53,17 +52,10 @@ interface FieldPalette {
   orb: OrbPalette;
   backdrop: BackdropPalette;
   veil: string;
-  /** Los dos colores que se alternan en el borde del iris. */
   veilRim: [string, string];
 }
 
-/**
- * Paleta del sistema "consola perla". De día: orbes de perla, orejas en el
- * lavanda del aro, monograma pizarra y un anillo azul eléctrico que late
- * en el orbe señalado. De noche: orbes lavanda con halo, estrellas y el
- * anillo lavanda. El velo tiene el color de la pantalla de inicio (--paper)
- * y su iris se abre con un borde cian-azul (día) o lavanda-cian (noche).
- */
+// Mismos valores que los tokens de globals.css; el velo es --paper de cada tema.
 const PALETTES: Record<FieldTheme, FieldPalette> = {
   light: {
     orb: {
@@ -103,7 +95,6 @@ const PALETTES: Record<FieldTheme, FieldPalette> = {
 
 const TUNNEL_COLORS = ["#306ce2", "#29c1f6", "#c5ccdf", "#8fb4ff", "#afacff", "#ffffff"];
 
-/** Hash determinista 0..1 (siempre el mismo valor para la misma clave). */
 const hash01 = (n: number) => {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return x - Math.floor(x);
@@ -117,17 +108,10 @@ interface Item {
 }
 
 /**
- * Motor del campo de orbes (Three.js, sin React).
- *
- * Filas diagonales (-12°) que se deslizan en direcciones alternas sin fin.
- * Cada fila es una cinta infinita de razas: la posición en la cinta decide
- * qué raza lleva cada orbe, y esa asignación se congela mientras el orbe
- * está en pantalla, así que cuando llegan razas nuevas nunca cambia de
- * golpe un orbe visible: las nuevas entran por los bordes.
- *
- * La CPU solo coloca ~300 puntos por frame y los ordena por aumento (los
- * que están bajo la lupa se pintan encima); dibujarlos es un único draw
- * call instanciado.
+ * Campo de orbes en Three.js, sin React. Cada fila diagonal es una cinta
+ * infinita de razas; la raza de un orbe se fija mientras está en pantalla,
+ * así que las que llegan con una página nueva entran por los bordes.
+ * Un solo draw call instanciado.
  */
 export function createFieldEngine(options: FieldEngineOptions) {
   const { canvas } = options;
@@ -136,6 +120,8 @@ export function createFieldEngine(options: FieldEngineOptions) {
   const renderer = new WebGLRenderer({ canvas, antialias: false, alpha: true, powerPreference: "high-performance" });
   renderer.outputColorSpace = LinearSRGBColorSpace;
   renderer.setClearColor(0x000000, 0);
+  // Leer el log de cada programa fuerza a esperar la compilación en paralelo.
+  renderer.debug.checkShaderErrors = process.env.NODE_ENV !== "production";
 
   const scene = new Scene();
   const camera = new OrthographicCamera(0, 1, 0, 1, -10, 10);
@@ -147,13 +133,10 @@ export function createFieldEngine(options: FieldEngineOptions) {
   const tunnel = createTunnelLayer(TUNNEL_COLORS);
   const veil = createVeilLayer(palette.veil, palette.veilRim);
   veil.mesh.renderOrder = 10;
-  // Los trazos del enlace van por encima del velo: se ven sobre el color de
-  // la pantalla de inicio mientras carga.
   tunnel.mesh.renderOrder = 11;
   scene.add(backdrop.mesh, orbs.mesh, tunnel.mesh, veil.mesh);
   tunnel.mesh.visible = false;
 
-  // ── Estado ──────────────────────────────────────────────────────────────
   let width = 1;
   let height = 1;
   let orbSize = 90;
@@ -171,11 +154,14 @@ export function createFieldEngine(options: FieldEngineOptions) {
   let explored = 0;
   let hoverKey = -1;
   let hoverTarget: OrbTarget | null = null;
+  // Respuesta inmediata al clic, antes de que React monte el Ronrón.
+  let pressKey = -1;
+  const squash = { value: 0 };
   let tunnelPhase = 0;
   let theme = options.theme;
   let themeTween: gsap.core.Tween | null = null;
 
-  // Buffers de ordenación reutilizados (sin basura por frame).
+  // Reutilizados: nada de basura por frame.
   const drawX = new Float32Array(MAX_ORBS);
   const drawY = new Float32Array(MAX_ORBS);
   const drawSize = new Float32Array(MAX_ORBS);
@@ -203,9 +189,7 @@ export function createFieldEngine(options: FieldEngineOptions) {
     tunnel.uniforms.uScale.value = Math.hypot(width, height) * 0.5;
   }
 
-  // ── Disposición y lupa ──────────────────────────────────────────────────
   const ANGLE = (-12 * Math.PI) / 180;
-  // Lupa contenida: alcanza a los vecinos inmediatos, no a medio campo.
   const LENS_RADIUS = 1.7;
   const LENS_SPREAD = 0.5;
   const LENS_ZOOM = 0.5;
@@ -265,10 +249,8 @@ export function createFieldEngine(options: FieldEngineOptions) {
         }
         item.seen = frame;
 
-        // Lupa de ojo de pez: separa en proporción a la distancia (el orbe
-        // bajo el puntero se queda bajo el puntero) y agranda según una
-        // campana gaussiana. Con LENS_SPREAD < 2.2 el mapeo es monótono:
-        // ningún orbe adelanta a otro al cruzar la lupa.
+        // Ojo de pez: separa en proporción a la distancia y agranda con una
+        // gaussiana. Con LENS_SPREAD < 2.2 ningún orbe adelanta a otro.
         let f = 0;
         if (lensStrength > 0.001) {
           const dx = x - pointer.sx;
@@ -285,7 +267,7 @@ export function createFieldEngine(options: FieldEngineOptions) {
 
         drawX[count] = x;
         drawY[count] = y;
-        drawSize[count] = orbSize * (1 + f * LENS_ZOOM);
+        drawSize[count] = orbSize * (1 + f * LENS_ZOOM) * (key === pressKey ? 1 + squash.value : 1);
         drawLens[count] = f;
         drawKey[count] = key;
         drawCell[count] = item.cell;
@@ -294,7 +276,6 @@ export function createFieldEngine(options: FieldEngineOptions) {
       }
     }
 
-    // Los aumentados, al final: se pintan por encima de sus vecinos.
     if (lensStrength > 0.001) order.sort((a, b) => drawLens[a] - drawLens[b]);
     for (const i of order) {
       const item = items.get(drawKey[i])!;
@@ -302,13 +283,11 @@ export function createFieldEngine(options: FieldEngineOptions) {
     }
     orbs.commit();
 
-    // Olvida los orbes que salieron de pantalla hace un rato.
     if (frame % 120 === 0) {
       for (const [key, item] of items) if (frame - item.seen > 60) items.delete(key);
     }
   }
 
-  /** El orbe bajo el puntero: el más aumentado cuyo disco contiene el punto. */
   function hitTest(px: number, py: number): number {
     for (let o = order.length - 1; o >= 0; o--) {
       const i = order[o];
@@ -336,14 +315,11 @@ export function createFieldEngine(options: FieldEngineOptions) {
     if (i >= 0) options.onHoverMove(drawX[i], drawY[i], drawSize[i]);
   }
 
-  // ── Bucle ───────────────────────────────────────────────────────────────
   let raf = 0;
   let last = performance.now();
   let time = 0;
   let running = true;
-  // Con el Ronrón delante el campo queda atenuado y casi quieto: se pinta a
-  // 30 fps (un frame sí y otro no, ritmo parejo en pantallas de 60 Hz) y la
-  // GPU trabaja la mitad.
+  // 30 fps con el Ronrón delante (un frame de cada dos: ritmo parejo a 60 Hz).
   let frameInterval = 0;
   let throttle: gsap.core.Tween | null = null;
 
@@ -356,7 +332,6 @@ export function createFieldEngine(options: FieldEngineOptions) {
     last = now;
     time += dt;
 
-    // El puntero suavizado persigue al real: la lupa se desliza, no salta.
     const ease = 1 - Math.exp(-dt * 12);
     if (pointer.sx < -9000) {
       pointer.sx = pointer.x;
@@ -402,9 +377,13 @@ export function createFieldEngine(options: FieldEngineOptions) {
     cancelAnimationFrame(raf);
     raf = 0;
   }
-  const onVisibility = () => (document.hidden ? stop() : start());
+  let awake = !options.dormant;
+  const wake = () => {
+    awake = true;
+    start();
+  };
+  const onVisibility = () => (document.hidden ? stop() : awake && start());
 
-  // ── Entrada del usuario ─────────────────────────────────────────────────
   let press: { x: number; y: number; time: number; moved: number } | null = null;
 
   const onPointerMove = (event: PointerEvent) => {
@@ -433,7 +412,15 @@ export function createFieldEngine(options: FieldEngineOptions) {
     if (!tap) return;
     const i = hitTest(event.clientX, event.clientY);
     const target = i >= 0 ? targetFor(i) : null;
-    if (target) options.onPick(target);
+    if (!target) return;
+    pressKey = drawKey[i];
+    gsap.killTweensOf(squash);
+    gsap
+      .timeline()
+      .to(squash, { value: -0.1, duration: 0.07, ease: "power2.out" })
+      .to(squash, { value: 0.16, duration: 0.16, ease: "power2.out" })
+      .to(squash, { value: 0, duration: 0.45, ease: "power3.out" });
+    options.onPick(target);
   };
   const onWheel = (event: WheelEvent) => {
     boost += (event.deltaY + event.deltaX) * 9;
@@ -449,10 +436,21 @@ export function createFieldEngine(options: FieldEngineOptions) {
   document.addEventListener("visibilitychange", onVisibility);
 
   resize();
-  start();
+  if (awake) start();
 
-  // ── API ─────────────────────────────────────────────────────────────────
   return {
+    /** Compila los shaders en paralelo y sube el atlas antes del primer frame. */
+    async warmUp() {
+      tunnel.mesh.visible = true;
+      veil.mesh.visible = true;
+      try {
+        await renderer.compileAsync(scene, camera);
+      } finally {
+        tunnel.mesh.visible = false;
+      }
+      renderer.initTexture(atlas.texture);
+    },
+
     setBreeds(next: FieldBreed[]) {
       breeds = next;
       atlas.update(next);
@@ -467,20 +465,14 @@ export function createFieldEngine(options: FieldEngineOptions) {
       spotlightCell = slug ? breeds.findIndex((breed) => breed.slug === slug) : -1;
     },
 
-    /** Con el Ronrón abierto el campo se atenúa y se desliza más despacio. */
     setDimmed(dimmed: boolean) {
       gsap.to(orbs.uniforms.uDim, { value: dimmed ? 1 : 0, duration: 0.7, ease: "sine.inOut" });
       gsap.to(flow, { speed: dimmed ? 0.25 : 1, duration: 1.2, ease: "sine.inOut" });
-      // 60 fps al volver; 30 fps cuando la atenuación ya terminó.
       frameInterval = 0;
       throttle?.kill();
       throttle = dimmed ? gsap.delayedCall(1.2, () => (frameInterval = 1000 / 30)) : null;
     },
 
-    /**
-     * Cambio de tema: los colores se funden en el shader (un tween de 0 a 1
-     * que mezcla cada color de origen con el de destino). Nada se recrea.
-     */
     setTheme(next: FieldTheme) {
       if (next === theme) return;
       theme = next;
@@ -518,8 +510,8 @@ export function createFieldEngine(options: FieldEngineOptions) {
       themeTween = gsap.to(mix, { t: 1, duration: motion ? 0.9 : 0.01, ease: "sine.inOut", onUpdate: apply });
     },
 
-    /** Pantalla de inicio: velo lleno y túnel en marcha lenta. */
     beginLink() {
+      wake();
       veil.uniforms.uAlpha.value = 1;
       veil.uniforms.uGlow.value = 0;
       veil.uniforms.uIris.value = 0;
@@ -530,11 +522,7 @@ export function createFieldEngine(options: FieldEngineOptions) {
       gsap.to(tunnel.uniforms.uSpeed, { value: 0.32, duration: 2.6, ease: "sine.in" });
     },
 
-    /**
-     * Llegada: los trazos aceleran, la boca del enlace se ilumina y el velo
-     * se abre como un iris desde el centro, con un borde de luz; los orbes
-     * aparecen del centro hacia fuera con un pequeño salto.
-     */
+    /** El velo se abre como un iris desde el centro y aparecen los orbes. */
     arrive(): Promise<void> {
       const reach = Math.hypot(width, height) * 0.5 + 160;
       return new Promise((resolve) => {
@@ -557,14 +545,14 @@ export function createFieldEngine(options: FieldEngineOptions) {
       });
     },
 
-    /** Sin pantalla de inicio (ya se entró en esta sesión): solo la entrada de orbes. */
     reveal() {
+      wake();
       veil.uniforms.uAlpha.value = 0;
       tunnel.mesh.visible = false;
       gsap.to(orbs.uniforms.uIntro, { value: 1, duration: motion ? 1.8 : 0.01, ease: "power2.out" });
     },
 
-    /** Posición en pantalla del orbe de una raza (el más cercano al centro). */
+    /** El orbe de esa raza más cercano al centro. */
     locate(slug: string): OrbTarget | null {
       let best = -1;
       let bestDistance = Infinity;

@@ -5,12 +5,8 @@ import { useCallback, useMemo } from "react";
 import { directorySearch, parseDirectoryParams, type CoatFilter, type DirectoryParams } from "../lib/directory-params";
 
 /**
- * La URL es la fuente de verdad de `q` y `page`.
- *
- * Se escribe con `history.replaceState`, que el App Router sincroniza con
- * `useSearchParams` sin volver a pedir la página al servidor: escribir en el
- * buscador no dispara un render de servidor por tecla. `replace` y no `push`
- * porque cada letra no es un paso al que el botón "atrás" deba volver.
+ * `q` y `page` viven en la URL. Con `replaceState` el App Router se sincroniza
+ * sin pedir la página al servidor, y cada tecla no es un paso del historial.
  */
 export function useDirectoryUrlState() {
   const searchParams = useSearchParams();

@@ -1,41 +1,49 @@
 "use client";
 
 import { useEffect } from "react";
+import type Lenis from "lenis";
 
-/**
- * Desplazamiento suave con Lenis, solo con rueda de ratón (en táctil el
- * scroll nativo ya es mejor y el gesto de recargar lo necesita intacto).
- *
- * Se para mientras un diálogo de Radix tiene el scroll bloqueado
- * (`data-scroll-locked` en el body); si no, la rueda movería la página que
- * hay debajo del modal. Con `prefers-reduced-motion` o en táctil ni se descarga.
- */
+const scrollable = () => document.documentElement.scrollHeight > window.innerHeight + 1;
+
+/** Lenis solo con rueda y solo si la página se desplaza: su bucle fuerza layouts en cada frame. */
 export function SmoothScroll() {
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce), (pointer: coarse)").matches) return;
 
-    let disposed = false;
-    let cleanup = () => {};
+    let lenis: Lenis | null = null;
+    let loading = false;
 
-    void import("lenis").catch(() => null).then((module) => {
-      if (!module) return; // sin red: se queda el scroll nativo
-      const Lenis = module.default;
-      if (disposed) return;
-      const lenis = new Lenis({ autoRaf: true, lerp: 0.14, wheelMultiplier: 0.9 });
-
-      const sync = () => (document.body.hasAttribute("data-scroll-locked") ? lenis.stop() : lenis.start());
-      const observer = new MutationObserver(sync);
-      observer.observe(document.body, { attributes: true, attributeFilter: ["data-scroll-locked"] });
-
-      cleanup = () => {
-        observer.disconnect();
+    const sync = () => {
+      if (!lenis) return;
+      if (!scrollable()) {
         lenis.destroy();
-      };
-    });
+        lenis = null;
+      } else if (document.body.hasAttribute("data-scroll-locked")) lenis.stop();
+      else lenis.start();
+    };
+
+    const onWheel = () => {
+      if (lenis || loading || !scrollable()) return;
+      loading = true;
+      void import("lenis")
+        .then(({ default: Lenis }) => {
+          lenis = new Lenis({ autoRaf: true, lerp: 0.14, wheelMultiplier: 0.9 });
+        })
+        .catch(() => {}) // sin red: se queda el scroll nativo
+        .finally(() => (loading = false));
+    };
+
+    const locks = new MutationObserver(sync);
+    locks.observe(document.body, { attributes: true, attributeFilter: ["data-scroll-locked"] });
+    const size = new ResizeObserver(sync);
+    size.observe(document.documentElement);
+    window.addEventListener("wheel", onWheel, { passive: true });
 
     return () => {
-      disposed = true;
-      cleanup();
+      locks.disconnect();
+      size.disconnect();
+      window.removeEventListener("wheel", onWheel);
+      lenis?.destroy();
     };
   }, []);
 

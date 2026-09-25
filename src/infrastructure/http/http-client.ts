@@ -38,11 +38,7 @@ function errorFromResponse(response: Response): DataSourceError {
   return new DataSourceError("client", `La API rechazó la petición (${status})`, { status });
 }
 
-/**
- * Cliente HTTP de solo lectura: un intento = timeout + validación del
- * esquema; alrededor, reintentos con backoff para los fallos transitorios.
- * Todo lo que sale de aquí es el dato validado o un `DataSourceError`.
- */
+/** Un intento es timeout + validación del esquema; los fallos transitorios se reintentan. */
 export function createHttpClient(config: HttpClientConfig): HttpClient {
   const fetchImpl = config.fetchImpl ?? ((...args: Parameters<typeof fetch>) => fetch(...args));
   const isOnline = config.isOnline ?? (() => true);

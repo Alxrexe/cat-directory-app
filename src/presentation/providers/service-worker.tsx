@@ -2,10 +2,7 @@
 
 import { useEffect } from "react";
 
-/**
- * Registra el service worker solo en producción: en desarrollo cachearía
- * bundles que cambian en cada guardado.
- */
+/** Solo en producción: en desarrollo cachearía bundles que cambian en cada guardado. */
 export function ServiceWorkerRegistrar() {
   useEffect(() => {
     if (process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator)) return;

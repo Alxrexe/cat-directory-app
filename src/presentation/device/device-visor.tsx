@@ -5,7 +5,7 @@ import type { BreedPhoto } from "@domain/breed/profile";
 import { FullImage } from "../components/full-image";
 import { padIndex } from "../lib/format";
 import { breedMonogram } from "../lib/monogram";
-import { readyGsap } from "../lib/gsap";
+import { EASE, motionArmed, play } from "../lib/motion";
 
 interface DeviceVisorProps {
   name: string;
@@ -17,41 +17,30 @@ interface DeviceVisorProps {
   priority: boolean;
 }
 
-/**
- * El visor: la foto de la raza, completa y de borde a borde. Sin marco
- * interior ni pie aparte: el número, la etiqueta de nueva y el crédito
- * flotan sobre la foto, y el borde es un filete de 1 px con un brillo. La
- * proporción de cada foto se respeta (`FullImage`): nunca se estira ni se
- * corta, y el hueco lo llena la propia foto desenfocada.
- *
- * Cuando la foto llega, una línea de luz la recorre y la imagen se asienta
- * (escala + opacidad, nada más).
- */
 export function DeviceVisor({ name, photo, sourceUrl, position, total, isNew, priority }: DeviceVisorProps) {
   const frameRef = useRef<HTMLDivElement>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     const frame = frameRef.current;
-    const gsap = readyGsap();
-    if (!gsap || !frame || !loaded || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const image = frame.querySelector("[data-photo]");
-    const scan = frame.querySelector("[data-scan]");
-    const tl = gsap.timeline();
-    tl.fromTo(image, { scale: 1.14, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.1, ease: "power3.out" }).fromTo(
-      scan,
-      { yPercent: -120, opacity: 1 },
-      { yPercent: 520, opacity: 0.2, duration: 1.2, ease: "power2.inOut" },
-      0,
-    );
+    if (!frame || !loaded || !motionArmed()) return;
+    const settle = play(frame.querySelector("[data-photo]"), [{ transform: "scale(1.14)", opacity: 0 }, { transform: "none", opacity: 1 }], {
+      duration: 1100,
+      easing: EASE.out,
+    });
+    const scan = play(frame.querySelector("[data-scan]"), [{ transform: "translateY(-120%)", opacity: 1 }, { transform: "translateY(520%)", opacity: 0.2 }], {
+      duration: 1200,
+      easing: EASE.inOut,
+    });
     return () => {
-      tl.kill();
+      settle?.cancel();
+      scan?.cancel();
     };
   }, [loaded]);
 
   return (
     <figure className="relative">
-      {/* En escritorio el visor cede altura para que el Ronrón quepa sin scroll. */}
+      {/* En escritorio cede altura para que el Ronrón quepa en 1280×800 sin scroll. */}
       <div
         ref={frameRef}
         data-screen
@@ -75,7 +64,6 @@ export function DeviceVisor({ name, photo, sourceUrl, position, total, isNew, pr
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 top-0 h-1/5 bg-gradient-to-b from-transparent via-[var(--accent-soft)] to-transparent opacity-0"
         />
-        {/* Reflejo del cristal del visor y velo inferior para que el crédito se lea. */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(165deg,var(--glass-shine)_0%,transparent_32%),linear-gradient(0deg,var(--scrim)_0%,transparent_26%)]"
@@ -111,7 +99,6 @@ export function DeviceVisor({ name, photo, sourceUrl, position, total, isNew, pr
   );
 }
 
-/** Sin foto (o si no llega): el monograma de la raza sobre la perla. */
 function MonogramPlate({ name }: { name: string }) {
   return (
     <div className="grid size-full place-items-center bg-[radial-gradient(circle_at_50%_40%,var(--surface),var(--surface-3))]">

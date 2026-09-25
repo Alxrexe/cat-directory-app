@@ -12,24 +12,15 @@ const HOLD = 56;
 interface PullGestureProps {
   onRefresh: () => Promise<unknown>;
   refreshing: boolean;
-  /** Elemento sobre el que se tira (la lista de la consola). */
   target: RefObject<HTMLElement | null>;
   /** Solo se puede tirar con la lista arriba del todo. */
   isAtTop: () => boolean;
 }
 
 /**
- * Gesto e indicador de "tirar para recargar". Vive en su propio chunk
- * (use-gesture + motion) y solo se carga en pantallas táctiles, cuando el
- * navegador queda ocioso: ver pull-to-refresh.tsx.
- *
- * Con `pointer.touch` use-gesture escucha eventos táctiles, que siguen
- * llegando mientras el navegador desplaza, así que no hace falta bloquear
- * el scroll con `touch-action`. Solo arranca si el gesto empieza con la
- * página arriba del todo.
- *
- * Es un atajo visual: el botón "Recargar" de la barra hace lo mismo y es el
- * camino accesible, así que el indicador va oculto a lectores de pantalla.
+ * Tirar para recargar (solo táctil, chunk propio). Con `pointer.touch` los
+ * eventos siguen llegando mientras el navegador desplaza, sin bloquear el
+ * scroll. El camino accesible es el botón Recargar.
  */
 export default function PullGesture({ onRefresh, refreshing, target, isAtTop }: PullGestureProps) {
   const pull = useMotionValue(0);
@@ -66,9 +57,8 @@ export default function PullGesture({ onRefresh, refreshing, target, isAtTop }: 
     {
       target,
       axis: "y",
-      // Sin `filterTaps`: use-gesture añadiría un click en captura que se
-      // traga los clics que no vengan precedidos de un toque (ratón en una
-      // tableta, pruebas automáticas) y las filas dejarían de abrirse.
+      // Sin `filterTaps`: su click en captura se tragaba los clics de ratón en
+      // tabletas y las filas dejaban de abrirse.
       pointer: { touch: true },
       eventOptions: { passive: true },
     },

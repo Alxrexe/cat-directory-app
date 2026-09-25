@@ -1,15 +1,8 @@
-import { loadGsap } from "../lib/gsap";
 import { loadOnce } from "../lib/idle";
 
-/**
- * El motor (Three.js + GSAP, ~170 KB comprimidos) no entra en el primer
- * pintado: se pide al acercar el puntero al botón de inicio y se termina de
- * cargar durante el túnel, que es literalmente la pantalla de carga.
- */
+/** Three.js y GSAP (~170 KB) no entran en el primer pintado. */
 const importEngine = () => import("./engine/engine");
 export const loadFieldEngine = () => {
-  // El motor ya trae GSAP; así el resto de la UI también lo tiene a mano.
-  void loadGsap().catch(() => {});
   return loadOnce(importEngine);
 };
 

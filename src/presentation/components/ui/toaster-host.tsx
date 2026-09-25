@@ -4,11 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useIdleModule } from "../../lib/idle";
 import { loadToasterModule, registerToasterHost } from "../../lib/notify";
 
-/**
- * Monta el <Toaster> de sileo con la primera interacción (o antes, si llega
- * un aviso). sileo trae motion (~45 kB): cargarlo con la página alargaba el
- * arranque sin que nadie hubiera tocado nada todavía.
- */
+/** sileo arrastra motion (~45 kB): se monta con la primera interacción o el primer aviso. */
 export function ToasterHost() {
   const [requested, setRequested] = useState(false);
   const toaster = useIdleModule(loadToasterModule, { now: requested, idle: false });

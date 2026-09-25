@@ -1,12 +1,7 @@
 import { MAX_RESTORED_PAGES } from "@application/use-cases/restore-breed-pages";
 import { COAT_FAMILIES, type CoatFamily } from "@domain/breed/coat";
 
-/**
- * Estado del directorio que vive en la URL: `?q=` (búsqueda), `?page=`
- * (página en pantalla) y `?pelaje=` (filtro por familia de pelaje). Lo leen igual el servidor, para el primer render, y
- * el cliente, así que el parseo es uno solo. La URL es entrada del usuario:
- * un valor inválido no rompe la página, cae al valor por defecto.
- */
+/** `?q=`, `?page=` y `?pelaje=`, igual en servidor y cliente. Lo inválido cae al defecto. */
 export const SEARCH_MAX_LENGTH = 60;
 
 export type CoatFilter = CoatFamily | "all";

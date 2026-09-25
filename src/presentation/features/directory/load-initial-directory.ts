@@ -9,11 +9,7 @@ export interface InitialDirectory {
   renderedAt: number;
 }
 
-/**
- * Primer render del directorio en el servidor. Si la API falla, la página
- * no revienta: se entrega vacía con el motivo y el cliente toma el relevo
- * (reintenta por su cuenta y, mientras, enseña la copia local si la hay).
- */
+/** Si la API falla, la página sale vacía con el motivo y el cliente toma el relevo. */
 export async function loadInitialDirectory(upToPage: number): Promise<InitialDirectory> {
   try {
     const pages = await serverUseCases.restoreBreedPages(upToPage);

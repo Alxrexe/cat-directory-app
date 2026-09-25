@@ -6,11 +6,7 @@ import { useEffect } from "react";
 import { Button } from "@presentation/components/ui/button";
 import { ScreenMessage } from "@presentation/components/screen-message";
 
-/**
- * Red de seguridad para errores que nadie previó. Los fallos de la API ya
- * se gestionan en cada vista; si se llega aquí es un fallo de programación,
- * y aun así el usuario tiene una salida.
- */
+// Último recurso: los fallos de la API ya se tratan en cada vista.
 export default function RouteError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error(error);

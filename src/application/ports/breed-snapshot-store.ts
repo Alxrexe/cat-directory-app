@@ -6,11 +6,7 @@ export interface BreedSnapshot {
   readonly savedAt: number;
 }
 
-/**
- * Puerto secundario: copia local de la primera página, para abrir la app sin
- * red. Síncrono a propósito: se lee en el primer efecto del cliente y tiene
- * que estar ahí en ese mismo frame.
- */
+/** Copia local de la primera página. Síncrona: se lee en el primer efecto del cliente. */
 export interface BreedSnapshotStore {
   read(): BreedSnapshot | null;
   write(snapshot: BreedSnapshot): void;

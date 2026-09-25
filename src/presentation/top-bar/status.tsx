@@ -4,22 +4,17 @@ import { LoaderCircle, Wifi, WifiOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useHydrated } from "../hooks/use-hydrated";
 import { cn } from "../lib/cn";
-import { readyGsap } from "../lib/gsap";
+import { EASE, motionArmed, play } from "../lib/motion";
 import { useConnectionStore } from "../stores/connection-store";
 import { useDiscoveryStore } from "../stores/discovery-store";
 
-// Hora y fecha a mano: crear un Intl.DateTimeFormat en español costaba
-// ~20 ms de hilo principal (80 ms en un móvil medio) en plena hidratación.
+// A mano: un Intl.DateTimeFormat en español costaba ~80 ms en móvil al hidratar.
 const DAYS = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
 const pad = (n: number) => String(n).padStart(2, "0");
 const formatTime = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 const formatDate = (d: Date) => `${DAYS[d.getDay()]} ${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
 
-/**
- * La hora de la consola, con la fecha debajo. Solo se pinta después de
- * hidratar (la hora del servidor no es la del visitante) y se actualiza al
- * cambiar el minuto, no cada segundo.
- */
+/** Tras hidratar (la hora del servidor no es la del visitante), una vez por minuto. */
 export function ConsoleClock({ className }: { className?: string }) {
   const hydrated = useHydrated();
   const [now, setNow] = useState(() => new Date());
@@ -51,11 +46,6 @@ export function ConsoleClock({ className }: { className?: string }) {
   );
 }
 
-/**
- * Estado de red, como el icono de wifi de la consola. Conectado es un icono
- * quieto; reintentando gira y dice el intento; sin red se vuelve rojo y lo
- * dice. Es una región `status`: el lector lo anuncia sin robar el foco.
- */
 export function NetworkIndicator({ className }: { className?: string }) {
   const online = useConnectionStore((state) => state.online);
   const retry = useConnectionStore((state) => state.retry);
@@ -89,10 +79,6 @@ export function NetworkIndicator({ className }: { className?: string }) {
   );
 }
 
-/**
- * Razas descubiertas: un aro de progreso (el mismo aro lavanda del logo,
- * llenándose en azul) y la cuenta en la matriz de puntos del LCD.
- */
 export function DiscoveryMeter({ total, className }: { total: number; className?: string }) {
   const hydrated = useHydrated();
   const count = useDiscoveryStore((state) => state.discovered.length);
@@ -102,7 +88,7 @@ export function DiscoveryMeter({ total, className }: { total: number; className?
 
   useEffect(() => {
     if (!numberRef.current || shown === 0) return;
-    readyGsap()?.fromTo(numberRef.current, { scale: 1.35 }, { scale: 1, duration: 0.6, ease: "elastic.out(1, 0.5)" });
+    if (motionArmed()) play(numberRef.current, [{ transform: "scale(1.35)" }, { transform: "none" }], { duration: 700, easing: EASE.elastic });
   }, [shown]);
 
   return (

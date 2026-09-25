@@ -15,20 +15,9 @@ const POSTER_CLASS: Record<ColorTheme, string> = {
 };
 
 /**
- * Fondo del Michiverso a pantalla completa, sin márgenes: el cielo de día
- * con el tema claro y el cielo nocturno con el oscuro.
- *
- * - Cada cielo es una capa; cuál se ve lo decide el CSS (`dark:`), así que
- *   al cargar no hay parpadeo aunque React aún no sepa el tema.
- * - Un cielo no descarga nada hasta que su tema se usa por primera vez: con
- *   el tema claro, el nocturno no cuesta ni un byte.
- * - El póster (10 KB) llega justo después del primer pintado y el video
- *   llega encima con un fundido. El video se crea cuando la simulación lo
- *   pide y el cielo oculto se pausa.
- * - Nada del cielo se pide antes de que la página termine de cargar y el
- *   navegador quede ocioso: en una ficha abierta desde un enlace, póster y
- *   video (85 kB) competían con la foto por el primer pintado.
- * - Con movimiento reducido se queda el póster, sin video.
+ * Cielo de día o de noche. Cuál se ve lo decide el CSS (`dark:`), así que no
+ * parpadea antes de hidratar. Nada se descarga hasta después del load (en la
+ * ficha competía con la foto por el LCP) ni para el tema que no se usa.
  */
 export function SkyBackground() {
   const active = useSimulationStore((state) => state.skyActive);
@@ -66,12 +55,9 @@ function SkyLayer({
   const [playing, setPlaying] = useState(false);
   const [poster, setPoster] = useState(false);
 
-  // Una vez usado, el cielo se queda montado (volver al tema es instantáneo).
   if (enabled && !used) setUsed(true);
   if (used && play && !mounted) setMounted(true);
 
-  // El póster no compite con el primer pintado: se pide al hidratar y entra
-  // con un fundido cuando ya está en caché. Hasta entonces, el color de fondo.
   useEffect(() => {
     if (!used) return;
     const image = new Image();

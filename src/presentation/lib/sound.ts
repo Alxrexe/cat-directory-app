@@ -1,12 +1,7 @@
 import type { SoundName } from "cuelume";
 import { loadOnce } from "./idle";
 
-/**
- * Sonido de interfaz, siempre activo: es parte de la consola, no una
- * opción. cuelume sintetiza con Web Audio (no descarga archivos) y se
- * importa con la primera interacción, que es además cuando el navegador
- * permite que suene algo.
- */
+/** cuelume sintetiza con Web Audio; se importa con la primera interacción. */
 const loadCuelume = () =>
   import("cuelume").then((module) => {
     module.setVolume(0.3);

@@ -7,11 +7,7 @@ import { startTransition, useEffect } from "react";
 import { Button } from "@presentation/components/ui/button";
 import { ScreenMessage } from "@presentation/components/screen-message";
 
-/**
- * La ficha no pudo generarse (la API falló y no había copia en caché).
- * "Reintentar" vuelve a pedir la ruta al servidor: `reset()` a secas solo
- * re-renderizaría el cliente con el mismo resultado.
- */
+// `reset()` a secas repetiría el mismo render: hay que volver a pedir la ruta.
 export default function BreedError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   const router = useRouter();
 

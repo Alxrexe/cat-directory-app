@@ -4,14 +4,8 @@ import { useConnectionStore } from "../stores/connection-store";
 const clearRetry = () => useConnectionStore.getState().clearRetry();
 
 /**
- * React Query guarda el estado de servidor (páginas, datos curiosos).
- *
- * `retry: false` es deliberado: el backoff exponencial ya lo hace el
- * adaptador HTTP. Reintentar también aquí multiplicaría los intentos
- * (4 × 4 = 16 peticiones por fallo) y quemaría el límite de la API.
- *
- * `networkMode: "online"` (por defecto) pausa las peticiones mientras el
- * navegador está offline y las reanuda solas al volver la red.
+ * `retry: false`: el backoff ya lo hace el cliente HTTP; reintentar también
+ * aquí serían 16 peticiones por fallo.
  */
 export function createQueryClient(): QueryClient {
   return new QueryClient({

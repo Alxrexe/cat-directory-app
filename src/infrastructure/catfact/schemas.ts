@@ -1,15 +1,8 @@
 import * as z from "zod/mini";
 
 /**
- * Esquemas del contrato de catfact.ninja. Son la frontera: nada que no pase
- * por aquí entra en el dominio.
- *
- * Se usa `zod/mini` (API funcional, apta para tree-shaking): estos esquemas
- * viajan también al navegador y la variante clásica arrastra ~100 KB.
- *
- * Cada raza se valida por separado (ver el mapper): una fila rota no debe
- * tumbar la página entera. La página sí se valida entera, porque sin
- * `current_page` o `last_page` no hay paginación posible.
+ * Frontera con catfact.ninja. `zod/mini` porque también viaja al navegador.
+ * Cada raza se valida por separado: una fila rota no tumba la página.
  */
 const text = z.pipe(
   z.nullish(z.string()),

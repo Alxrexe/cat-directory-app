@@ -9,9 +9,7 @@ const nextConfig: NextConfig = {
   // `next dev` crea AGENTS.md y CLAUDE.md en la raíz si no se desactiva.
   agentRules: false,
   images: {
-    // Fotos de razas desde Wikimedia Commons, optimizadas por Next (AVIF/WebP
-    // al tamaño del visor). Los originales pequeños llegan desde upload.* y
-    // las miniaturas reescaladas desde thumb.* (por cubetas: 960px, 1280px…).
+    // Wikimedia Commons: originales en upload.*, miniaturas en thumb.*.
     remotePatterns: [
       { protocol: "https", hostname: "upload.wikimedia.org", pathname: "/wikipedia/**" },
       { protocol: "https", hostname: "thumb.wikimedia.org", pathname: "/wikipedia/**" },

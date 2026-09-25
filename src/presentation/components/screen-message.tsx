@@ -1,10 +1,6 @@
 import type { ReactNode } from "react";
 import { CatMark } from "../brand/cat-mark";
 
-/**
- * Mensaje a pantalla completa sobre el cielo (404, errores): una pieza de
- * perla con el sello del gato, como un aviso del sistema de la consola.
- */
 export function ScreenMessage({
   label,
   title,

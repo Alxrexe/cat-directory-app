@@ -5,29 +5,18 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { CatMark } from "../brand/cat-mark";
 import { CommandPalette } from "../features/command-palette/command-palette";
 import { cn } from "../lib/cn";
-import { readyGsap } from "../lib/gsap";
+import { EASE, playEach, prefersReducedMotion } from "../lib/motion";
 import { useDeviceStore } from "../stores/device-store";
 import { useDiscoveryStore } from "../stores/discovery-store";
 import { ConsoleClock, DiscoveryMeter, NetworkIndicator } from "./status";
 import { ThemeToggle } from "./theme-toggle";
 
-/**
- * Barra de sistema, como la fila superior del menú de una consola:
- * a la izquierda el "perfil" (la marca del Michiverso), a la derecha una
- * cápsula de estado (hora, red, razas descubiertas) separada por filetes
- * de 1 px, y dos botones redondos: el tema (sol/luna) y la búsqueda.
- *
- * No es una franja: son piezas de perla sueltas sobre el cielo.
- */
 export function TopBar({ visible: wanted = true, total }: { visible?: boolean; total: number }) {
   const ref = useRef<HTMLElement>(null);
-  // Con el Ronrón abierto como modal, la barra se aparta: el dispositivo
-  // (y sus orejas) necesitan todo el alto.
+  // El Ronrón modal necesita todo el alto.
   const deviceOpen = useDeviceStore((state) => state.open);
   const visible = wanted && !deviceOpen;
-  // Si la barra ya se ve al cargar (una ficha abierta desde un enlace), llega
-  // pintada del servidor y no hay entrada que animar. Solo se anima cuando
-  // cambia después (la pantalla de inicio la revela; el Ronrón la aparta).
+  // Si ya se ve al cargar, llega pintada del servidor: solo se animan los cambios.
   const [shownAtMount] = useState(visible);
   const firstRun = useRef(true);
 
@@ -42,22 +31,24 @@ export function TopBar({ visible: wanted = true, total }: { visible?: boolean; t
       firstRun.current = false;
       if (visible === shownAtMount) return;
     }
-    const gsap = readyGsap();
-    if (!gsap) {
-      // Sin GSAP todavía (o sin red): mismo resultado, sin animar.
-      for (const child of node.children) (child as HTMLElement).style.opacity = visible ? "1" : "0";
-      return;
+    const pieces = Array.from(node.children) as HTMLElement[];
+    for (const piece of pieces) {
+      for (const running of piece.getAnimations()) running.cancel();
+      piece.style.opacity = visible ? "1" : "0";
     }
-    // Las piezas bajan a su sitio una tras otra, con un pequeño rebote,
-    // como la barra del menú de una consola al encenderse.
+    if (prefersReducedMotion()) return;
     if (visible) {
-      gsap.fromTo(
-        node.children,
-        { y: -28, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8, stagger: 0.08, ease: "back.out(1.6)" },
-      );
+      playEach(pieces, () => [{ transform: "translateY(-28px)", opacity: 0 }, { transform: "none", opacity: 1 }], {
+        duration: 800,
+        stagger: 80,
+        easing: EASE.back,
+        fill: "backwards",
+      });
     } else {
-      gsap.to(node.children, { y: -24, opacity: 0, duration: 0.3, ease: "power2.in" });
+      playEach(pieces, () => [{ transform: "none", opacity: 1 }, { transform: "translateY(-24px)", opacity: 0 }], {
+        duration: 300,
+        easing: EASE.in,
+      });
     }
   }, [visible, shownAtMount]);
 

@@ -9,11 +9,7 @@ export interface ErrorCopy {
   description: string;
 }
 
-/**
- * Lo que ve el usuario cuando algo falla. Se decide por el tipo de fallo, no
- * por el mensaje técnico, y siempre dice qué pasa con lo que ya tenía en
- * pantalla: la peor sensación ante un error es no saber si perdiste algo.
- */
+/** Por tipo de fallo, diciendo siempre qué pasa con lo que ya había en pantalla. */
 const COPY: Record<DataSourceErrorKind, (status?: number) => ErrorCopy> = {
   offline: () => ({
     title: "Sin conexión",

@@ -8,20 +8,17 @@ import { coatFamily, type CoatShare } from "@domain/breed/coat";
 import { describeCountry } from "@domain/breed/country";
 import type { BreedPhoto, BreedProfile } from "@domain/breed/profile";
 import { COAT_LABEL, MISSING } from "../lib/format";
-import { readyGsap } from "../lib/gsap";
+import { EASE, motionArmed, play } from "../lib/motion";
 import { useIdleModule } from "../lib/idle";
 
 export type ScreenTab = "ficha" | "historia" | "familia";
 export const SCREEN_TABS: ScreenTab[] = ["ficha", "historia", "familia"];
 const TAB_LABEL: Record<ScreenTab, string> = { ficha: "Ficha", historia: "Historia", familia: "Familia" };
 
-// La pestaña Familia (carrusel de embla, fotos y gráfico) va en su propio
-// chunk: se precarga en ocioso y se pide ya al abrir la pestaña.
+// Familia (carrusel, fotos, gráfico) en su propio chunk.
 const loadFamily = () => import("./family-tab");
 
-// En escritorio el panel mide lo que deja la pantalla y se desplaza por
-// dentro; es enfocable (Radix le da tabindex 0), así que también con teclado.
-// El borde inferior se funde: si hay más contenido, se nota que sigue.
+// En escritorio el panel se desplaza por dentro, con el borde inferior fundido.
 const PANEL =
   "rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-screen-accent/60 lg:absolute lg:inset-0 lg:-mr-2 lg:overflow-y-auto lg:overscroll-contain lg:pr-2 lg:pb-4 lg:[mask-image:linear-gradient(to_bottom,black_calc(100%-1rem),transparent)] [scrollbar-color:oklch(82%_0.09_255/0.4)_transparent] [scrollbar-width:thin]";
 
@@ -37,11 +34,6 @@ export interface DeviceScreenProps {
   onOpenRelated: (slug: string) => void;
 }
 
-/**
- * Pantalla LCD del Ronrón: nombre, país y tres pestañas (Radix Tabs, con
- * sus flechas de teclado). Cambiar de pestaña desliza el contenido unos
- * píxeles y lo funde: nunca aparece de golpe.
- */
 export function DeviceScreen(props: DeviceScreenProps) {
   const { breed, tab } = props;
   const country = describeCountry(breed.country);
@@ -49,18 +41,17 @@ export function DeviceScreen(props: DeviceScreenProps) {
 
   useEffect(() => {
     const panel = panelRef.current?.querySelector(`[data-tab="${tab}"]`);
-    const gsap = readyGsap();
-    if (!gsap || !panel || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const tween = gsap.fromTo(panel, { x: 14, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "power3.out" });
-    return () => {
-      tween.kill();
-    };
+    if (!panel || !motionArmed()) return;
+    const slide = play(panel, [{ transform: "translateX(14px)", opacity: 0 }, { transform: "none", opacity: 1 }], {
+      duration: 450,
+      easing: EASE.out,
+    });
+    return () => slide?.cancel();
   }, [tab, breed.slug]);
 
   return (
     <div data-screen className="squircle flex min-h-0 flex-1 flex-col rounded-[30px] screen-glass p-2">
       <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[26px] p-4 ring-1 ring-white/5 sm:p-5">
-        {/* Líneas de barrido del LCD: estáticas, casi invisibles. */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(0deg,rgb(255_255_255/0.035)_0_1px,transparent_1px_3px)]"
@@ -116,15 +107,17 @@ function SheetTab({ breed, coats, total }: DeviceScreenProps) {
   const share = coats.find((item) => item.family === family);
   const barRef = useRef<HTMLDivElement>(null);
 
-  // La barra se pinta ya en su medida (sirve sin JS); con GSAP, además, crece.
+  // Se pinta ya en su medida; la animación solo la hace crecer.
   const ratio = share ? share.count / Math.max(1, total) : 0;
   useEffect(() => {
-    const gsap = readyGsap();
-    if (!gsap || !barRef.current || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const tween = gsap.fromTo(barRef.current, { scaleX: 0 }, { scaleX: ratio, duration: 1, ease: "power3.out", delay: 0.2 });
-    return () => {
-      tween.kill();
-    };
+    if (!motionArmed()) return;
+    const grow = play(barRef.current, [{ transform: "scaleX(0)" }, { transform: `scaleX(${ratio})` }], {
+      duration: 1000,
+      delay: 200,
+      easing: EASE.out,
+      fill: "backwards",
+    });
+    return () => grow?.cancel();
   }, [ratio, breed.slug]);
 
   const stats: Array<{ icon: ComponentType<{ className?: string }>; label: string; field: string; value: string | null; note?: string | null }> = [
@@ -171,11 +164,7 @@ function SheetTab({ breed, coats, total }: DeviceScreenProps) {
   );
 }
 
-/**
- * "Natural/Standard" es una sola palabra para el navegador: en una tarjeta
- * estrecha se partiría por cualquier letra. Un <wbr> tras cada barra deja
- * cortar justo ahí.
- */
+// "Natural/Standard" es una sola palabra para el navegador: que corte tras la barra.
 function SlashBreaks({ text }: { text: string }) {
   const parts = text.split("/");
   return parts.map((part, i) => (
