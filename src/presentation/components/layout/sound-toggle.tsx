@@ -21,9 +21,9 @@ export function SoundToggle() {
           if (pressed) playCue("toggle");
         }}
         aria-label="Sonidos de interfaz"
-        className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "data-[state=on]:text-primary")}
+        className={cn(buttonVariants({ variant: "console", size: "icon-lg" }), "max-sm:size-11 data-[state=on]:text-accent")}
       >
-        {sound ? <Volume2 aria-hidden="true" /> : <VolumeX aria-hidden="true" />}
+        {sound ? <Volume2 className="size-5" aria-hidden="true" /> : <VolumeX className="size-5" aria-hidden="true" />}
       </TogglePrimitive.Root>
     </Hint>
   );

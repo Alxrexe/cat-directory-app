@@ -10,8 +10,8 @@ export function Skeleton({ className, ...props }: ComponentProps<"div">) {
     <div
       aria-hidden="true"
       className={cn(
-        "relative overflow-hidden bg-muted",
-        "after:absolute after:inset-0 after:animate-shimmer after:bg-gradient-to-r after:from-transparent after:via-foreground/[0.05] after:to-transparent",
+        "relative overflow-hidden rounded-xl bg-ink/8",
+        "after:absolute after:inset-0 after:animate-shimmer after:bg-gradient-to-r after:from-transparent after:via-ink/[0.06] after:to-transparent",
         className,
       )}
       {...props}

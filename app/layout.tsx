@@ -1,34 +1,28 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, Instrument_Serif, Outfit } from "next/font/google";
-import type { ReactNode } from "react";
-import { SiteFooter } from "@presentation/components/layout/site-footer";
-import { SiteHeader } from "@presentation/components/layout/site-header";
+import { Suspense } from "react";
+import { Nunito, Rubik } from "next/font/google";
 import { AppProviders } from "@presentation/providers/app-providers";
+import { SkyBackground } from "@presentation/sky/sky-background";
 import "./globals.css";
 
 /**
- * Tres cortes con un papel cada uno: serif de exhibición para los nombres
- * de raza (lo que se busca), sans geométrica para la interfaz y mono para
- * los datos de archivo (índices, páginas, recuentos).
+ * Tres voces, como el menú de una consola con un panel técnico:
+ * - Rubik: geometría con esquinas suavizadas, la de títulos y nombres.
+ * - Nunito: redondeada y muy legible, la de la interfaz y el texto.
+ * - La mono del sistema (SF Mono, Menlo, Consolas, Roboto Mono): rótulos
+ *   técnicos, reloj y contadores. No descarga nada: una tercera fuente web
+ *   costaba ~30 kB en el camino del primer pintado en móvil.
  */
-const display = Instrument_Serif({
-  variable: "--font-display",
+const rubik = Rubik({
+  variable: "--font-rubik",
   subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
+  weight: ["500", "600", "700"],
   display: "swap",
 });
 
-const ui = Outfit({
-  variable: "--font-ui",
+const nunito = Nunito({
+  variable: "--font-nunito",
   subsets: ["latin"],
-  display: "swap",
-});
-
-const technical = IBM_Plex_Mono({
-  variable: "--font-technical",
-  subsets: ["latin"],
-  weight: "400",
   display: "swap",
 });
 
@@ -37,46 +31,44 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Felis — Directorio de razas de gato",
-    template: "%s · Felis",
+    default: "Michiverso — Simulación de razas de gato",
+    template: "%s · Michiverso",
   },
   description:
-    "Directorio de razas de gato: país, origen, pelaje y patrón de cada raza, con un dato curioso al azar en cada ficha.",
-  applicationName: "Felis",
-  openGraph: {
-    type: "website",
-    locale: "es_ES",
-    siteName: "Felis",
-  },
+    "Explora 98 razas de gato en una simulación: orbes que flotan en el cielo y el Ronrón, un dispositivo con la ficha, la foto y un dato curioso de cada raza.",
+  applicationName: "Michiverso",
+  openGraph: { type: "website", locale: "es_ES", siteName: "Michiverso" },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#110e0b" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f5fa" },
+    { media: "(prefers-color-scheme: dark)", color: "#f4f5fa" },
   ],
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({ children, modal }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
       suppressHydrationWarning
-      className={`${display.variable} ${ui.variable} ${technical.variable}`}
+      className={`${rubik.variable} ${nunito.variable}`}
     >
-      <body className="flex min-h-dvh flex-col">
+      <body className="min-h-dvh">
         <AppProviders>
           <a
             href="#contenido"
-            className="label-mono sr-only bg-foreground px-3 py-2 text-background focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50"
+            className="sr-only rounded-full bg-ink px-4 py-2 font-display text-surface focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-100"
           >
             Saltar al contenido
           </a>
-          <SiteHeader />
-          <main id="contenido" tabIndex={-1} className="flex flex-1 flex-col outline-none">
+          <Suspense fallback={null}>
+            <SkyBackground />
+          </Suspense>
+          <main id="contenido" tabIndex={-1} className="relative outline-none">
             {children}
           </main>
-          <SiteFooter />
+          {modal}
         </AppProviders>
       </body>
     </html>

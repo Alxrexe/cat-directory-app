@@ -16,7 +16,7 @@ export default function RadixHint({ label, children }: { label: string; children
         <TooltipPrimitive.Portal>
           <TooltipPrimitive.Content
             sideOffset={6}
-            className="label-mono z-50 bg-foreground px-2 py-1.5 text-background data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0"
+            className="z-50 rounded-full bg-ink px-3 py-1.5 font-display text-xs text-surface data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0"
           >
             {label}
           </TooltipPrimitive.Content>

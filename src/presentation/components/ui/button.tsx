@@ -3,22 +3,36 @@ import { cva, type VariantProps } from "class-variance-authority";
 import type { ComponentProps } from "react";
 import { cn } from "../../lib/cn";
 
+// Fondo de hover como capa aparte que solo cambia de opacidad (compositor),
+// en lugar de transicionar `background-color`.
+const hoverLayer =
+  "before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:opacity-0 before:transition-opacity before:duration-200 hover:before:opacity-100";
+
+/**
+ * Botones de consola. Tres voces:
+ * - `default`: la píldora pizarra llena (la acción principal de la vista).
+ * - `outline`: porcelana con aro lavanda (acciones secundarias).
+ * - `console`: el botón redondo del menú de la consola, para iconos.
+ * Al pulsarlos bajan un píxel, como una tecla. Solo se animan transform y
+ * opacidad; el fondo de hover es una capa que se funde.
+ */
 export const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap text-sm font-medium select-none transition-[color,background-color,border-color,transform] duration-150 ease-out active:translate-y-px disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "relative isolate inline-flex shrink-0 items-center justify-center gap-2 rounded-full font-display font-medium whitespace-nowrap select-none transition-transform duration-200 ease-[var(--ease-cozy)] active:translate-y-px disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[1.1em]",
   {
     variants: {
       variant: {
-        default: "bg-foreground text-background hover:bg-foreground/85",
-        accent: "bg-primary text-primary-foreground hover:bg-primary/90",
-        outline: "border border-input bg-background hover:border-foreground/40 hover:bg-muted",
-        ghost: "hover:bg-muted",
-        link: "h-auto px-0 underline-offset-4 hover:underline",
+        default: "bg-slate text-surface shadow-[0_8px_18px_-12px_var(--ink)] hover:-translate-y-0.5",
+        outline: "porcelain text-ink hover:-translate-y-0.5",
+        console: "console-dot text-slate hover:-translate-y-0.5",
+        ghost: cn("text-ink before:bg-slate/8", hoverLayer),
+        link: "h-auto rounded-none px-0 text-slate underline decoration-ring decoration-2 underline-offset-4 hover:decoration-accent",
       },
       size: {
-        default: "h-10 px-4",
-        sm: "h-9 px-3 text-[0.8125rem]",
-        lg: "h-12 px-6",
-        icon: "size-10",
+        default: "h-11 px-5 text-[0.95rem]",
+        sm: "h-9 px-4 text-sm",
+        lg: "h-13 px-7 text-lg",
+        icon: "size-11",
+        "icon-lg": "size-13",
         "icon-sm": "size-9",
       },
     },

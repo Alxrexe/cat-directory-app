@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# originales 4K del cielo (~80 MB cada uno): el sitio usa las versiones
+# recodificadas de public/media; estos no deben subirse al repositorio
+/public/Blue sky.mp4
+/public/Night sky.mp4

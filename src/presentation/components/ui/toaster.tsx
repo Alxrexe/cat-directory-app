@@ -1,6 +1,5 @@
 "use client";
 
-import { useTheme } from "next-themes";
 import { useEffect } from "react";
 import { Toaster as Sileo } from "sileo";
 
@@ -16,8 +15,10 @@ export { sileo } from "sileo";
  * que sileo se suscriba a su store (los efectos del hijo van primero).
  */
 export default function Toaster({ onMounted }: { onMounted?: () => void }) {
-  const { resolvedTheme } = useTheme();
-  useEffect(() => onMounted?.(), [onMounted]);
+  useEffect(() => {
+    onMounted?.();
+  }, [onMounted]);
 
-  return <Sileo position="bottom-center" offset={{ bottom: 16 }} theme={resolvedTheme === "dark" ? "dark" : "light"} />;
+  // En sileo, "dark" es la píldora clara: la que va con la porcelana.
+  return <Sileo position="bottom-center" offset={{ bottom: 16 }} theme="dark" />;
 }

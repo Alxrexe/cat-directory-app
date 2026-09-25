@@ -2,13 +2,13 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Felis — Directorio de razas de gato",
-    short_name: "Felis",
-    description: "Directorio de razas de gato con ficha y dato curioso.",
+    name: "Michiverso — Simulación de razas de gato",
+    short_name: "Michiverso",
+    description: "Las 98 razas de catfact.ninja como un campo de orbes, con la ficha, la foto y un dato curioso de cada una.",
     start_url: "/",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#ffffff",
+    background_color: "#f4f5fa",
+    theme_color: "#f4f5fa",
     lang: "es",
     icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml" }],
   };

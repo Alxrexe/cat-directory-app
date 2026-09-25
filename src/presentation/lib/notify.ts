@@ -11,8 +11,8 @@ import { loadOnce } from "./idle";
  * pantalla ("Sin conexión" → "Conexión restablecida") en vez de apilarse.
  *
  * Un aviso siempre llega después de algo (un fallo, una recarga), nunca en
- * el primer frame, así que sileo y su <Toaster> se cargan en ocioso o con
- * el primer aviso, lo que ocurra antes. `notify` espera a que el Toaster
+ * el primer frame, así que sileo y su <Toaster> se cargan con la primera
+ * interacción o con el primer aviso, lo que ocurra antes. `notify` espera a que el Toaster
  * esté montado: un aviso nunca se pierde por llegar antes que él.
  */
 export interface NotifyOptions {

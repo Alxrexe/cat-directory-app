@@ -8,11 +8,11 @@ import { useEffect } from "react";
  *
  * Se para mientras un diálogo de Radix tiene el scroll bloqueado
  * (`data-scroll-locked` en el body); si no, la rueda movería la página que
- * hay debajo del modal. Con `prefers-reduced-motion` no se instancia.
+ * hay debajo del modal. Con `prefers-reduced-motion` o en táctil ni se descarga.
  */
 export function SmoothScroll() {
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce), (pointer: coarse)").matches) return;
 
     let disposed = false;
     let cleanup = () => {};
