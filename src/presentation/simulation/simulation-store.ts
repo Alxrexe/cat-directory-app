@@ -16,6 +16,13 @@ export interface LinkStep {
 
 interface SimulationState {
   phase: SimulationPhase;
+  /**
+   * Ya se entró en esta visita. Vive solo en memoria: una carga nueva de la
+   * página vuelve a la pantalla de inicio; volver al campo navegando desde
+   * una ficha, no.
+   */
+  entered: boolean;
+  markEntered: () => void;
   steps: LinkStep[];
   /** El cielo puede cargar y reproducir su video. */
   skyActive: boolean;
@@ -36,6 +43,8 @@ const INITIAL_STEPS: LinkStep[] = [
 
 export const useSimulationStore = create<SimulationState>()((set) => ({
   phase: "gate",
+  entered: false,
+  markEntered: () => set({ entered: true }),
   steps: INITIAL_STEPS,
   skyActive: false,
   origin: null,

@@ -19,7 +19,6 @@ import { breedMonogram, shortBreedName } from "../lib/monogram";
 import { notify } from "../lib/notify";
 import { playCue } from "../lib/sound";
 import { StartGate } from "../simulation/start-gate";
-import { rememberSimulation } from "../simulation/cookie";
 import { useSimulationStore, type SimulationPhase } from "../simulation/simulation-store";
 import { useDeviceStore } from "../stores/device-store";
 import { useNavigationStore } from "../stores/navigation-store";
@@ -29,8 +28,6 @@ interface HomeExperienceProps {
   initialPages: readonly BreedPage[];
   serverError: SerializedDataSourceError | null;
   renderedAt: number;
-  /** Ya se entró en esta sesión (cookie): sin pantalla de inicio. */
-  skipGate: boolean;
 }
 
 /** El túnel dura al menos esto, aunque todo cargue antes: es parte del viaje. */
@@ -44,12 +41,15 @@ const MIN_LINK_MS = 2600;
  * reparte la fase de la simulación, el Ronrón abierto y el origen del orbe
  * pulsado. El campo 3D solo recibe datos: nunca decide nada de negocio.
  */
-export function HomeExperience({ initialPages, serverError, renderedAt, skipGate }: HomeExperienceProps) {
+export function HomeExperience({ initialPages, serverError, renderedAt }: HomeExperienceProps) {
   const router = useRouter();
   const directory = useBreedDirectory({ initialPages, renderedAt });
   const { params, setQuery, setPage, setCoat } = useDirectoryUrlState();
   const [restorePage] = useState(params.page);
 
+  // Al cargar la página, siempre la pantalla de inicio. Si se vuelve al campo
+  // navegando (desde una ficha) en la misma visita, el campo sigue abierto.
+  const [skipGate] = useState(() => useSimulationStore.getState().entered);
   const [phase, setPhase] = useState<SimulationPhase>(skipGate ? "running" : "gate");
   const [gateMounted, setGateMounted] = useState(!skipGate);
   const [tunnelVisible, setTunnelVisible] = useState(false);
@@ -161,7 +161,7 @@ export function HomeExperience({ initialPages, serverError, renderedAt, skipGate
       enter = setTimeout(
         () => {
           setPhase("running");
-          rememberSimulation();
+          useSimulationStore.getState().markEntered();
         },
         engineRef.current ? 1100 : 0,
       );
